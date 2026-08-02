@@ -1,12 +1,11 @@
 import { useEffect, useRef } from 'react'
 import gsap from 'gsap'
-import { useTilt } from '../hooks/useTilt'
-import { IconArrowRight, IconBolt, IconCalendar, IconReceipt, IconStar } from './Icons'
+import { IconArrowRight, IconStar } from './Icons'
+import HeroScene from './HeroScene'
 import './Hero.css'
 
 export default function Hero() {
   const rootRef = useRef<HTMLDivElement>(null)
-  const tiltRef = useTilt<HTMLDivElement>(10)
 
   useEffect(() => {
     const ctx = gsap.context(() => {
@@ -21,29 +20,7 @@ export default function Hero() {
         .fromTo('.hero__subtitle', { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.7 }, '-=0.5')
         .fromTo('.hero__actions', { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.7 }, '-=0.5')
         .fromTo('.hero__stats > *', { opacity: 0, y: 16 }, { opacity: 1, y: 0, duration: 0.6, stagger: 0.1 }, '-=0.4')
-        .fromTo(
-          '.hero__mockup-wrap',
-          { opacity: 0, y: 60, scale: 0.92 },
-          { opacity: 1, y: 0, scale: 1, duration: 1.1 },
-          '-=0.9',
-        )
-        .fromTo('.hero__chip', { opacity: 0, scale: 0.7, y: 10 }, { opacity: 1, scale: 1, y: 0, duration: 0.6, stagger: 0.15 }, '-=0.5')
 
-      gsap.to('.hero__chip--calendar', {
-        y: -14,
-        duration: 2.6,
-        repeat: -1,
-        yoyo: true,
-        ease: 'sine.inOut',
-      })
-      gsap.to('.hero__chip--receipt', {
-        y: 12,
-        duration: 3.1,
-        repeat: -1,
-        yoyo: true,
-        ease: 'sine.inOut',
-        delay: 0.3,
-      })
       gsap.to('.hero__blob--a', {
         x: 40,
         y: -30,
@@ -70,6 +47,7 @@ export default function Hero() {
       <div className="hero__blob hero__blob--a" />
       <div className="hero__blob hero__blob--b" />
       <div className="noise-grid" />
+      <HeroScene />
 
       <div className="hero__inner">
         <div className="hero__copy">
@@ -107,54 +85,6 @@ export default function Hero() {
               <strong>4.9<IconStar size={14} /></strong>
               <span>Average rating</span>
             </div>
-          </div>
-        </div>
-
-        <div className="hero__mockup-wrap">
-          <div className="hero__mockup-stage" ref={tiltRef}>
-            <div className="hero__mockup">
-              <div className="hero__mockup-notch" />
-              <div className="hero__mockup-header">
-                <span>Good evening, Aarav</span>
-                <div className="hero__mockup-avatar" />
-              </div>
-
-              <div className="hero__mockup-card hero__mockup-card--booking">
-                <div className="hero__mockup-card-row">
-                  <span className="eyebrow" style={{ fontSize: '0.6rem' }}>Table confirmed</span>
-                  <IconCalendar size={16} />
-                </div>
-                <strong>Ember & Oak, Table 6</strong>
-                <span className="hero__mockup-muted">Today, 8:30 PM · 4 guests</span>
-              </div>
-
-              <div className="hero__mockup-card hero__mockup-card--bill">
-                <div className="hero__mockup-card-row">
-                  <span className="eyebrow" style={{ fontSize: '0.6rem' }}>Bill ready</span>
-                  <IconReceipt size={16} />
-                </div>
-                <strong>₹2,840.00</strong>
-                <div className="hero__mockup-progress">
-                  <div className="hero__mockup-progress-fill" />
-                </div>
-                <span className="hero__mockup-muted">18% off applied · Split 4 ways</span>
-              </div>
-
-              <button className="hero__mockup-pay">
-                Pay ₹710.00 <IconArrowRight size={16} />
-              </button>
-            </div>
-
-            <div className="hero__mockup-glow" />
-          </div>
-
-          <div className="hero__chip hero__chip--calendar glass-card">
-            <IconBolt size={16} />
-            Table held for 5 min
-          </div>
-          <div className="hero__chip hero__chip--receipt glass-card">
-            <IconReceipt size={16} />
-            Split & pay in 10s
           </div>
         </div>
       </div>

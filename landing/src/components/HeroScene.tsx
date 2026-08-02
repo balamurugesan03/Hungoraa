@@ -76,9 +76,15 @@ function TableSetting() {
 
   // Visible world-space width at z=0 for the current canvas size — used so the
   // scene stays on-screen across aspect ratios instead of a fixed x offset
-  // that only worked for wide desktop viewports.
+  // that only worked for wide desktop viewports. Below the hero's mobile
+  // breakpoint (980px, see Hero.css) the copy stacks full-width instead of
+  // sharing a row with the scene, so it should sit near-center, not off to
+  // the side.
+  const isNarrow = typeof window !== 'undefined' && window.innerWidth < 720
   const viewportWidth = useThree((state) => state.viewport.width)
-  const baseX = THREE.MathUtils.clamp(viewportWidth * 0.24, 0.55, 1.9)
+  const baseX = isNarrow
+    ? THREE.MathUtils.clamp(viewportWidth * 0.06, 0.1, 0.7)
+    : THREE.MathUtils.clamp(viewportWidth * 0.24, 0.55, 1.9)
   const baseScale = THREE.MathUtils.clamp(viewportWidth / 5.5, 0.4, 0.85)
 
   useFrame((_, delta) => {

@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react'
-import { Canvas, useFrame } from '@react-three/fiber'
+import { Canvas, useFrame, useThree } from '@react-three/fiber'
 import { Float, Sparkles } from '@react-three/drei'
 import gsap from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
@@ -74,6 +74,13 @@ function TableSetting() {
     return () => window.removeEventListener('pointermove', onMove)
   }, [])
 
+  // Visible world-space width at z=0 for the current canvas size — used so the
+  // scene stays on-screen across aspect ratios instead of a fixed x offset
+  // that only worked for wide desktop viewports.
+  const viewportWidth = useThree((state) => state.viewport.width)
+  const baseX = THREE.MathUtils.clamp(viewportWidth * 0.24, 0.55, 1.9)
+  const baseScale = THREE.MathUtils.clamp(viewportWidth / 5.5, 0.4, 0.85)
+
   useFrame((_, delta) => {
     const g = groupRef.current
     if (!g) return
@@ -87,14 +94,14 @@ function TableSetting() {
     if (!g) return
     const ctx = gsap.context(() => {
       const trigger = { trigger: '.hero', start: 'top top', end: 'bottom top', scrub: 0.6 }
-      gsap.to(g.position, { z: -2.2, y: -1.5, x: 2.4, ease: 'none', scrollTrigger: trigger })
-      gsap.to(g.scale, { x: 0.62, y: 0.62, z: 0.62, ease: 'none', scrollTrigger: trigger })
+      gsap.to(g.position, { z: -2.2, y: -1.5, x: baseX + 0.65, ease: 'none', scrollTrigger: trigger })
+      gsap.to(g.scale, { x: baseScale * 0.73, y: baseScale * 0.73, z: baseScale * 0.73, ease: 'none', scrollTrigger: trigger })
     })
     return () => ctx.revert()
-  }, [])
+  }, [baseX, baseScale])
 
   return (
-    <group ref={groupRef} position={[1.75, -0.35, 0]} rotation={[0.55, -0.35, 0]} scale={0.85}>
+    <group ref={groupRef} position={[baseX, -0.35, 0]} rotation={[0.55, -0.35, 0]} scale={baseScale}>
       {/* Pendant lamp — the ring, now hanging above the table on a cord */}
       <group position={[0, 0.78, 0]}>
         <mesh position={[0, 0.24, 0]}>

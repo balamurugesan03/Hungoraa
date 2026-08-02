@@ -1,0 +1,103 @@
+.download__panel {
+  position: relative;
+  overflow: hidden;
+  display: grid;
+  grid-template-columns: 1.2fr 0.8fr;
+  align-items: center;
+  gap: 40px;
+  padding: 72px;
+}
+
+.download__glow {
+  position: absolute;
+  top: -40%;
+  right: -10%;
+  width: 480px;
+  height: 480px;
+  border-radius: 50%;
+  background: var(--gradient-brand);
+  filter: blur(120px);
+  opacity: 0.25;
+  pointer-events: none;
+}
+
+.download__copy h2 {
+  font-size: clamp(2rem, 3.4vw, 2.8rem);
+  margin-top: 16px;
+}
+
+.download__copy p {
+  margin-top: 20px;
+  max-width: 460px;
+  color: var(--text-mid);
+}
+
+.download__badges {
+  display: flex;
+  gap: 16px;
+  margin-top: 36px;
+  flex-wrap: wrap;
+}
+
+.download__badge {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 20px;
+  border-radius: 14px;
+  border: 1px solid var(--border-strong);
+  font-size: 0.8rem;
+  color: var(--text-mid);
+  transition: border-color 0.3s ease, transform 0.3s ease;
+}
+
+.download__badge strong {
+  display: block;
+  font-size: 0.95rem;
+  color: var(--text-hi);
+}
+
+.download__badge:hover {
+  border-color: var(--accent-cyan);
+  transform: translateY(-2px);
+}
+
+.download__qr-stage {
+  display: flex;
+  justify-content: center;
+  transform-style: preserve-3d;
+  perspective: 800px;
+}
+
+.download__qr {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  padding: 28px 32px;
+  color: var(--text-hi);
+}
+
+.download__qr svg {
+  color: var(--text-hi);
+}
+
+.download__qr span {
+  font-size: 0.8rem;
+  color: var(--text-low);
+}
+
+@media (max-width: 860px) {
+  .download__panel {
+    grid-template-columns: 1fr;
+    padding: 48px 32px;
+    text-align: center;
+  }
+  .download__copy p {
+    margin-left: auto;
+    margin-right: auto;
+  }
+  .download__badges {
+    justify-content: center;
+  }
+}

@@ -57,7 +57,7 @@ export default function BookingsPage() {
 
       <Card withBorder radius="md" p={0}>
         <Table highlightOnHover verticalSpacing="md" horizontalSpacing="lg">
-          <Table.Thead style={{ background: '#f8f9fa' }}>
+          <Table.Thead style={{ background: '#123f66' }}>
             <Table.Tr>
               <Table.Th>Booking ID</Table.Th>
               <Table.Th>Customer</Table.Th>
@@ -77,10 +77,10 @@ export default function BookingsPage() {
               ))
             ) : bookings.map((b) => (
               <Table.Tr key={b._id}>
-                <Table.Td><Text size="sm" fw={700} c="brand">#{b.bookingId}</Text></Table.Td>
+                <Table.Td><Text size="sm" fw={700} c="gold">#{b.bookingId}</Text></Table.Td>
                 <Table.Td>
                   <Group gap={8}>
-                    <Avatar size="xs" color="brand">{b.customer?.name?.charAt(0)}</Avatar>
+                    <Avatar size="xs" color="gold">{b.customer?.name?.charAt(0)}</Avatar>
                     <Text size="sm">{b.customer?.name}</Text>
                   </Group>
                 </Table.Td>
@@ -110,7 +110,7 @@ export default function BookingsPage() {
 
       {data?.pages > 1 && (
         <Group justify="center">
-          <Pagination total={data.pages} value={page} onChange={setPage} color="brand" />
+          <Pagination total={data.pages} value={page} onChange={setPage} color="gold" />
         </Group>
       )}
     </Stack>

@@ -94,7 +94,7 @@ export default function RestaurantDetailPage() {
             <Card withBorder radius="md" p="lg">
               <Text fw={700} mb="md" size="sm" c="dimmed" tt="uppercase">Owner</Text>
               <Group gap="sm" mb="sm">
-                <Avatar color="brand" size="md">{r.owner?.name?.charAt(0)}</Avatar>
+                <Avatar color="gold" size="md">{r.owner?.name?.charAt(0)}</Avatar>
                 <Stack gap={2}>
                   <Text fw={700} size="sm">{r.owner?.name}</Text>
                   <Text size="xs" c="dimmed">{r.owner?.email}</Text>
@@ -152,7 +152,7 @@ export default function RestaurantDetailPage() {
                   { label: 'Revenue', value: `₹${(r.stats?.revenue || 0).toLocaleString('en-IN')}`, color: '#f9a91b' },
                   { label: 'Cancel Rate', value: `${r.stats?.cancelRate || 0}%`, color: '#cd302b' },
                 ].map(({ label, value, color }) => (
-                  <Box key={label} ta="center" p="md" style={{ background: '#f8f9fa', borderRadius: 8 }}>
+                  <Box key={label} ta="center" p="md" style={{ background: '#123f66', borderRadius: 8 }}>
                     <Text fw={800} size="lg" c={color}>{value}</Text>
                     <Text size="xs" c="dimmed">{label}</Text>
                   </Box>
@@ -170,7 +170,7 @@ export default function RestaurantDetailPage() {
                   min={0} max={50}
                   style={{ width: 160 }}
                 />
-                <Button mt={24} color="brand" onClick={() => commissionMutation.mutate()}
+                <Button mt={24} color="gold" onClick={() => commissionMutation.mutate()}
                   loading={commissionMutation.isPending}>
                   Update
                 </Button>
@@ -187,7 +187,7 @@ export default function RestaurantDetailPage() {
                   data={PLAN_OPTIONS.map((p) => ({ value: p, label: p.charAt(0).toUpperCase() + p.slice(1) }))}
                   style={{ width: 200 }}
                 />
-                <Button mt={24} color="brand" onClick={() => planMutation.mutate()}
+                <Button mt={24} color="gold" onClick={() => planMutation.mutate()}
                   loading={planMutation.isPending}>
                   Update Plan
                 </Button>

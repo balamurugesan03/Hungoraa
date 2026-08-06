@@ -16,6 +16,13 @@ import { adminApi, restaurantApi } from '../../api';
 
 const COLORS = ['#cd302b', '#2d6a4f', '#2a628f', '#f9a91b'];
 
+const CHART_TOOLTIP_STYLE = {
+  background: '#0c2f4e',
+  border: '1px solid #123f66',
+  borderRadius: 8,
+  color: '#f6f4ee',
+};
+
 
 function StatCard({ title, value, icon: Icon, color, change, prefix = '' }) {
   const isPositive = change >= 0;
@@ -127,10 +134,10 @@ export default function DashboardPage() {
                     <stop offset="95%" stopColor="#cd302b" stopOpacity={0} />
                   </linearGradient>
                 </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="#f1f3f5" />
-                <XAxis dataKey="date" tick={{ fontSize: 10 }} />
-                <YAxis tick={{ fontSize: 10 }} />
-                <Tooltip />
+                <CartesianGrid strokeDasharray="3 3" stroke="#123f66" />
+                <XAxis dataKey="date" tick={{ fontSize: 10, fill: '#8892a8' }} />
+                <YAxis tick={{ fontSize: 10, fill: '#8892a8' }} />
+                <Tooltip contentStyle={CHART_TOOLTIP_STYLE} labelStyle={{ color: '#f6f4ee' }} />
                 <Area type="monotone" dataKey="users" stroke="#2a628f" fill="url(#uGrad)" strokeWidth={2} name="New Users" />
                 <Area type="monotone" dataKey="bookings" stroke="#cd302b" fill="url(#bGrad)" strokeWidth={2} name="Bookings" />
               </AreaChart>
@@ -146,7 +153,7 @@ export default function DashboardPage() {
                 <Pie data={bookingStatus} cx="50%" cy="50%" innerRadius={45} outerRadius={70} dataKey="value" paddingAngle={3}>
                   {bookingStatus.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
                 </Pie>
-                <Tooltip />
+                <Tooltip contentStyle={CHART_TOOLTIP_STYLE} labelStyle={{ color: '#f6f4ee' }} />
               </PieChart>
             </ResponsiveContainer>
             <Stack gap={6} mt="sm">
@@ -173,7 +180,7 @@ export default function DashboardPage() {
           </Group>
         </Group>
         <Table highlightOnHover verticalSpacing="sm">
-          <Table.Thead style={{ background: '#f8f9fa' }}>
+          <Table.Thead style={{ background: '#123f66' }}>
             <Table.Tr>
               <Table.Th>Restaurant</Table.Th>
               <Table.Th>Owner</Table.Th>

@@ -1,6 +1,12 @@
+import { useEffect, useRef } from 'react'
+import gsap from 'gsap'
+import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import { useStaggerReveal } from '../hooks/useReveal'
+import { useTilt } from '../hooks/useTilt'
 import { IconBolt, IconCalendar, IconReceipt } from './Icons'
 import './HowItWorks.css'
+
+gsap.registerPlugin(ScrollTrigger)
 
 const steps = [
   {
@@ -23,31 +29,65 @@ const steps = [
   },
 ]
 
+function Step({ icon: Icon, step, title, body }: (typeof steps)[number]) {
+  const tiltRef = useTilt<HTMLDivElement>(6)
+  return (
+    <div className="how__step glass-card" ref={tiltRef}>
+      <span className="how__step-ghost" aria-hidden="true">
+        {step}
+      </span>
+      <div className="how__step-top">
+        <span className="how__step-icon">
+          <Icon size={22} />
+        </span>
+        <span className="how__step-num">{step}</span>
+      </div>
+      <h3>{title}</h3>
+      <p>{body}</p>
+    </div>
+  )
+}
+
 export default function HowItWorks() {
+  const rootRef = useRef<HTMLDivElement>(null)
+  const connectorRef = useRef<HTMLDivElement>(null)
   const ref = useStaggerReveal<HTMLDivElement>({ stagger: 0.16 })
 
+  useEffect(() => {
+    const el = connectorRef.current
+    if (!el) return
+    const ctx = gsap.context(() => {
+      gsap.fromTo(
+        el,
+        { scaleX: 0 },
+        {
+          scaleX: 1,
+          transformOrigin: 'left center',
+          ease: 'power2.out',
+          scrollTrigger: { trigger: el, start: 'top 78%', end: 'bottom 55%', scrub: 0.6 },
+        },
+      )
+    }, rootRef)
+    return () => ctx.revert()
+  }, [])
+
   return (
-    <section id="how-it-works" className="section how">
+    <section id="how-it-works" className="section how" ref={rootRef}>
       <div className="section-head">
         <span className="eyebrow">How it works</span>
         <h2>From hungry to seated to paid — three taps.</h2>
         <p>No paperwork at the table, no waiting for a card machine, no splitting arguments.</p>
       </div>
 
-      <div className="how__steps" ref={ref}>
-        {steps.map(({ icon: Icon, step, title, body }) => (
-          <div className="how__step glass-card" key={step}>
-            <div className="how__step-top">
-              <span className="how__step-icon">
-                <Icon size={22} />
-              </span>
-              <span className="how__step-num">{step}</span>
-            </div>
-            <h3>{title}</h3>
-            <p>{body}</p>
-          </div>
-        ))}
-        <div className="how__connector" aria-hidden="true" />
+      <div className="how__steps-wrap">
+        <div className="how__connector-track" aria-hidden="true">
+          <div className="how__connector" ref={connectorRef} />
+        </div>
+        <div className="how__steps" ref={ref}>
+          {steps.map((s) => (
+            <Step key={s.step} {...s} />
+          ))}
+        </div>
       </div>
     </section>
   )

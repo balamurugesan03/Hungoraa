@@ -1,8 +1,11 @@
 import { useEffect, useRef } from 'react'
 import gsap from 'gsap'
-import { IconArrowRight, IconStar } from './Icons'
+import { ScrollTrigger } from 'gsap/ScrollTrigger'
+import { IconArrowRight, IconBolt, IconShield, IconStar } from './Icons'
 import HeroScene from './HeroScene'
 import './Hero.css'
+
+gsap.registerPlugin(ScrollTrigger)
 
 export default function Hero() {
   const rootRef = useRef<HTMLDivElement>(null)
@@ -20,6 +23,12 @@ export default function Hero() {
         .fromTo('.hero__subtitle', { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.7 }, '-=0.5')
         .fromTo('.hero__actions', { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.7 }, '-=0.5')
         .fromTo('.hero__stats > *', { opacity: 0, y: 16 }, { opacity: 1, y: 0, duration: 0.6, stagger: 0.1 }, '-=0.4')
+        .fromTo(
+          '.hero__floating',
+          { opacity: 0, y: 24, scale: 0.92 },
+          { opacity: 1, y: 0, scale: 1, duration: 0.8, stagger: 0.15 },
+          '-=0.5',
+        )
 
       gsap.to('.hero__blob--a', {
         x: 40,
@@ -37,6 +46,13 @@ export default function Hero() {
         yoyo: true,
         ease: 'sine.inOut',
       })
+
+      gsap.to(['.hero__copy', '.hero__floating'], {
+        opacity: 0,
+        y: -60,
+        ease: 'none',
+        scrollTrigger: { trigger: '.hero', start: 'top top', end: '65% top', scrub: 0.6 },
+      })
     }, rootRef)
 
     return () => ctx.revert()
@@ -47,7 +63,28 @@ export default function Hero() {
       <div className="hero__blob hero__blob--a" />
       <div className="hero__blob hero__blob--b" />
       <div className="noise-grid" />
+      <div className="hero__vignette" />
       <HeroScene />
+
+      <div className="hero__floating hero__floating--a glass-card">
+        <span className="hero__floating-icon">
+          <IconShield size={16} />
+        </span>
+        <div>
+          <strong>Verified</strong>
+          <span>12k+ partner restaurants</span>
+        </div>
+      </div>
+
+      <div className="hero__floating hero__floating--b glass-card">
+        <span className="hero__floating-icon">
+          <IconBolt size={16} />
+        </span>
+        <div>
+          <strong>5-min hold</strong>
+          <span>Your table, never lost</span>
+        </div>
+      </div>
 
       <div className="hero__inner">
         <div className="hero__copy">
@@ -77,10 +114,12 @@ export default function Hero() {
               <strong>12k+</strong>
               <span>Partner restaurants</span>
             </div>
+            <span className="hero__stats-divider" />
             <div>
               <strong>2.4M</strong>
               <span>Bills paid instantly</span>
             </div>
+            <span className="hero__stats-divider" />
             <div>
               <strong>4.9<IconStar size={14} /></strong>
               <span>Average rating</span>

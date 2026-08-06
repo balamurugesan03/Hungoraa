@@ -90,7 +90,7 @@ export default function LoginPage() {
               />
               <Button
                 type="submit"
-                fullWidth size="md" color="brand"
+                fullWidth size="md" color="gold"
                 loading={loginMutation.isPending}
                 mt="xs"
               >

@@ -75,12 +75,12 @@ export default function NotificationsPage() {
                 />
 
                 <SimpleGrid cols={2}>
-                  <Box p="md" style={{ background: '#f8f9fa', borderRadius: 8, textAlign: 'center' }}>
+                  <Box p="md" style={{ background: '#123f66', borderRadius: 8, textAlign: 'center' }}>
                     <IconUsers size={24} color="#2a628f" />
                     <Text size="sm" fw={700} mt={4}>12,840</Text>
                     <Text size="xs" c="dimmed">Total customers</Text>
                   </Box>
-                  <Box p="md" style={{ background: '#f8f9fa', borderRadius: 8, textAlign: 'center' }}>
+                  <Box p="md" style={{ background: '#123f66', borderRadius: 8, textAlign: 'center' }}>
                     <IconBuildingStore size={24} color="#2d6a4f" />
                     <Text size="sm" fw={700} mt={4}>342</Text>
                     <Text size="xs" c="dimmed">Restaurant owners</Text>
@@ -101,7 +101,7 @@ export default function NotificationsPage() {
                 />
 
                 <Group justify="flex-end">
-                  <Button type="submit" color="brand" leftSection={<IconSend size={16} />}
+                  <Button type="submit" color="gold" leftSection={<IconSend size={16} />}
                     loading={sendMutation.isPending} size="md">
                     Send Notification
                   </Button>

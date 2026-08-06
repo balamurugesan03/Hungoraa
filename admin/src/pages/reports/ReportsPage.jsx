@@ -14,6 +14,15 @@ import dayjs from 'dayjs';
 
 const COLORS = ['#cd302b', '#2d6a4f', '#2a628f', '#f9a91b', '#153f63', '#ffd76b'];
 
+const CHART_TOOLTIP_STYLE = {
+  background: '#0c2f4e',
+  border: '1px solid #123f66',
+  borderRadius: 8,
+  color: '#f6f4ee',
+};
+
+const AXIS_TICK = { fontSize: 10, fill: '#8892a8' };
+
 
 function KPICard({ label, value, change, color }) {
   const isPositive = change >= 0;
@@ -68,11 +77,11 @@ export default function ReportsPage() {
         <Text fw={700} size="lg" mb="lg">Platform Growth</Text>
         <ResponsiveContainer width="100%" height={280}>
           <LineChart data={stats?.growthData || []}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#f1f3f5" />
-            <XAxis dataKey="date" tick={{ fontSize: 10 }} />
-            <YAxis tick={{ fontSize: 10 }} />
-            <Tooltip />
-            <Legend />
+            <CartesianGrid strokeDasharray="3 3" stroke="#123f66" />
+            <XAxis dataKey="date" tick={AXIS_TICK} />
+            <YAxis tick={AXIS_TICK} />
+            <Tooltip contentStyle={CHART_TOOLTIP_STYLE} labelStyle={{ color: '#f6f4ee' }} />
+            <Legend wrapperStyle={{ color: '#a9b1c4' }} />
             <Line type="monotone" dataKey="users" stroke="#2a628f" strokeWidth={2} dot={false} name="New Users" />
             <Line type="monotone" dataKey="bookings" stroke="#cd302b" strokeWidth={2} dot={false} name="Bookings" />
           </LineChart>
@@ -92,10 +101,14 @@ export default function ReportsPage() {
                     <stop offset="95%" stopColor="#cd302b" stopOpacity={0} />
                   </linearGradient>
                 </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="#f1f3f5" />
-                <XAxis dataKey="date" tick={{ fontSize: 10 }} />
-                <YAxis tick={{ fontSize: 10 }} />
-                <Tooltip formatter={(v) => [`₹${v.toLocaleString('en-IN')}`, 'Revenue']} />
+                <CartesianGrid strokeDasharray="3 3" stroke="#123f66" />
+                <XAxis dataKey="date" tick={AXIS_TICK} />
+                <YAxis tick={AXIS_TICK} />
+                <Tooltip
+                  contentStyle={CHART_TOOLTIP_STYLE}
+                  labelStyle={{ color: '#f6f4ee' }}
+                  formatter={(v) => [`₹${v.toLocaleString('en-IN')}`, 'Revenue']}
+                />
                 <Area type="monotone" dataKey="revenue" stroke="#cd302b" fill="url(#revGrad)" strokeWidth={2} />
               </AreaChart>
             </ResponsiveContainer>
@@ -111,7 +124,7 @@ export default function ReportsPage() {
                 <Pie data={stats?.cuisines || []} cx="50%" cy="50%" outerRadius={70} dataKey="value" paddingAngle={3}>
                   {(stats?.cuisines || []).map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
                 </Pie>
-                <Tooltip />
+                <Tooltip contentStyle={CHART_TOOLTIP_STYLE} labelStyle={{ color: '#f6f4ee' }} />
               </PieChart>
             </ResponsiveContainer>
             <Stack gap={4} mt="sm">
@@ -134,10 +147,14 @@ export default function ReportsPage() {
             <Text fw={700} size="lg" mb="lg">Top Cities by Bookings</Text>
             <ResponsiveContainer width="100%" height={200}>
               <BarChart data={stats?.topCities || []} layout="vertical">
-                <CartesianGrid strokeDasharray="3 3" stroke="#f1f3f5" />
-                <XAxis type="number" tick={{ fontSize: 10 }} />
-                <YAxis type="category" dataKey="city" tick={{ fontSize: 11 }} width={80} />
-                <Tooltip formatter={(v, n) => [n === 'revenue' ? `₹${v.toLocaleString('en-IN')}` : v, n === 'revenue' ? 'Revenue' : 'Bookings']} />
+                <CartesianGrid strokeDasharray="3 3" stroke="#123f66" />
+                <XAxis type="number" tick={AXIS_TICK} />
+                <YAxis type="category" dataKey="city" tick={{ fontSize: 11, fill: '#8892a8' }} width={80} />
+                <Tooltip
+                  contentStyle={CHART_TOOLTIP_STYLE}
+                  labelStyle={{ color: '#f6f4ee' }}
+                  formatter={(v, n) => [n === 'revenue' ? `₹${v.toLocaleString('en-IN')}` : v, n === 'revenue' ? 'Revenue' : 'Bookings']}
+                />
                 <Bar dataKey="bookings" fill="#cd302b" radius={[0, 4, 4, 0]} name="bookings" />
               </BarChart>
             </ResponsiveContainer>

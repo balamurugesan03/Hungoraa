@@ -68,7 +68,7 @@ export default function CommissionsPage() {
         </Card>
 
         <Card withBorder radius="md" p="md" ta="center" style={{ borderTop: '3px solid #2a628f' }}>
-          <ThemeIcon color="brand" variant="light" size="xl" radius="xl" mx="auto" mb={8}>
+          <ThemeIcon color="gold" variant="light" size="xl" radius="xl" mx="auto" mb={8}>
             <IconCoin size={20} />
           </ThemeIcon>
           <Text size="xl" fw={800} c="brand.7">
@@ -136,7 +136,7 @@ export default function CommissionsPage() {
       {/* Table */}
       <Card withBorder radius="md" p={0}>
         <Table highlightOnHover verticalSpacing="sm" horizontalSpacing="lg">
-          <Table.Thead style={{ background: '#f8f9fa' }}>
+          <Table.Thead style={{ background: '#123f66' }}>
             <Table.Tr>
               <Table.Th>Restaurant</Table.Th>
               <Table.Th>Invoice</Table.Th>
@@ -203,7 +203,7 @@ export default function CommissionsPage() {
                     <Text size="sm" c="dimmed">{c.percentage}%</Text>
                   </Table.Td>
                   <Table.Td>
-                    <Text size="sm" fw={700} c="brand">₹{c.amount?.toLocaleString('en-IN')}</Text>
+                    <Text size="sm" fw={700} c="gold">₹{c.amount?.toLocaleString('en-IN')}</Text>
                   </Table.Td>
                   <Table.Td>
                     <Text size="xs" c="dimmed">{dayjs(c.createdAt).format('DD MMM YYYY')}</Text>
@@ -230,7 +230,7 @@ export default function CommissionsPage() {
 
       {pagination.pages > 1 && (
         <Group justify="center">
-          <Pagination total={pagination.pages} value={page} onChange={setPage} color="brand" />
+          <Pagination total={pagination.pages} value={page} onChange={setPage} color="gold" />
         </Group>
       )}
     </Stack>

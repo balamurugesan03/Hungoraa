@@ -52,7 +52,7 @@ export default function RevenueAnalytics() {
       {/* Summary cards */}
       <SimpleGrid cols={{ base: 2, sm: 4 }} spacing="md">
         <Card withBorder radius="md" p="md" ta="center" style={{ borderTop: '3px solid #2a628f' }}>
-          <ThemeIcon color="brand" variant="light" size="xl" radius="xl" mx="auto" mb={8}>
+          <ThemeIcon color="gold" variant="light" size="xl" radius="xl" mx="auto" mb={8}>
             <IconCurrencyRupee size={20} />
           </ThemeIcon>
           <Text size="xl" fw={800} c="brand.7">
@@ -102,7 +102,7 @@ export default function RevenueAnalytics() {
             <Text fw={700} size="sm">Revenue Trend ({period})</Text>
           </Box>
           <Table verticalSpacing="sm" horizontalSpacing="md">
-            <Table.Thead style={{ background: '#f8f9fa' }}>
+            <Table.Thead style={{ background: '#123f66' }}>
               <Table.Tr>
                 <Table.Th>Period</Table.Th>
                 <Table.Th>Gross Revenue</Table.Th>
@@ -155,7 +155,7 @@ export default function RevenueAnalytics() {
             <Text fw={700} size="sm">Top Restaurants</Text>
           </Box>
           <Table verticalSpacing="sm" horizontalSpacing="md">
-            <Table.Thead style={{ background: '#f8f9fa' }}>
+            <Table.Thead style={{ background: '#123f66' }}>
               <Table.Tr>
                 <Table.Th>Restaurant</Table.Th>
                 <Table.Th>Revenue</Table.Th>

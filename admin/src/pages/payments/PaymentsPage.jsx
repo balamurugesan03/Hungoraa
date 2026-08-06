@@ -72,7 +72,7 @@ export default function PaymentsPage() {
       {/* Table */}
       <Card withBorder radius="md" p={0}>
         <Table highlightOnHover verticalSpacing="md" horizontalSpacing="lg">
-          <Table.Thead style={{ background: '#f8f9fa' }}>
+          <Table.Thead style={{ background: '#123f66' }}>
             <Table.Tr>
               <Table.Th>Payment ID</Table.Th>
               <Table.Th>Customer</Table.Th>
@@ -93,7 +93,7 @@ export default function PaymentsPage() {
             ) : payments.map((p) => (
               <Table.Tr key={p._id}>
                 <Table.Td>
-                  <Text size="xs" fw={700} c="brand" style={{ fontFamily: 'monospace' }}>
+                  <Text size="xs" fw={700} c="gold" style={{ fontFamily: 'monospace' }}>
                     {p.razorpayPaymentId || p._id?.slice(-8).toUpperCase()}
                   </Text>
                 </Table.Td>
@@ -115,7 +115,7 @@ export default function PaymentsPage() {
 
       {data?.pages > 1 && (
         <Group justify="center">
-          <Pagination total={data.pages} value={page} onChange={setPage} color="brand" />
+          <Pagination total={data.pages} value={page} onChange={setPage} color="gold" />
         </Group>
       )}
     </Stack>

@@ -112,7 +112,7 @@ export default function DiscountAnalytics() {
             <Text fw={700} size="sm">Top Offers by Discount Given</Text>
           </Box>
           <Table verticalSpacing="sm" horizontalSpacing="md">
-            <Table.Thead style={{ background: '#f8f9fa' }}>
+            <Table.Thead style={{ background: '#123f66' }}>
               <Table.Tr>
                 <Table.Th>Offer</Table.Th>
                 <Table.Th>Uses</Table.Th>
@@ -162,7 +162,7 @@ export default function DiscountAnalytics() {
             <Text fw={700} size="sm">Platform Discount Cost by Restaurant</Text>
           </Box>
           <Table verticalSpacing="sm" horizontalSpacing="md">
-            <Table.Thead style={{ background: '#f8f9fa' }}>
+            <Table.Thead style={{ background: '#123f66' }}>
               <Table.Tr>
                 <Table.Th>Restaurant</Table.Th>
                 <Table.Th>Platform Cost</Table.Th>

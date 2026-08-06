@@ -143,7 +143,7 @@ export default function RestaurantsPage() {
           <Title order={2}>Restaurants</Title>
           {pendingCount > 0 && <Badge color="orange" size="lg">{pendingCount} pending</Badge>}
         </Group>
-        <Button color="brand" leftSection={<IconPlus size={16} />} onClick={() => navigate('/restaurants/new')}>
+        <Button color="gold" leftSection={<IconPlus size={16} />} onClick={() => navigate('/restaurants/new')}>
           Create Restaurant
         </Button>
       </Group>
@@ -177,7 +177,7 @@ export default function RestaurantsPage() {
       {/* Table */}
       <Card withBorder radius="md" p={0}>
         <Table highlightOnHover verticalSpacing="md" horizontalSpacing="lg">
-          <Table.Thead style={{ background: '#f8f9fa' }}>
+          <Table.Thead style={{ background: '#123f66' }}>
             <Table.Tr>
               <Table.Th>Restaurant</Table.Th>
               <Table.Th>Owner</Table.Th>
@@ -199,7 +199,7 @@ export default function RestaurantsPage() {
               <Table.Tr key={r._id}>
                 <Table.Td>
                   <Group gap={8}>
-                    <Avatar size="sm" color="brand">{r.name.charAt(0)}</Avatar>
+                    <Avatar size="sm" color="gold">{r.name.charAt(0)}</Avatar>
                     <Stack gap={0}>
                       <Text size="sm" fw={600}>{r.name}</Text>
                       <Text size="xs" c="dimmed">{r.cuisine?.slice(0, 2).join(', ')}</Text>
@@ -319,7 +319,7 @@ export default function RestaurantsPage() {
           </Grid>
           <Group justify="flex-end">
             <Button variant="subtle" onClick={() => setEditModal({ open: false, restaurant: null })}>Cancel</Button>
-            <Button color="brand" loading={editMutation.isPending} onClick={handleEditSubmit}>
+            <Button color="gold" loading={editMutation.isPending} onClick={handleEditSubmit}>
               Save Changes
             </Button>
           </Group>
@@ -367,7 +367,7 @@ export default function RestaurantsPage() {
           <NumberInput label="Commission %" value={commission} onChange={setCommission} min={0} max={50} />
           <Group justify="flex-end">
             <Button variant="subtle" onClick={() => setCommModal({ open: false, restaurant: null })}>Cancel</Button>
-            <Button color="brand" loading={commissionMutation.isPending}
+            <Button color="gold" loading={commissionMutation.isPending}
               onClick={() => commissionMutation.mutate({ id: commModal.restaurant?._id, commission })}>
               Update
             </Button>

@@ -48,8 +48,8 @@ export default function AdminShellLayout() {
           style={{
             display: 'flex', alignItems: 'center', gap: 12,
             padding: '10px 14px', borderRadius: 8,
-            backgroundColor: isActive ? '#eaf1f7' : 'transparent',
-            color: isActive ? '#0c2f4e' : '#495057',
+            backgroundColor: isActive ? 'rgba(249, 169, 27, 0.12)' : 'transparent',
+            color: isActive ? '#f9a91b' : '#a9b1c4',
             fontWeight: isActive ? 600 : 400,
             width: '100%', transition: 'all 0.15s',
           }}
@@ -74,8 +74,8 @@ export default function AdminShellLayout() {
             <Burger opened={opened} onClick={toggle} hiddenFrom="sm" size="sm" />
             <Group gap={8}>
               <img src={logo} alt="Hungora" style={{ width: 30, height: 30, borderRadius: 8 }} />
-              <Text fw={700} size="lg" c="brand">Hungora</Text>
-              <Badge variant="filled" color="dark" size="sm">Admin</Badge>
+              <Text fw={700} size="lg" c="white">Hungora</Text>
+              <Badge variant="light" color="gold" size="sm">Admin</Badge>
             </Group>
           </Group>
 
@@ -90,14 +90,14 @@ export default function AdminShellLayout() {
               <Menu.Target>
                 <UnstyledButton>
                   <Group gap={8}>
-                    <Avatar src={user?.avatar?.url} color="dark" radius="xl" size={32}>
+                    <Avatar src={user?.avatar?.url} color="gold" radius="xl" size={32}>
                       {user?.name?.charAt(0)}
                     </Avatar>
                     <Box visibleFrom="sm">
                       <Text size="sm" fw={600}>{user?.name}</Text>
                       <Text size="xs" c="dimmed">Administrator</Text>
                     </Box>
-                    <IconChevronRight size={14} style={{ color: '#868e96' }} />
+                    <IconChevronRight size={14} style={{ color: '#6e7994' }} />
                   </Group>
                 </UnstyledButton>
               </Menu.Target>

@@ -125,7 +125,7 @@ export default function CreateRestaurantPage() {
 
         <Group>
           <Button variant="subtle" onClick={() => navigate('/restaurants')}>Back to Restaurants</Button>
-          <Button color="brand" onClick={() => { setSuccess(null); form.reset(); }}>Create Another</Button>
+          <Button color="gold" onClick={() => { setSuccess(null); form.reset(); }}>Create Another</Button>
         </Group>
       </Stack>
     );
@@ -301,7 +301,7 @@ export default function CreateRestaurantPage() {
           <Grid.Col span={12}>
             <Group justify="flex-end">
               <Button variant="subtle" onClick={() => navigate('/restaurants')}>Cancel</Button>
-              <Button type="submit" color="brand" size="md" loading={createMutation.isPending}
+              <Button type="submit" color="gold" size="md" loading={createMutation.isPending}
                 leftSection={<IconBuildingStore size={16} />}>
                 Create Restaurant & Owner Account
               </Button>

@@ -122,7 +122,7 @@ export default function SettingsPage() {
                   min={0} max={72}
                   {...platformForm.getInputProps('bookingCancellationHours')}
                 />
-                <Button type="submit" color="brand" leftSection={<IconDeviceFloppy size={16} />}
+                <Button type="submit" color="gold" leftSection={<IconDeviceFloppy size={16} />}
                   loading={updateMutation.isPending}>
                   Save Settings
                 </Button>
@@ -157,7 +157,7 @@ export default function SettingsPage() {
                 </Group>
               ))}
               <Divider />
-              <Button color="brand" leftSection={<IconDeviceFloppy size={16} />}
+              <Button color="gold" leftSection={<IconDeviceFloppy size={16} />}
                 loading={updateMutation.isPending}
                 onClick={() => updateMutation.mutate(featureForm.values)}>
                 Save Feature Settings

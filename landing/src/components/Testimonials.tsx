@@ -1,5 +1,7 @@
+import type { MouseEvent } from 'react'
 import { useStaggerReveal } from '../hooks/useReveal'
-import { IconStar } from './Icons'
+import { useTilt } from '../hooks/useTilt'
+import { IconQuote, IconStar } from './Icons'
 import './Testimonials.css'
 
 const testimonials = [
@@ -22,6 +24,43 @@ const testimonials = [
   },
 ]
 
+function initials(name: string) {
+  return name
+    .split(' ')
+    .map((n) => n[0])
+    .join('')
+    .slice(0, 2)
+    .toUpperCase()
+}
+
+function handleSpotlight(e: MouseEvent<HTMLElement>) {
+  const rect = e.currentTarget.getBoundingClientRect()
+  e.currentTarget.style.setProperty('--mx', `${((e.clientX - rect.left) / rect.width) * 100}%`)
+  e.currentTarget.style.setProperty('--my', `${((e.clientY - rect.top) / rect.height) * 100}%`)
+}
+
+function TestimonialCard({ quote, name, role }: (typeof testimonials)[number]) {
+  const tiltRef = useTilt<HTMLElement>(6)
+  return (
+    <figure className="testimonial-card glass-card" ref={tiltRef} onMouseMove={handleSpotlight}>
+      <IconQuote size={40} className="testimonial-card__quote" />
+      <div className="testimonial-card__stars">
+        {Array.from({ length: 5 }).map((_, i) => (
+          <IconStar key={i} size={14} />
+        ))}
+      </div>
+      <blockquote>&ldquo;{quote}&rdquo;</blockquote>
+      <figcaption>
+        <span className="testimonial-card__avatar">{initials(name)}</span>
+        <div>
+          <strong>{name}</strong>
+          <span>{role}</span>
+        </div>
+      </figcaption>
+    </figure>
+  )
+}
+
 export default function Testimonials() {
   const ref = useStaggerReveal<HTMLDivElement>({ stagger: 0.12 })
 
@@ -34,22 +73,12 @@ export default function Testimonials() {
         <h2 style={{ margin: '16px auto 0' }}>
           Real tables. <span className="gradient-text">Real speed.</span>
         </h2>
+        <p style={{ margin: '20px auto 0' }}>4.9 average rating from diners across 12k+ partner restaurants.</p>
       </div>
 
       <div className="testimonials__grid" ref={ref}>
         {testimonials.map((t) => (
-          <figure className="testimonial-card glass-card" key={t.name}>
-            <div className="testimonial-card__stars">
-              {Array.from({ length: 5 }).map((_, i) => (
-                <IconStar key={i} size={14} />
-              ))}
-            </div>
-            <blockquote>&ldquo;{t.quote}&rdquo;</blockquote>
-            <figcaption>
-              <strong>{t.name}</strong>
-              <span>{t.role}</span>
-            </figcaption>
-          </figure>
+          <TestimonialCard key={t.name} {...t} />
         ))}
       </div>
     </section>

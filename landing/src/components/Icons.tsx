@@ -116,6 +116,88 @@ export function IconPlay({ size, className }: IconProps) {
   )
 }
 
+export function IconScale({ size, className }: IconProps) {
+  return (
+    <svg {...base(size)} className={className}>
+      <path d="M12 3v18M8 21h8" />
+      <path d="M5 7h5M14 7h5" />
+      <path d="M5 7 2.5 12a2.5 2.5 0 0 0 5 0L5 7ZM19 7l-2.5 5a2.5 2.5 0 0 0 5 0L19 7Z" />
+    </svg>
+  )
+}
+
+export function IconUsers({ size, className }: IconProps) {
+  return (
+    <svg {...base(size)} className={className}>
+      <circle cx="9" cy="8" r="3.2" />
+      <path d="M3.5 20c0-3.3 2.5-5.5 5.5-5.5s5.5 2.2 5.5 5.5" />
+      <circle cx="17" cy="9" r="2.4" />
+      <path d="M14.5 14.8c.6-.2 1.2-.3 1.9-.3 2.6 0 4.6 1.9 4.9 4.6" />
+    </svg>
+  )
+}
+
+export function IconHandshake({ size, className }: IconProps) {
+  return (
+    <svg {...base(size)} className={className}>
+      <path d="M2 11h4l3.5-3 2.7 2.4a1.6 1.6 0 0 1-2.1 2.4L8 11" />
+      <path d="M22 11h-4l-4-3.5-2.2 2M7 9 3 12.5 7 17l2-1.5M17 9l4 3.5-4 4.5-2-1.5" />
+      <path d="M9.5 12.5 12 15l2.5-2" />
+    </svg>
+  )
+}
+
+export function IconSparkle({ size, className }: IconProps) {
+  return (
+    <svg {...base(size)} fill="currentColor" stroke="none" className={className}>
+      <path d="M11 2.5c.4 3 1.4 5 3 6.5s3.5 2.6 6.5 3c-3 .4-5 1.4-6.5 3s-2.6 3.5-3 6.5c-.4-3-1.4-5-3-6.5s-3.5-2.6-6.5-3c3-.4 5-1.4 6.5-3s2.6-3.5 3-6.5Z" />
+    </svg>
+  )
+}
+
+export function IconHeart({ size, className }: IconProps) {
+  return (
+    <svg {...base(size)} className={className}>
+      <path d="M12 20.5s-7.5-4.7-9.8-9.3C.6 7.8 2.3 4.5 5.6 3.8c1.9-.4 3.8.4 4.9 2 1.1-1.6 3-2.4 4.9-2 3.3.7 5 4 3.4 7.4-2.3 4.6-9.8 9.3-9.8 9.3Z" />
+    </svg>
+  )
+}
+
+export function IconAward({ size, className }: IconProps) {
+  return (
+    <svg {...base(size)} className={className}>
+      <circle cx="12" cy="8.5" r="5.5" />
+      <path d="M9 13.2 7.3 21l4.7-2.6 4.7 2.6-1.7-7.8" />
+    </svg>
+  )
+}
+
+export function IconEye({ size, className }: IconProps) {
+  return (
+    <svg {...base(size)} className={className}>
+      <path d="M2 12s3.8-7 10-7 10 7 10 7-3.8 7-10 7-10-7-10-7Z" />
+      <circle cx="12" cy="12" r="3" />
+    </svg>
+  )
+}
+
+export function IconCompass({ size, className }: IconProps) {
+  return (
+    <svg {...base(size)} className={className}>
+      <circle cx="12" cy="12" r="9.5" />
+      <path d="m15 9-2 5-4.5 1.5L10.5 11 15 9Z" />
+    </svg>
+  )
+}
+
+export function IconQuote({ size, className }: IconProps) {
+  return (
+    <svg {...base(size)} fill="currentColor" stroke="none" className={className}>
+      <path d="M9.5 8C6.5 8 4 10.5 4 13.7c0 2.9 2.1 5 4.8 5 .5 0 1-.1 1.4-.3-.7 2-2.3 3.4-4.6 3.8v2.3c4.4-.6 7.4-3.9 7.4-8.4V13c0-2.8-1.5-5-3.5-5Zm10 0c-3 0-5.5 2.5-5.5 5.7 0 2.9 2.1 5 4.8 5 .5 0 1-.1 1.4-.3-.7 2-2.3 3.4-4.6 3.8v2.3c4.4-.6 7.4-3.9 7.4-8.4V13c0-2.8-1.5-5-3.5-5Z" />
+    </svg>
+  )
+}
+
 export function IconQr({ size, className }: IconProps) {
   return (
     <svg {...base(size)} className={className}>

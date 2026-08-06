@@ -61,7 +61,7 @@ export default function ReviewsPage() {
 
       <Card withBorder radius="md" p={0}>
         <Table highlightOnHover verticalSpacing="md" horizontalSpacing="lg">
-          <Table.Thead style={{ background: '#f8f9fa' }}>
+          <Table.Thead style={{ background: '#123f66' }}>
             <Table.Tr>
               <Table.Th>Customer</Table.Th>
               <Table.Th>Restaurant</Table.Th>
@@ -82,7 +82,7 @@ export default function ReviewsPage() {
               <Table.Tr key={r._id}>
                 <Table.Td>
                   <Group gap={8}>
-                    <Avatar size="xs" color="brand">{r.customer?.name?.charAt(0)}</Avatar>
+                    <Avatar size="xs" color="gold">{r.customer?.name?.charAt(0)}</Avatar>
                     <Text size="sm">{r.customer?.name}</Text>
                   </Group>
                 </Table.Td>

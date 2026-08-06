@@ -1,3 +1,4 @@
+import type { MouseEvent } from 'react'
 import { useStaggerReveal } from '../hooks/useReveal'
 import { useTilt } from '../hooks/useTilt'
 import { IconBolt, IconCalendar, IconReceipt, IconShield, IconTag, IconWallet } from './Icons'
@@ -7,7 +8,9 @@ const features = [
   {
     icon: IconCalendar,
     title: 'Instant table holds',
-    body: 'Reserve a table and we lock it for 5 minutes while payment confirms — never lose a booking to a slow queue.',
+    body: 'Reserve a table and we lock it for 5 minutes while payment confirms — never lose a booking to a slow queue. The whole hold-to-seated flow runs in real time, so you always know exactly where your table stands.',
+    tag: '5-minute lock',
+    featured: true,
   },
   {
     icon: IconTag,
@@ -36,13 +39,25 @@ const features = [
   },
 ]
 
-function FeatureCard({ icon: Icon, title, body }: (typeof features)[number]) {
-  const tiltRef = useTilt<HTMLDivElement>(8)
+function handleSpotlight(e: MouseEvent<HTMLDivElement>) {
+  const rect = e.currentTarget.getBoundingClientRect()
+  e.currentTarget.style.setProperty('--mx', `${((e.clientX - rect.left) / rect.width) * 100}%`)
+  e.currentTarget.style.setProperty('--my', `${((e.clientY - rect.top) / rect.height) * 100}%`)
+}
+
+function FeatureCard({ icon: Icon, title, body, tag, featured, index }: (typeof features)[number] & { index: number }) {
+  const tiltRef = useTilt<HTMLDivElement>(featured ? 5 : 8)
   return (
-    <div className="feature-card glass-card" ref={tiltRef}>
+    <div
+      className={`feature-card glass-card${featured ? ' feature-card--featured' : ''}`}
+      ref={tiltRef}
+      onMouseMove={handleSpotlight}
+    >
+      <span className="feature-card__index">{String(index + 1).padStart(2, '0')}</span>
       <span className="feature-card__icon">
-        <Icon size={22} />
+        <Icon size={featured ? 26 : 22} />
       </span>
+      {tag && <span className="feature-card__tag">{tag}</span>}
       <h3>{title}</h3>
       <p>{body}</p>
     </div>
@@ -63,8 +78,8 @@ export default function Features() {
       </div>
 
       <div className="features__grid" ref={ref}>
-        {features.map((f) => (
-          <FeatureCard key={f.title} {...f} />
+        {features.map((f, i) => (
+          <FeatureCard key={f.title} {...f} index={i} />
         ))}
       </div>
     </section>

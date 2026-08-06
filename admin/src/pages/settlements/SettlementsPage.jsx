@@ -108,7 +108,7 @@ function CreateSettlementModal({ opened, onClose }) {
           <DateInput label="Period To" value={to} onChange={(v) => { setTo(v); setPreview(null); }} required />
         </Group>
 
-        <Button variant="light" color="brand" size="xs"
+        <Button variant="light" color="gold" size="xs"
           disabled={!restaurantId || !from || !to} loading={previewLoading} onClick={loadPreview}>
           Preview Pending Commissions
         </Button>
@@ -149,7 +149,7 @@ function CreateSettlementModal({ opened, onClose }) {
 
         <Group justify="flex-end">
           <Button variant="subtle" onClick={onClose}>Cancel</Button>
-          <Button color="brand" leftSection={<IconPlus size={16} />}
+          <Button color="gold" leftSection={<IconPlus size={16} />}
             loading={createMutation.isPending}
             disabled={!restaurantId || !from || !to || preview?.count === 0}
             onClick={() => createMutation.mutate()}>
@@ -206,7 +206,7 @@ function AdvanceStatusModal({ settlement, opened, onClose }) {
     >
       <Stack gap="md">
         {/* Pipeline progress */}
-        <Stepper active={currentStep} size="xs" color="brand">
+        <Stepper active={currentStep} size="xs" color="gold">
           {PIPELINE_STEPS.map((s) => (
             <Stepper.Step key={s} label={s.charAt(0).toUpperCase() + s.slice(1)} />
           ))}
@@ -348,7 +348,7 @@ export default function SettlementsPage() {
     <Stack gap="lg">
       <Group justify="space-between">
         <Title order={2}>Settlements</Title>
-        <Button color="brand" leftSection={<IconPlus size={16} />} onClick={() => setCreateOpen(true)}>
+        <Button color="gold" leftSection={<IconPlus size={16} />} onClick={() => setCreateOpen(true)}>
           Create Settlement
         </Button>
       </Group>
@@ -379,7 +379,7 @@ export default function SettlementsPage() {
         </Card>
 
         <Card withBorder radius="md" p="md" ta="center" style={{ borderTop: '3px solid #2a628f' }}>
-          <ThemeIcon color="brand" variant="light" size="xl" radius="xl" mx="auto" mb={8}>
+          <ThemeIcon color="gold" variant="light" size="xl" radius="xl" mx="auto" mb={8}>
             <IconBuildingBank size={20} />
           </ThemeIcon>
           <Text size="xl" fw={800} c="brand.7">{pagination.total || 0}</Text>
@@ -418,7 +418,7 @@ export default function SettlementsPage() {
 
       <Card withBorder radius="md" p={0}>
         <Table highlightOnHover verticalSpacing="sm" horizontalSpacing="lg">
-          <Table.Thead style={{ background: '#f8f9fa' }}>
+          <Table.Thead style={{ background: '#123f66' }}>
             <Table.Tr>
               <Table.Th>Settlement ID</Table.Th>
               <Table.Th>Restaurant</Table.Th>
@@ -487,7 +487,7 @@ export default function SettlementsPage() {
                     </Table.Td>
                     <Table.Td>
                       {NEXT_STATUS[s.status] ? (
-                        <Button size="xs" color="brand" variant="light"
+                        <Button size="xs" color="gold" variant="light"
                           leftSection={<IconArrowRight size={12} />}
                           onClick={() => setAdvancing(s)}>
                           Advance
@@ -506,7 +506,7 @@ export default function SettlementsPage() {
 
       {pagination.pages > 1 && (
         <Group justify="center">
-          <Pagination total={pagination.pages} value={page} onChange={setPage} color="brand" />
+          <Pagination total={pagination.pages} value={page} onChange={setPage} color="gold" />
         </Group>
       )}
 

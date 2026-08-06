@@ -104,7 +104,7 @@ export default function UsersPage() {
       {/* Table */}
       <Card withBorder radius="md" p={0}>
         <Table highlightOnHover verticalSpacing="md" horizontalSpacing="lg">
-          <Table.Thead style={{ background: '#f8f9fa' }}>
+          <Table.Thead style={{ background: '#123f66' }}>
             <Table.Tr>
               <Table.Th>User</Table.Th>
               <Table.Th>Role</Table.Th>
@@ -125,7 +125,7 @@ export default function UsersPage() {
               <Table.Tr key={u._id}>
                 <Table.Td>
                   <Group gap={8}>
-                    <Avatar size="sm" color="brand">{u.name?.charAt(0)}</Avatar>
+                    <Avatar size="sm" color="gold">{u.name?.charAt(0)}</Avatar>
                     <Stack gap={0}>
                       <Text size="sm" fw={600}>{u.name}</Text>
                       <Text size="xs" c="dimmed">{u.email}</Text>
@@ -189,7 +189,7 @@ export default function UsersPage() {
 
       {data?.pages > 1 && (
         <Group justify="center">
-          <Pagination total={data.pages} value={page} onChange={setPage} color="brand" />
+          <Pagination total={data.pages} value={page} onChange={setPage} color="gold" />
         </Group>
       )}
 

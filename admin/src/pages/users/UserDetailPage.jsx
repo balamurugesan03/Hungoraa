@@ -45,7 +45,7 @@ export default function UserDetailPage() {
       <Grid gutter="md">
         <Grid.Col span={{ base: 12, md: 4 }}>
           <Card withBorder radius="md" p="lg" ta="center">
-            <Avatar size={80} color="brand" radius="xl" mx="auto" mb="md">
+            <Avatar size={80} color="gold" radius="xl" mx="auto" mb="md">
               {u.name?.charAt(0)}
             </Avatar>
             <Text fw={700} size="lg">{u.name}</Text>
@@ -99,7 +99,7 @@ export default function UserDetailPage() {
                   { label: 'Completed', value: s.completedBookings || 0, color: '#2d6a4f' },
                   { label: 'Cancelled', value: s.cancelledBookings || 0, color: '#cd302b' },
                 ].map(({ label, value, color }) => (
-                  <Box key={label} ta="center" p="md" style={{ background: '#f8f9fa', borderRadius: 8 }}>
+                  <Box key={label} ta="center" p="md" style={{ background: '#123f66', borderRadius: 8 }}>
                     <Text size="xl" fw={800} c={color}>{value}</Text>
                     <Text size="xs" c="dimmed">{label}</Text>
                   </Box>
@@ -110,7 +110,7 @@ export default function UserDetailPage() {
             <Card withBorder radius="md" p="lg">
               <Text fw={700} mb="md" size="sm" c="dimmed" tt="uppercase">Wallet</Text>
               <Group gap={8}>
-                <Text size="xl" fw={800} c="brand">₹{u.wallet?.balance || 0}</Text>
+                <Text size="xl" fw={800} c="gold">₹{u.wallet?.balance || 0}</Text>
                 <Text size="sm" c="dimmed">available balance</Text>
               </Group>
             </Card>

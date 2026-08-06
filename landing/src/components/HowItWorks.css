@@ -1,31 +1,62 @@
-.how__steps {
+.how__steps-wrap {
   position: relative;
+}
+
+.how__connector-track {
+  position: absolute;
+  top: 52px;
+  left: 12%;
+  right: 12%;
+  height: 2px;
+  border-radius: 2px;
+  background: var(--border-soft);
+  overflow: hidden;
+  z-index: -1;
+}
+
+.how__connector {
+  height: 100%;
+  width: 100%;
+  background: var(--gradient-brand);
+  transform: scaleX(0);
+}
+
+.how__steps {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 28px;
 }
 
-.how__connector {
-  position: absolute;
-  top: 52px;
-  left: 12%;
-  right: 12%;
-  height: 1px;
-  background: linear-gradient(90deg, transparent, var(--border-strong) 20%, var(--border-strong) 80%, transparent);
-  z-index: -1;
-}
-
 .how__step {
+  position: relative;
+  overflow: hidden;
   padding: 32px 28px;
-  transition: transform 0.4s var(--ease-out), border-color 0.4s var(--ease-out);
+  transform-style: preserve-3d;
+  perspective: 800px;
+  transition: border-color 0.4s var(--ease-out), background 0.4s var(--ease-out);
+  will-change: transform;
 }
 
 .how__step:hover {
-  transform: translateY(-6px);
   border-color: var(--border-strong);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.07), rgba(255, 255, 255, 0.02));
+}
+
+.how__step-ghost {
+  position: absolute;
+  top: -18px;
+  right: 8px;
+  font-family: var(--font-display);
+  font-size: 6rem;
+  font-weight: 700;
+  line-height: 1;
+  color: rgba(255, 255, 255, 0.04);
+  pointer-events: none;
+  user-select: none;
 }
 
 .how__step-top {
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -40,6 +71,12 @@
   border-radius: 14px;
   background: var(--gradient-brand);
   color: #06170d;
+  transition: transform 0.4s var(--ease-out), box-shadow 0.4s var(--ease-out);
+}
+
+.how__step:hover .how__step-icon {
+  transform: scale(1.08);
+  box-shadow: 0 12px 30px -10px rgba(205, 48, 43, 0.7);
 }
 
 .how__step-num {
@@ -50,11 +87,13 @@
 }
 
 .how__step h3 {
+  position: relative;
   font-size: 1.25rem;
   margin-bottom: 12px;
 }
 
 .how__step p {
+  position: relative;
   color: var(--text-mid);
   font-size: 0.95rem;
 }
@@ -63,7 +102,7 @@
   .how__steps {
     grid-template-columns: 1fr;
   }
-  .how__connector {
+  .how__connector-track {
     display: none;
   }
 }

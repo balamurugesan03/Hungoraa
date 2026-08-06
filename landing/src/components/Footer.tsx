@@ -4,19 +4,38 @@ import './Footer.css'
 const columns = [
   {
     title: 'Product',
-    links: ['How it works', 'Features', 'Restaurants', 'Pricing'],
+    links: [
+      { label: 'How it works', href: '#how-it-works' },
+      { label: 'Features', href: '#features' },
+      { label: 'Restaurants', href: '#restaurants' },
+      { label: 'Pricing', href: '#' },
+    ],
   },
   {
     title: 'Company',
-    links: ['About us', 'Careers', 'Press', 'Contact'],
+    links: [
+      { label: 'About us', href: '#about' },
+      { label: 'Careers', href: '#' },
+      { label: 'Press', href: '#' },
+      { label: 'Contact', href: '#' },
+    ],
   },
   {
     title: 'Restaurants',
-    links: ['Partner with us', 'Owner dashboard', 'Settlements', 'Support'],
+    links: [
+      { label: 'Partner with us', href: '#restaurants' },
+      { label: 'Owner dashboard', href: '#' },
+      { label: 'Settlements', href: '#' },
+      { label: 'Support', href: '#' },
+    ],
   },
   {
     title: 'Legal',
-    links: ['Terms of service', 'Privacy policy', 'Refund policy'],
+    links: [
+      { label: 'Terms of service', href: '#' },
+      { label: 'Privacy policy', href: '#' },
+      { label: 'Refund policy', href: '#' },
+    ],
   },
 ]
 
@@ -47,8 +66,8 @@ export default function Footer() {
               <h4>{c.title}</h4>
               <ul>
                 {c.links.map((l) => (
-                  <li key={l}>
-                    <a href="#">{l}</a>
+                  <li key={l.label}>
+                    <a href={l.href}>{l.label}</a>
                   </li>
                 ))}
               </ul>

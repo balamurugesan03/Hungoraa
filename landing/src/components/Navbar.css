@@ -11,9 +11,11 @@
 
 .navbar--scrolled {
   padding: 12px 0;
-  background: rgba(246, 248, 250, 0.82);
-  backdrop-filter: blur(16px);
+  background: rgba(11, 9, 8, 0.78);
+  backdrop-filter: blur(20px) saturate(150%);
+  -webkit-backdrop-filter: blur(20px) saturate(150%);
   border-bottom: 1px solid var(--border-soft);
+  box-shadow: 0 12px 32px -20px rgba(0, 0, 0, 0.7);
 }
 
 .navbar__inner {
@@ -99,7 +101,8 @@
   flex-direction: column;
   gap: 20px;
   padding: 24px 32px 28px;
-  background: rgba(255, 255, 255, 0.98);
+  background: rgba(11, 9, 8, 0.97);
+  backdrop-filter: blur(20px);
   border-top: 1px solid var(--border-soft);
 }
 

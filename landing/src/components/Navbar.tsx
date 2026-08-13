@@ -3,6 +3,7 @@ import logo from '../assets/logo.svg'
 import './Navbar.css'
 
 const links = [
+  { label: 'Menu', href: '#menu' },
   { label: 'About', href: '#about' },
   { label: 'How it works', href: '#how-it-works' },
   { label: 'Features', href: '#features' },

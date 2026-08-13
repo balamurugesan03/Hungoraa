@@ -2,7 +2,7 @@ import { useEffect, useRef } from 'react'
 import gsap from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import { IconArrowRight, IconBolt, IconShield, IconStar } from './Icons'
-import HeroScene from './HeroScene'
+import RestaurantScene from './RestaurantScene'
 import './Hero.css'
 
 gsap.registerPlugin(ScrollTrigger)
@@ -60,71 +60,78 @@ export default function Hero() {
 
   return (
     <section id="top" className="hero" ref={rootRef}>
-      <div className="hero__blob hero__blob--a" />
-      <div className="hero__blob hero__blob--b" />
-      <div className="noise-grid" />
-      <div className="hero__vignette" />
-      <HeroScene />
+      <div className="hero__stage">
+        <div className="hero__blob hero__blob--a" />
+        <div className="hero__blob hero__blob--b" />
+        <div className="noise-grid" />
+        <div className="hero__vignette" />
+        <RestaurantScene />
 
-      <div className="hero__floating hero__floating--a glass-card">
-        <span className="hero__floating-icon">
-          <IconShield size={16} />
-        </span>
-        <div>
-          <strong>Verified</strong>
-          <span>12k+ partner restaurants</span>
-        </div>
-      </div>
-
-      <div className="hero__floating hero__floating--b glass-card">
-        <span className="hero__floating-icon">
-          <IconBolt size={16} />
-        </span>
-        <div>
-          <strong>5-min hold</strong>
-          <span>Your table, never lost</span>
-        </div>
-      </div>
-
-      <div className="hero__inner">
-        <div className="hero__copy">
-          <span className="eyebrow hero__eyebrow">Booking + bill pay, unified</span>
-          <h1 className="hero__title">
-            <span className="hero__title-line">Book the table.</span>
-            <span className="hero__title-line">
-              Split the bill. <span className="gradient-text">Instantly.</span>
-            </span>
-          </h1>
-          <p className="hero__subtitle">
-            Hungora lets you reserve tables in seconds, unlock live restaurant offers, and pay your
-            bill straight from your phone — no waiting for the check, no app-switching.
-          </p>
-
-          <div className="hero__actions">
-            <a href="#download" className="btn btn-primary">
-              Get the app <IconArrowRight size={18} />
-            </a>
-            <a href="#how-it-works" className="btn btn-ghost">
-              See how it works
-            </a>
+        <div className="hero__floating hero__floating--a glass-card">
+          <span className="hero__floating-icon">
+            <IconShield size={16} />
+          </span>
+          <div>
+            <strong>Verified</strong>
+            <span>12k+ partner restaurants</span>
           </div>
+        </div>
 
-          <div className="hero__stats">
-            <div>
-              <strong>12k+</strong>
-              <span>Partner restaurants</span>
+        <div className="hero__floating hero__floating--b glass-card">
+          <span className="hero__floating-icon">
+            <IconBolt size={16} />
+          </span>
+          <div>
+            <strong>5-min hold</strong>
+            <span>Your table, never lost</span>
+          </div>
+        </div>
+
+        <div className="hero__inner">
+          <div className="hero__copy">
+            <span className="eyebrow hero__eyebrow">Booking + bill pay, unified</span>
+            <h1 className="hero__title">
+              <span className="hero__title-line">Step into the table.</span>
+              <span className="hero__title-line">
+                Split the bill. <span className="gradient-text">Instantly.</span>
+              </span>
+            </h1>
+            <p className="hero__subtitle">
+              Hungora lets you reserve tables in seconds, unlock live restaurant offers, and pay your
+              bill straight from your phone — no waiting for the check, no app-switching.
+            </p>
+
+            <div className="hero__actions">
+              <a href="#download" className="btn btn-primary">
+                Get the app <IconArrowRight size={18} />
+              </a>
+              <a href="#how-it-works" className="btn btn-ghost">
+                See how it works
+              </a>
             </div>
-            <span className="hero__stats-divider" />
-            <div>
-              <strong>2.4M</strong>
-              <span>Bills paid instantly</span>
-            </div>
-            <span className="hero__stats-divider" />
-            <div>
-              <strong>4.9<IconStar size={14} /></strong>
-              <span>Average rating</span>
+
+            <div className="hero__stats">
+              <div>
+                <strong>12k+</strong>
+                <span>Partner restaurants</span>
+              </div>
+              <span className="hero__stats-divider" />
+              <div>
+                <strong>2.4M</strong>
+                <span>Bills paid instantly</span>
+              </div>
+              <span className="hero__stats-divider" />
+              <div>
+                <strong>4.9<IconStar size={14} /></strong>
+                <span>Average rating</span>
+              </div>
             </div>
           </div>
+        </div>
+
+        <div className="hero__scroll-hint">
+          <span />
+          Scroll to walk in
         </div>
       </div>
     </section>

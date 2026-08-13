@@ -30,7 +30,7 @@ function PrivateRoute({ children }) {
 
 export default function App() {
   return (
-    <BrowserRouter>
+    <BrowserRouter basename="/admin-panel">
       <Routes>
         <Route path="/login" element={<LoginPage />} />
         <Route

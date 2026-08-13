@@ -24,6 +24,8 @@ app.use(hpp());
 const allowedOrigins = [
   process.env.CLIENT_URL,
   process.env.ADMIN_URL,
+  'https://hungora.com',
+  'https://www.hungora.com',
   'http://localhost:3000',
   'http://localhost:3001',
   'http://localhost:3002',

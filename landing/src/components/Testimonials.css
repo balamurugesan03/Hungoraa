@@ -18,7 +18,7 @@
   content: '';
   position: absolute;
   inset: 0;
-  background: radial-gradient(280px circle at var(--mx, 50%) var(--my, 50%), rgba(249, 169, 27, 0.12), transparent 62%);
+  background: radial-gradient(280px circle at var(--mx, 50%) var(--my, 50%), rgba(47, 102, 144, 0.16), transparent 62%);
   opacity: 0;
   transition: opacity 0.4s var(--ease-out);
   pointer-events: none;
@@ -26,7 +26,7 @@
 
 .testimonial-card:hover {
   border-color: var(--border-strong);
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.07), rgba(255, 255, 255, 0.02));
+  background: linear-gradient(180deg, rgba(47, 102, 144, 0.1), rgba(47, 102, 144, 0.02));
 }
 
 .testimonial-card:hover::before {
@@ -37,7 +37,7 @@
   position: absolute;
   top: 22px;
   right: 24px;
-  color: rgba(255, 255, 255, 0.05);
+  color: rgba(14, 35, 56, 0.06);
   pointer-events: none;
 }
 
@@ -74,7 +74,7 @@
   font-family: var(--font-display);
   font-size: 0.8rem;
   font-weight: 700;
-  color: #1a0e00;
+  color: var(--text-inverse);
   background: var(--gradient-brand);
 }
 

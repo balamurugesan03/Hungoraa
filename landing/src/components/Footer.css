@@ -1,7 +1,9 @@
 .footer {
   position: relative;
   border-top: 1px solid var(--border-soft);
-  background: var(--bg-panel);
+  background:
+    radial-gradient(ellipse 60% 60% at 85% 0%, rgba(47, 102, 144, 0.16), transparent 65%),
+    linear-gradient(180deg, #eef4fb 0%, #dde9f4 55%, #cbdcec 100%);
 }
 
 .footer__cta {
@@ -31,7 +33,7 @@
 
 .footer__brand p {
   margin-top: 16px;
-  color: var(--text-low);
+  color: var(--text-mid);
   font-size: 0.9rem;
   max-width: 220px;
 }
@@ -57,12 +59,13 @@
 
 .footer__columns a {
   font-size: 0.88rem;
-  color: var(--text-low);
+  font-weight: 500;
+  color: var(--text-mid);
   transition: color 0.25s ease;
 }
 
 .footer__columns a:hover {
-  color: var(--accent-cyan);
+  color: var(--accent-violet);
 }
 
 .footer__bottom {
@@ -70,7 +73,8 @@
   padding: 24px 32px;
   text-align: center;
   font-size: 0.8rem;
-  color: var(--text-low);
+  color: var(--text-mid);
+  background: rgba(12, 47, 78, 0.05);
 }
 
 @media (max-width: 860px) {

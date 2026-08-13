@@ -19,7 +19,7 @@
   content: '';
   position: absolute;
   inset: 0;
-  background: radial-gradient(280px circle at var(--mx, 50%) var(--my, 50%), rgba(249, 169, 27, 0.14), transparent 62%);
+  background: radial-gradient(280px circle at var(--mx, 50%) var(--my, 50%), rgba(47, 102, 144, 0.19), transparent 62%);
   opacity: 0;
   transition: opacity 0.4s var(--ease-out);
   pointer-events: none;
@@ -41,7 +41,7 @@
 
 .feature-card:hover {
   border-color: var(--border-strong);
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.07), rgba(255, 255, 255, 0.02));
+  background: linear-gradient(180deg, rgba(47, 102, 144, 0.1), rgba(47, 102, 144, 0.02));
 }
 
 .feature-card:hover::before {
@@ -70,8 +70,8 @@
   height: 46px;
   border-radius: 14px;
   margin-bottom: 22px;
-  background: rgba(205, 48, 43, 0.12);
-  color: var(--accent-cyan);
+  background: rgba(12, 47, 78, 0.13);
+  color: var(--accent-violet);
   border: 1px solid var(--border-soft);
 }
 
@@ -85,8 +85,8 @@
   font-weight: 600;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: var(--accent-cyan);
-  background: rgba(249, 169, 27, 0.1);
+  color: var(--accent-violet);
+  background: rgba(47, 102, 144, 0.19);
   border: 1px solid var(--border-soft);
 }
 
@@ -107,7 +107,7 @@
   display: flex;
   flex-direction: column;
   justify-content: center;
-  background: linear-gradient(160deg, rgba(205, 48, 43, 0.14), rgba(255, 255, 255, 0.02));
+  background: linear-gradient(160deg, rgba(12, 47, 78, 0.15), rgba(255, 255, 255, 0.4));
 }
 
 .feature-card--featured .feature-card__icon {

@@ -4,12 +4,12 @@ import { IconArrowRight, IconFork, IconStar, IconTag } from './Icons'
 import './RestaurantShowcase.css'
 
 const restaurants = [
-  { name: 'Ember & Oak', cuisine: 'Modern Grill', rating: 4.8, offer: '20% off', gradient: 'linear-gradient(140deg,#7a1f1a,#cd302b)' },
-  { name: 'Basilico', cuisine: 'Italian', rating: 4.7, offer: 'Flat ₹300 off', gradient: 'linear-gradient(140deg,#0c2f4e,#f9a91b)' },
+  { name: 'Ember & Oak', cuisine: 'Modern Grill', rating: 4.8, offer: '20% off', gradient: 'linear-gradient(140deg,#0c2f4e,#7a1f2b)' },
+  { name: 'Basilico', cuisine: 'Italian', rating: 4.7, offer: 'Flat ₹300 off', gradient: 'linear-gradient(140deg,#0c2f4e,#b8862f)' },
   { name: 'Umami House', cuisine: 'Japanese', rating: 4.9, offer: '1+1 Starters', gradient: 'linear-gradient(140deg,#123f66,#4d7ea8)' },
-  { name: 'Spice Route', cuisine: 'North Indian', rating: 4.6, offer: '15% off', gradient: 'linear-gradient(140deg,#cd302b,#f9a91b)' },
+  { name: 'Spice Route', cuisine: 'North Indian', rating: 4.6, offer: '15% off', gradient: 'linear-gradient(140deg,#0c2f4e,#c0392b)' },
   { name: 'Coastal Table', cuisine: 'Seafood', rating: 4.8, offer: 'Free dessert', gradient: 'linear-gradient(140deg,#0c2f4e,#2f6690)' },
-  { name: 'The Green Fork', cuisine: 'Vegan', rating: 4.7, offer: '10% off', gradient: 'linear-gradient(140deg,#f9a91b,#ffe29a)' },
+  { name: 'The Green Fork', cuisine: 'Vegan', rating: 4.7, offer: '10% off', gradient: 'linear-gradient(140deg,#2f6690,#b8862f)' },
 ]
 
 export default function RestaurantShowcase() {

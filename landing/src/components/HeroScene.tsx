@@ -8,13 +8,14 @@ import './HeroScene.css'
 
 gsap.registerPlugin(ScrollTrigger)
 
-const GOLD = '#f9a91b'
-const RED = '#cd302b'
+const BLUE = '#0c2f4e'
+const STEEL_BLUE = '#2f6690'
+const EMBER = '#f2a154'
 const CREAM = '#f6f1e6'
 const STEEL = '#e4eaf0'
 
 const steelMat = { color: STEEL, metalness: 0.95, roughness: 0.12, clearcoat: 1, clearcoatRoughness: 0.08 } as const
-const goldMat = { color: GOLD, metalness: 0.85, roughness: 0.22, clearcoat: 1, clearcoatRoughness: 0.15 } as const
+const blueMat = { color: STEEL_BLUE, metalness: 0.85, roughness: 0.22, clearcoat: 1, clearcoatRoughness: 0.15 } as const
 
 /** Modern minimalist fork — a rounded rod handle + four tapered tine rods. */
 function Fork() {
@@ -39,13 +40,13 @@ function Fork() {
   )
 }
 
-/** Modern knife — rounded gold handle + a tapered blade (flattened cone, tip forward). */
+/** Modern knife — rounded blued-steel handle + a tapered blade (flattened cone, tip forward). */
 function Knife() {
   return (
     <group>
       <mesh position={[0, 0, -0.22]} rotation={[Math.PI / 2, 0, 0]}>
         <cylinderGeometry args={[0.017, 0.021, 0.34, 16]} />
-        <meshPhysicalMaterial {...goldMat} />
+        <meshPhysicalMaterial {...blueMat} />
       </mesh>
       <mesh position={[0, 0, 0.16]} rotation={[Math.PI / 2, 0, 0]} scale={[1, 0.22, 1]}>
         <cylinderGeometry args={[0.003, 0.07, 0.44, 24]} />
@@ -112,11 +113,11 @@ function TableSetting() {
       <group position={[0, 0.78, 0]}>
         <mesh position={[0, 0.24, 0]}>
           <cylinderGeometry args={[0.008, 0.008, 0.48, 8]} />
-          <meshStandardMaterial color={GOLD} metalness={0.8} roughness={0.3} />
+          <meshStandardMaterial color={STEEL_BLUE} metalness={0.8} roughness={0.3} />
         </mesh>
         <mesh rotation={[Math.PI / 2, 0, 0]}>
           <torusGeometry args={[0.48, 0.028, 24, 96]} />
-          <meshPhysicalMaterial color={GOLD} metalness={0.9} roughness={0.22} clearcoat={1} clearcoatRoughness={0.15} />
+          <meshPhysicalMaterial color={STEEL_BLUE} metalness={0.9} roughness={0.22} clearcoat={1} clearcoatRoughness={0.15} />
         </mesh>
         <pointLight position={[0, -0.1, 0]} intensity={0.9} color="#ffd28a" distance={3.2} />
       </group>
@@ -132,7 +133,7 @@ function TableSetting() {
       </mesh>
       <mesh position={[0, -0.296, 0]} rotation={[Math.PI / 2, 0, 0]}>
         <torusGeometry args={[0.615, 0.006, 12, 96]} />
-        <meshPhysicalMaterial {...goldMat} />
+        <meshPhysicalMaterial {...blueMat} />
       </mesh>
 
       {/* Fork, laid to the left of the plate */}
@@ -149,7 +150,7 @@ function TableSetting() {
         </group>
       </Float>
 
-      {/* Two glasses */}
+      {/* Two glasses — one clear, one blue-tinted to carry the brand blue onto the table */}
       <Float speed={1.1} rotationIntensity={0.2} floatIntensity={0.5}>
         <mesh position={[0.55, -0.06, 0.55]}>
           <cylinderGeometry args={[0.09, 0.06, 0.32, 32]} />
@@ -159,15 +160,15 @@ function TableSetting() {
       <Float speed={1.6} rotationIntensity={0.2} floatIntensity={0.5}>
         <mesh position={[-0.5, -0.1, -0.5]}>
           <cylinderGeometry args={[0.07, 0.05, 0.26, 32]} />
-          <meshPhysicalMaterial color={RED} transparent opacity={0.55} roughness={0.05} metalness={0} clearcoat={1} />
+          <meshPhysicalMaterial color={BLUE} transparent opacity={0.55} roughness={0.05} metalness={0} clearcoat={1} />
         </mesh>
       </Float>
 
-      {/* Tealight */}
+      {/* Tealight — kept a warm ember tone; a blue "flame" would read as broken, not on-brand */}
       <Float speed={2} rotationIntensity={0.1} floatIntensity={0.3}>
         <mesh position={[0, -0.05, 0]}>
           <sphereGeometry args={[0.045, 16, 16]} />
-          <meshStandardMaterial color={RED} emissive={RED} emissiveIntensity={1.4} />
+          <meshStandardMaterial color={EMBER} emissive={EMBER} emissiveIntensity={1.4} />
         </mesh>
       </Float>
     </group>
@@ -178,12 +179,12 @@ export default function HeroScene() {
   return (
     <div className="hero-scene" aria-hidden="true">
       <Canvas dpr={[1, 1.5]} camera={{ position: [0, 0, 5.2], fov: 42 }} gl={{ alpha: true, antialias: true, powerPreference: 'high-performance' }}>
-        <ambientLight intensity={0.4} color="#123f66" />
-        <directionalLight position={[3, 4, 5]} intensity={1.5} color="#ffe4b0" />
-        <pointLight position={[-3, -2, 2]} intensity={0.9} color={RED} />
-        <pointLight position={[2, -3, -2]} intensity={0.5} color={GOLD} />
+        <ambientLight intensity={0.6} color="#eaf2fa" />
+        <directionalLight position={[3, 4, 5]} intensity={1.4} color="#f4f9fd" />
+        <pointLight position={[-3, -2, 2]} intensity={0.9} color={BLUE} />
+        <pointLight position={[2, -3, -2]} intensity={0.5} color={STEEL_BLUE} />
         <TableSetting />
-        <Sparkles count={22} scale={[6, 4, 3]} size={2} speed={0.3} color={GOLD} opacity={0.4} />
+        <Sparkles count={22} scale={[6, 4, 3]} size={2} speed={0.3} color={STEEL_BLUE} opacity={0.4} />
       </Canvas>
     </div>
   )

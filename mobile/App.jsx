@@ -6,8 +6,17 @@ import * as SplashScreen from 'expo-splash-screen';
 import * as Notifications from 'expo-notifications';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { GoogleSignin } from '@react-native-google-signin/google-signin';
 import RootNavigator from './src/navigation';
 import { COLORS } from './src/constants';
+
+// Web/server client ID — this is the audience the backend verifies Google ID
+// tokens against, so it must be a "Web application" OAuth client, not the
+// Android one. See mobile/.env (EXPO_PUBLIC_GOOGLE_CLIENT_ID).
+GoogleSignin.configure({
+  webClientId: process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID,
+  offlineAccess: false,
+});
 
 LogBox.ignoreLogs(['Non-serializable values', 'Require cycle']);
 

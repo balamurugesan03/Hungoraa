@@ -7,6 +7,9 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useMutation } from '@tanstack/react-query';
 import Toast from 'react-native-toast-message';
+import {
+  GoogleSignin, isSuccessResponse, isErrorWithCode, statusCodes,
+} from '@react-native-google-signin/google-signin';
 import authApi from '../../api/auth.api';
 import { useAuthStore } from '../../store/authStore';
 import { COLORS, FONTS, SIZES, SPACING, BORDER_RADIUS, SHADOW } from '../../constants';
@@ -55,6 +58,40 @@ export default function LoginScreen({ navigation }) {
   const handlePhoneLogin = () => {
     if (!phone || phone.length < 10) return Alert.alert('Error', 'Please enter a valid phone number');
     sendOTPMutation.mutate();
+  };
+
+  const googleLoginMutation = useMutation({
+    mutationFn: (idToken) => authApi.googleLogin(idToken),
+    onSuccess: ({ data }) => {
+      const { user, accessToken, refreshToken } = data.data;
+      setAuth(user, accessToken, refreshToken);
+      Toast.show({ type: 'success', text1: `Welcome, ${user.name}! 👋` });
+    },
+    onError: (err) => {
+      const msg = err.response?.data?.message
+        || (!err.response ? 'Cannot connect to server. Make sure the backend is running.' : 'Google sign-in failed');
+      Toast.show({ type: 'error', text1: 'Google Sign-In Failed', text2: msg });
+    },
+  });
+
+  const handleGoogleLogin = async () => {
+    try {
+      await GoogleSignin.hasPlayServices();
+      const response = await GoogleSignin.signIn();
+      if (isSuccessResponse(response)) {
+        googleLoginMutation.mutate(response.data.idToken);
+      }
+    } catch (err) {
+      if (isErrorWithCode(err)) {
+        if (err.code === statusCodes.SIGN_IN_CANCELLED) return;
+        if (err.code === statusCodes.IN_PROGRESS) return;
+        if (err.code === statusCodes.PLAY_SERVICES_NOT_AVAILABLE) {
+          Toast.show({ type: 'error', text1: 'Google Play Services not available' });
+          return;
+        }
+      }
+      Toast.show({ type: 'error', text1: 'Google Sign-In Failed', text2: err.message || 'Something went wrong' });
+    }
   };
 
   return (
@@ -173,10 +210,20 @@ export default function LoginScreen({ navigation }) {
           <View style={styles.divider} />
         </View>
 
-        {/* Google Login placeholder */}
-        <TouchableOpacity style={styles.googleBtn} activeOpacity={0.8}>
-          <Text style={styles.googleIcon}>G</Text>
-          <Text style={styles.googleText}>Continue with Google</Text>
+        <TouchableOpacity
+          style={styles.googleBtn}
+          activeOpacity={0.8}
+          onPress={handleGoogleLogin}
+          disabled={googleLoginMutation.isPending}
+        >
+          {googleLoginMutation.isPending ? (
+            <ActivityIndicator color={COLORS.primary} />
+          ) : (
+            <>
+              <Text style={styles.googleIcon}>G</Text>
+              <Text style={styles.googleText}>Continue with Google</Text>
+            </>
+          )}
         </TouchableOpacity>
 
         <View style={styles.registerRow}>

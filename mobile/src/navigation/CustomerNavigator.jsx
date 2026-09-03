@@ -1,8 +1,11 @@
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { View, Text, StyleSheet, Platform } from 'react-native';
+import {
+  View, Text, StyleSheet, Platform, Pressable,
+} from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 import { COLORS, FONTS, SIZES } from '../constants';
 
 // Tab Screens
@@ -39,6 +42,31 @@ function TabBarIcon({ name, color, focused }) {
     <View style={styles.tabIcon}>
       <Ionicons name={name} size={24} color={color} />
       {focused && <View style={[styles.tabDot, { backgroundColor: color }]} />}
+    </View>
+  );
+}
+
+// Empty screen behind the raised centre "Pay Bill" button (tabPress is
+// intercepted and redirected to the PayBill stack screen).
+function PayBillPlaceholder() {
+  return <View style={{ flex: 1, backgroundColor: COLORS.background }} />;
+}
+
+// Raised, colour-filled centre action button for the tab bar.
+function PayBillTabButton({ onPress }) {
+  return (
+    <View style={styles.centerSlot} pointerEvents="box-none">
+      <Pressable onPress={onPress} style={styles.centerBtn} android_ripple={{ color: 'rgba(255,255,255,0.2)', borderless: true }}>
+        <LinearGradient
+          colors={[COLORS.primary, COLORS.primaryDark]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.centerCircle}
+        >
+          <Ionicons name="receipt-outline" size={24} color={COLORS.white} />
+        </LinearGradient>
+        <Text style={styles.centerLabel}>Pay Bill</Text>
+      </Pressable>
     </View>
   );
 }
@@ -113,6 +141,19 @@ export default function CustomerNavigator() {
         options={{ tabBarLabel: 'Discover', tabBarStyle: { display: 'none' } }}
       />
       <Tab.Screen name="Search" component={SearchScreen} />
+      <Tab.Screen
+        name="PayBillTab"
+        component={PayBillPlaceholder}
+        options={{
+          tabBarButton: (props) => <PayBillTabButton onPress={props.onPress} />,
+        }}
+        listeners={({ navigation }) => ({
+          tabPress: (e) => {
+            e.preventDefault();
+            navigation.navigate('Home', { screen: 'PayBill' });
+          },
+        })}
+      />
       <Tab.Screen name="Bookings" component={BookingsStack} options={{ tabBarLabel: 'My Bookings' }} />
       <Tab.Screen name="Profile" component={ProfileStack} />
     </Tab.Navigator>
@@ -128,6 +169,7 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: COLORS.border,
     elevation: 0,
+    overflow: 'visible',
   },
   tabLabel: {
     fontSize: 11,
@@ -141,6 +183,36 @@ const styles = StyleSheet.create({
     width: 4,
     height: 4,
     borderRadius: 2,
+    marginTop: 3,
+  },
+  // Raised centre "Pay Bill" action
+  centerSlot: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'flex-start',
+  },
+  centerBtn: {
+    alignItems: 'center',
+    marginTop: -26,
+  },
+  centerCircle: {
+    width: 54,
+    height: 54,
+    borderRadius: 27,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 4,
+    borderColor: COLORS.card,
+    shadowColor: COLORS.primary,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.35,
+    shadowRadius: 10,
+    elevation: 8,
+  },
+  centerLabel: {
+    fontSize: 11,
+    fontFamily: FONTS.semiBold,
+    color: COLORS.primary,
     marginTop: 3,
   },
 });

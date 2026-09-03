@@ -1,11 +1,14 @@
 import React from 'react';
 import { View, Text, StyleSheet, Pressable } from 'react-native';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
-import { COLOR, SPACING, RADII, ELEVATION, FONT } from '../../theme';
+import { LinearGradient } from 'expo-linear-gradient';
+import { COLOR, SPACING, RADII, ELEVATION, GRADIENT, FONT } from '../../theme';
 
-const ITEMS = [
+const LEFT = [
   { id: 'dineout', label: 'Dine Out', lib: 'mc', icon: 'silverware-fork-knife' },
   { id: 'quick', label: 'Quick', lib: 'ion', icon: 'flash-outline' },
+];
+const RIGHT = [
   { id: 'offers', label: 'Offers', lib: 'ion', icon: 'pricetag-outline' },
   { id: 'bookings', label: 'Bookings', lib: 'ion', icon: 'calendar-outline' },
 ];
@@ -15,23 +18,42 @@ function TabIcon({ lib, icon, color, size }) {
   return <Ionicons name={icon} size={size} color={color} />;
 }
 
-/** Floating rounded bottom nav — cream pill, terracotta active state. */
+function Item({ item, active, onChange }) {
+  const on = item.id === active;
+  const color = on ? COLOR.blue : COLOR.inkFaint;
+  return (
+    <Pressable style={styles.item} onPress={() => onChange && onChange(item.id)}>
+      <TabIcon lib={item.lib} icon={item.icon} color={color} size={22} />
+      <Text style={[styles.label, { color, fontFamily: on ? FONT.semiBold : FONT.medium }]}>
+        {item.label}
+      </Text>
+    </Pressable>
+  );
+}
+
+/**
+ * Floating rounded bottom nav — white pill, blue active state, with a raised
+ * colour-filled "Pay Bill" action in the centre.
+ */
 export default function BottomNavigation({ active = 'dineout', onChange, bottomInset = 0 }) {
   return (
     <View style={[styles.wrap, { paddingBottom: bottomInset ? bottomInset - 4 : 8 }]}>
       <View style={[styles.bar, ELEVATION.lg]}>
-        {ITEMS.map((item) => {
-          const on = item.id === active;
-          const color = on ? COLOR.terracotta : COLOR.inkFaint;
-          return (
-            <Pressable key={item.id} style={styles.item} onPress={() => onChange && onChange(item.id)}>
-              <TabIcon lib={item.lib} icon={item.icon} color={color} size={22} />
-              <Text style={[styles.label, { color, fontFamily: on ? FONT.semiBold : FONT.medium }]}>
-                {item.label}
-              </Text>
-            </Pressable>
-          );
-        })}
+        {LEFT.map((item) => <Item key={item.id} item={item} active={active} onChange={onChange} />)}
+
+        <Pressable style={styles.centerItem} onPress={() => onChange && onChange('paybill')}>
+          <LinearGradient
+            colors={GRADIENT.blue}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={styles.centerCircle}
+          >
+            <Ionicons name="receipt-outline" size={24} color="#FFFFFF" />
+          </LinearGradient>
+          <Text style={styles.centerLabel}>Pay Bill</Text>
+        </Pressable>
+
+        {RIGHT.map((item) => <Item key={item.id} item={item} active={active} onChange={onChange} />)}
       </View>
     </View>
   );
@@ -48,7 +70,25 @@ const styles = StyleSheet.create({
     backgroundColor: COLOR.surface,
     borderWidth: 1,
     borderColor: COLOR.hairline,
+    overflow: 'visible',
   },
   item: { flex: 1, alignItems: 'center', gap: 3 },
   label: { fontSize: 10 },
+  centerItem: { flex: 1, alignItems: 'center' },
+  centerCircle: {
+    width: 52,
+    height: 52,
+    borderRadius: 26,
+    marginTop: -24,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 4,
+    borderColor: COLOR.surface,
+    shadowColor: COLOR.blue,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.35,
+    shadowRadius: 10,
+    elevation: 8,
+  },
+  centerLabel: { fontSize: 10, fontFamily: FONT.semiBold, color: COLOR.blue, marginTop: 2 },
 });

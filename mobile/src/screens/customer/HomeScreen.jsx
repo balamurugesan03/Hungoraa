@@ -252,6 +252,7 @@ export default function HomeScreen({ navigation }) {
           if (id === 'quick') go('RestaurantList', { title: 'Table in 15 min', city });
           else if (id === 'offers' || id === 'win') go('Offers');
           else if (id === 'bookings') go('Bookings');
+          else if (id === 'paybill') go('PayBill');
         }}
         bottomInset={insets.bottom}
       />

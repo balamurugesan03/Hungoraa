@@ -2,7 +2,7 @@
   "expo": {
     "name": "Hungora",
     "slug": "hungora",
-    "version": "1.0.3",
+    "version": "1.0.4",
     "sdkVersion": "54.0.0",
     "orientation": "portrait",
     "icon": "./assets/hungora_darkgreen_gold_logo.png",

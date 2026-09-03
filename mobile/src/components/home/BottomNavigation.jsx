@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, Pressable } from 'react-native';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { COLOR, SPACING, RADII, ELEVATION, GRADIENT, FONT } from '../../theme';
+import PulseGlow from './PulseGlow';
 
 const LEFT = [
   { id: 'dineout', label: 'Dine Out', lib: 'mc', icon: 'silverware-fork-knife' },
@@ -42,14 +43,18 @@ export default function BottomNavigation({ active = 'dineout', onChange, bottomI
         {LEFT.map((item) => <Item key={item.id} item={item} active={active} onChange={onChange} />)}
 
         <Pressable style={styles.centerItem} onPress={() => onChange && onChange('paybill')}>
-          <LinearGradient
-            colors={GRADIENT.blue}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            style={styles.centerCircle}
-          >
-            <Ionicons name="receipt-outline" size={24} color="#FFFFFF" />
-          </LinearGradient>
+          <View style={styles.centerCircleWrap}>
+            <PulseGlow color={COLOR.blue} size={52} />
+            <PulseGlow color={COLOR.blue} size={52} delay={900} />
+            <LinearGradient
+              colors={GRADIENT.blue}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={styles.centerCircle}
+            >
+              <Ionicons name="receipt-outline" size={24} color="#FFFFFF" />
+            </LinearGradient>
+          </View>
           <Text style={styles.centerLabel}>Pay Bill</Text>
         </Pressable>
 
@@ -75,11 +80,17 @@ const styles = StyleSheet.create({
   item: { flex: 1, alignItems: 'center', gap: 3 },
   label: { fontSize: 10 },
   centerItem: { flex: 1, alignItems: 'center' },
+  centerCircleWrap: {
+    width: 52,
+    height: 52,
+    marginTop: -24,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   centerCircle: {
     width: 52,
     height: 52,
     borderRadius: 26,
-    marginTop: -24,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 4,

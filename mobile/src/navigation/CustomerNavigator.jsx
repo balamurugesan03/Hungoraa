@@ -7,6 +7,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { COLORS, FONTS, SIZES } from '../constants';
+import PulseGlow from '../components/home/PulseGlow';
 
 // Tab Screens
 import HomeScreen from '../screens/customer/HomeScreen';
@@ -57,14 +58,18 @@ function PayBillTabButton({ onPress }) {
   return (
     <View style={styles.centerSlot} pointerEvents="box-none">
       <Pressable onPress={onPress} style={styles.centerBtn} android_ripple={{ color: 'rgba(255,255,255,0.2)', borderless: true }}>
-        <LinearGradient
-          colors={[COLORS.primary, COLORS.primaryDark]}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={styles.centerCircle}
-        >
-          <Ionicons name="receipt-outline" size={24} color={COLORS.white} />
-        </LinearGradient>
+        <View style={styles.centerCircleWrap}>
+          <PulseGlow color={COLORS.primary} size={54} />
+          <PulseGlow color={COLORS.primary} size={54} delay={900} />
+          <LinearGradient
+            colors={[COLORS.primary, COLORS.primaryDark]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={styles.centerCircle}
+          >
+            <Ionicons name="receipt-outline" size={24} color={COLORS.white} />
+          </LinearGradient>
+        </View>
         <Text style={styles.centerLabel}>Pay Bill</Text>
       </Pressable>
     </View>
@@ -194,6 +199,12 @@ const styles = StyleSheet.create({
   centerBtn: {
     alignItems: 'center',
     marginTop: -26,
+  },
+  centerCircleWrap: {
+    width: 54,
+    height: 54,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   centerCircle: {
     width: 54,

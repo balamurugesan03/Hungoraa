@@ -9,9 +9,12 @@ export const useAuthStore = create(
       accessToken: null,
       refreshToken: null,
       isAuthenticated: false,
+      city: null, // user-selected city for discovery (null = auto/all)
 
       setAuth: (user, accessToken, refreshToken) =>
         set({ user, accessToken, refreshToken, isAuthenticated: true }),
+
+      setCity: (city) => set({ city }),
 
       setAccessToken: (accessToken) => set({ accessToken }),
 
@@ -31,6 +34,7 @@ export const useAuthStore = create(
         accessToken: state.accessToken,
         refreshToken: state.refreshToken,
         isAuthenticated: state.isAuthenticated,
+        city: state.city,
       }),
     }
   )

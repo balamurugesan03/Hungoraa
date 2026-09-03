@@ -14,21 +14,21 @@ const slides = [
     emoji: '🗺️',
     title: 'Discover Amazing\nRestaurants',
     subtitle: 'Explore thousands of restaurants near you. Find the perfect place for every occasion.',
-    bg: ['#1a1a2e', '#16213e'],
+    bg: ['#1B5E8F', '#0C2F4E'],
   },
   {
     id: '2',
     emoji: '📅',
     title: 'Reserve Tables\nInstantly',
     subtitle: 'Book tables in seconds. Choose your date, time, and guests with zero hassle.',
-    bg: ['#16213e', '#0f3460'],
+    bg: ['#246C97', '#123E5C'],
   },
   {
     id: '3',
     emoji: '🎁',
     title: 'Exclusive Deals\n& Offers',
     subtitle: 'Get up to 50% off on dining. Unlock special deals and cashback every time you dine.',
-    bg: ['#0f3460', '#e63946'],
+    bg: ['#1B5E8F', '#081E33'],
   },
 ];
 

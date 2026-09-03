@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity, FlatList,
-  Platform, StatusBar, TextInput, ActivityIndicator,
+  Platform, StatusBar, TextInput, ActivityIndicator, Modal,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
@@ -42,6 +42,7 @@ export default function BookingScreen({ navigation, route }) {
   const [guests, setGuests] = useState(2);
   const [specialRequest, setSpecialRequest] = useState('');
   const [selectedTable, setSelectedTable] = useState(null);
+  const [tableModalVisible, setTableModalVisible] = useState(false);
 
   const { data: availabilityData, isLoading } = useQuery({
     queryKey: ['availability', restaurantId, selectedDate, guests],
@@ -87,16 +88,19 @@ export default function BookingScreen({ navigation, route }) {
 
   const handleContinue = () => {
     if (!selectedTime) return Toast.show({ type: 'error', text1: 'Please select a time slot' });
-    if (!selectedTable) return Toast.show({ type: 'error', text1: 'Please select a table' });
+    // Table is optional — the restaurant assigns one if the guest doesn't pick.
     holdMutation.mutate();
   };
+
+  const selectedTableObj = tables.find((t) => (t._id || t.id) === selectedTable);
+  const availableTables = tables.filter((t) => t.isAvailable);
 
   return (
     <View style={styles.container}>
       <StatusBar barStyle="light-content" />
 
       {/* Header */}
-      <LinearGradient colors={['#1a1a2e', '#16213e']} style={styles.header}>
+      <LinearGradient colors={['#1B5E8F', '#0C2F4E']} style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
           <Ionicons name="arrow-back" size={22} color={COLORS.white} />
         </TouchableOpacity>
@@ -186,34 +190,37 @@ export default function BookingScreen({ navigation, route }) {
           </View>
         </View>
 
-        {/* Table Selector */}
+        {/* Table Selector — opens a centered popup; optional */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>
-            <Ionicons name="restaurant-outline" size={16} color={COLORS.primary} /> Select Table
+            <Ionicons name="restaurant-outline" size={16} color={COLORS.primary} /> Select Table (Optional)
           </Text>
-          <View style={styles.tableGrid}>
-            {tables.map((table) => (
-              <TouchableOpacity
-                key={table._id || table.id}
-                style={[
-                  styles.tableCard,
-                  selectedTable === (table._id || table.id) && styles.tableCardActive,
-                  !table.isAvailable && styles.tableCardUnavailable,
-                ]}
-                onPress={() => table.isAvailable && setSelectedTable(table._id || table.id)}
-                disabled={!table.isAvailable}
-              >
-                <Text style={[styles.tableEmoji]}>{table.type === 'booth' ? '🛋️' : table.type === 'outdoor' ? '🌿' : '🍽️'}</Text>
-                <Text style={[styles.tableName, selectedTable === (table._id || table.id) && styles.tableNameActive]}>
-                  {table.name || `T${table.number}`}
+          <TouchableOpacity
+            style={styles.tablePicker}
+            onPress={() => setTableModalVisible(true)}
+            activeOpacity={0.85}
+          >
+            <View style={styles.tablePickerLeft}>
+              <Text style={styles.tableEmoji}>
+                {selectedTableObj
+                  ? (selectedTableObj.type === 'booth' ? '🛋️' : selectedTableObj.type === 'outdoor' ? '🌿' : '🍽️')
+                  : '🍽️'}
+              </Text>
+              <View>
+                <Text style={styles.tablePickerValue}>
+                  {selectedTableObj
+                    ? (selectedTableObj.name || `Table T${selectedTableObj.number}`)
+                    : 'Any available table'}
                 </Text>
-                <Text style={[styles.tableCapacity, !table.isAvailable && { color: COLORS.gray }]}>
-                  {table.capacity} seats
+                <Text style={styles.tablePickerHint}>
+                  {selectedTableObj
+                    ? `${selectedTableObj.capacity} seats`
+                    : 'Tap to choose — or skip and let the restaurant seat you'}
                 </Text>
-                {!table.isAvailable && <Text style={styles.tableBooked}>Booked</Text>}
-              </TouchableOpacity>
-            ))}
-          </View>
+              </View>
+            </View>
+            <Ionicons name="chevron-forward" size={18} color={COLORS.gray} />
+          </TouchableOpacity>
         </View>
 
         {/* Special Request */}
@@ -234,13 +241,13 @@ export default function BookingScreen({ navigation, route }) {
         </View>
 
         {/* Summary */}
-        {selectedTime && selectedTable && (
+        {selectedTime && (
           <View style={styles.summaryCard}>
             <Text style={styles.summaryTitle}>Booking Summary</Text>
             <SummaryRow icon="calendar" label="Date" value={selectedDate} />
             <SummaryRow icon="time" label="Time" value={selectedTime} />
             <SummaryRow icon="people" label="Guests" value={`${guests} people`} />
-            <SummaryRow icon="restaurant" label="Table" value={tables.find((t) => (t._id || t.id) === selectedTable)?.name || 'Selected'} />
+            <SummaryRow icon="restaurant" label="Table" value={selectedTableObj?.name || (selectedTableObj ? 'Selected' : 'Any available')} />
           </View>
         )}
 
@@ -267,6 +274,73 @@ export default function BookingScreen({ navigation, route }) {
           </LinearGradient>
         </TouchableOpacity>
       </View>
+
+      {/* ── Centered table-selection popup ─────────────────────────────── */}
+      <Modal
+        visible={tableModalVisible}
+        transparent
+        animationType="fade"
+        statusBarTranslucent
+        onRequestClose={() => setTableModalVisible(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <TouchableOpacity
+            style={StyleSheet.absoluteFill}
+            activeOpacity={1}
+            onPress={() => setTableModalVisible(false)}
+          />
+          <View style={styles.modalCard}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Choose a table</Text>
+              <TouchableOpacity onPress={() => setTableModalVisible(false)} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
+                <Ionicons name="close" size={22} color={COLORS.gray} />
+              </TouchableOpacity>
+            </View>
+            <Text style={styles.modalSub}>Optional — skip to let the restaurant seat you.</Text>
+
+            <ScrollView style={styles.modalBody} contentContainerStyle={styles.modalGrid} showsVerticalScrollIndicator={false}>
+              {isLoading ? (
+                <ActivityIndicator color={COLORS.primary} style={{ marginVertical: 24 }} />
+              ) : availableTables.length === 0 ? (
+                <Text style={styles.modalEmpty}>No tables listed for this slot. You can still continue — the restaurant will assign one.</Text>
+              ) : (
+                availableTables.map((table) => {
+                  const id = table._id || table.id;
+                  const active = selectedTable === id;
+                  return (
+                    <TouchableOpacity
+                      key={id}
+                      style={[styles.tableCard, styles.modalTableCard, active && styles.tableCardActive]}
+                      onPress={() => { setSelectedTable(id); setTableModalVisible(false); }}
+                    >
+                      <Text style={styles.tableEmoji}>{table.type === 'booth' ? '🛋️' : table.type === 'outdoor' ? '🌿' : '🍽️'}</Text>
+                      <Text style={[styles.tableName, active && styles.tableNameActive]}>
+                        {table.name || `T${table.number}`}
+                      </Text>
+                      <Text style={styles.tableCapacity}>{table.capacity} seats</Text>
+                    </TouchableOpacity>
+                  );
+                })
+              )}
+            </ScrollView>
+
+            <View style={styles.modalActions}>
+              <TouchableOpacity
+                style={styles.modalSkipBtn}
+                onPress={() => { setSelectedTable(null); setTableModalVisible(false); }}
+              >
+                <Text style={styles.modalSkipText}>Skip — any table</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.modalDoneBtn}
+                onPress={() => setTableModalVisible(false)}
+              >
+                <Text style={styles.modalDoneText}>Done</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -311,7 +385,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingVertical: SPACING.md,
     paddingHorizontal: SPACING.xl,
-    backgroundColor: COLORS.white,
+    backgroundColor: COLORS.card,
     gap: 4,
   },
   stepDot: { width: 28, height: 28, borderRadius: 14, backgroundColor: COLORS.border, alignItems: 'center', justifyContent: 'center' },
@@ -320,7 +394,7 @@ const styles = StyleSheet.create({
   stepNumActive: { color: COLORS.white },
   stepLine: { flex: 1, height: 2, backgroundColor: COLORS.border },
   stepLineActive: { backgroundColor: COLORS.primary },
-  section: { backgroundColor: COLORS.white, padding: SPACING.lg, marginBottom: 8 },
+  section: { backgroundColor: COLORS.card, padding: SPACING.lg, marginBottom: 8 },
   sectionTitle: { fontSize: SIZES.base, fontFamily: FONTS.bold, color: COLORS.dark, marginBottom: SPACING.md, flexDirection: 'row', alignItems: 'center', gap: 6 },
   dateList: { gap: SPACING.sm, paddingBottom: 4 },
   dateItem: {
@@ -399,7 +473,7 @@ const styles = StyleSheet.create({
     minHeight: 80,
   },
   summaryCard: {
-    backgroundColor: COLORS.white,
+    backgroundColor: COLORS.card,
     margin: SPACING.lg,
     borderRadius: BORDER_RADIUS.lg,
     padding: SPACING.lg,
@@ -409,7 +483,7 @@ const styles = StyleSheet.create({
   },
   summaryTitle: { fontSize: SIZES.base, fontFamily: FONTS.bold, color: COLORS.dark, marginBottom: SPACING.sm },
   cta: {
-    backgroundColor: COLORS.white,
+    backgroundColor: COLORS.card,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
@@ -425,4 +499,63 @@ const styles = StyleSheet.create({
   continueBtn: { borderRadius: BORDER_RADIUS.md, overflow: 'hidden' },
   continueBtnGrad: { paddingHorizontal: SPACING.xl, paddingVertical: 14 },
   continueBtnText: { fontSize: SIZES.base, fontFamily: FONTS.bold, color: COLORS.white },
+
+  // Table picker row (opens the popup)
+  tablePicker: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    borderWidth: 1.5,
+    borderColor: COLORS.border,
+    borderRadius: BORDER_RADIUS.md,
+    backgroundColor: COLORS.background,
+    paddingHorizontal: SPACING.md,
+    paddingVertical: 14,
+  },
+  tablePickerLeft: { flexDirection: 'row', alignItems: 'center', gap: SPACING.sm, flex: 1 },
+  tablePickerValue: { fontSize: SIZES.base, fontFamily: FONTS.bold, color: COLORS.dark },
+  tablePickerHint: { fontSize: SIZES.xs, color: COLORS.gray, fontFamily: FONTS.regular, marginTop: 2, paddingRight: SPACING.md },
+
+  // Centered table popup
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(12,47,78,0.45)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: SPACING.lg,
+  },
+  modalCard: {
+    width: '100%',
+    maxWidth: 420,
+    maxHeight: '80%',
+    backgroundColor: COLORS.card,
+    borderRadius: BORDER_RADIUS.xl,
+    padding: SPACING.lg,
+    ...SHADOW.lg,
+  },
+  modalHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  modalTitle: { fontSize: SIZES.lg, fontFamily: FONTS.bold, color: COLORS.dark },
+  modalSub: { fontSize: SIZES.sm, color: COLORS.gray, fontFamily: FONTS.regular, marginTop: 4, marginBottom: SPACING.md },
+  modalBody: { flexGrow: 0, flexShrink: 1 },
+  modalGrid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', gap: SPACING.sm },
+  modalTableCard: { width: '31%' },
+  modalEmpty: { fontSize: SIZES.sm, color: COLORS.gray, fontFamily: FONTS.regular, lineHeight: 20, paddingVertical: SPACING.md },
+  modalActions: { flexDirection: 'row', gap: SPACING.sm, marginTop: SPACING.md },
+  modalSkipBtn: {
+    flex: 1,
+    borderWidth: 1.5,
+    borderColor: COLORS.border,
+    borderRadius: BORDER_RADIUS.md,
+    paddingVertical: 13,
+    alignItems: 'center',
+  },
+  modalSkipText: { fontSize: SIZES.sm, fontFamily: FONTS.bold, color: COLORS.dark },
+  modalDoneBtn: {
+    flex: 1,
+    backgroundColor: COLORS.primary,
+    borderRadius: BORDER_RADIUS.md,
+    paddingVertical: 13,
+    alignItems: 'center',
+  },
+  modalDoneText: { fontSize: SIZES.sm, fontFamily: FONTS.bold, color: COLORS.white },
 });

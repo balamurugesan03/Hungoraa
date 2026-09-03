@@ -7,12 +7,23 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useMutation } from '@tanstack/react-query';
 import Toast from 'react-native-toast-message';
-import {
-  GoogleSignin, isSuccessResponse, isErrorWithCode, statusCodes,
-} from '@react-native-google-signin/google-signin';
 import authApi from '../../api/auth.api';
 import { useAuthStore } from '../../store/authStore';
 import { COLORS, FONTS, SIZES, SPACING, BORDER_RADIUS, SHADOW } from '../../constants';
+
+/**
+ * Loaded lazily so the auth screen still renders in an environment without
+ * the native module (e.g. Expo Go). Returns null there — the Google button
+ * shows a "needs a dev build" toast instead of crashing the whole app.
+ */
+function getGoogleSignin() {
+  try {
+    // eslint-disable-next-line global-require
+    return require('@react-native-google-signin/google-signin');
+  } catch (e) {
+    return null;
+  }
+}
 
 export default function LoginScreen({ navigation }) {
   const { setAuth } = useAuthStore();
@@ -75,6 +86,16 @@ export default function LoginScreen({ navigation }) {
   });
 
   const handleGoogleLogin = async () => {
+    const g = getGoogleSignin();
+    if (!g) {
+      Toast.show({
+        type: 'error',
+        text1: 'Google Sign-In needs a dev build',
+        text2: 'Run the app from a development/production build, not Expo Go.',
+      });
+      return;
+    }
+    const { GoogleSignin, isSuccessResponse, isErrorWithCode, statusCodes } = g;
     try {
       await GoogleSignin.hasPlayServices();
       const response = await GoogleSignin.signIn();
@@ -97,7 +118,7 @@ export default function LoginScreen({ navigation }) {
   return (
     <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
       <StatusBar barStyle="light-content" />
-      <LinearGradient colors={['#1a1a2e', '#16213e']} style={styles.header}>
+      <LinearGradient colors={['#1B5E8F', '#0C2F4E']} style={styles.header}>
         <Text style={styles.logo}>🍽️ Hungora</Text>
         <Text style={styles.headerSub}>Your Table, Your Way</Text>
       </LinearGradient>
@@ -262,7 +283,7 @@ const styles = StyleSheet.create({
   },
   logo: { fontSize: 28, fontFamily: FONTS.extraBold, color: COLORS.white },
   headerSub: { fontSize: SIZES.sm, color: 'rgba(255,255,255,0.6)', marginTop: 4, fontFamily: FONTS.regular },
-  body: { flex: 1, backgroundColor: COLORS.white },
+  body: { flex: 1, backgroundColor: COLORS.card },
   bodyContent: { padding: SPACING.xl, paddingTop: SPACING.lg },
   title: { fontSize: SIZES.h1, fontFamily: FONTS.bold, color: COLORS.black, marginBottom: 4 },
   subtitle: { fontSize: SIZES.base, color: COLORS.gray, fontFamily: FONTS.regular, marginBottom: SPACING.lg },
@@ -318,7 +339,7 @@ const styles = StyleSheet.create({
     borderColor: COLORS.border,
     borderRadius: BORDER_RADIUS.md,
     paddingVertical: 14,
-    backgroundColor: COLORS.white,
+    backgroundColor: COLORS.card,
     ...SHADOW.sm,
   },
   googleIcon: { fontSize: SIZES.lg, fontFamily: FONTS.bold, color: '#4285f4' },

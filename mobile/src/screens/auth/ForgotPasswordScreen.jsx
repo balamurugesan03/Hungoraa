@@ -32,7 +32,7 @@ export default function ForgotPasswordScreen({ navigation }) {
   if (sent) {
     return (
       <View style={styles.successContainer}>
-        <LinearGradient colors={['#1a1a2e', '#16213e']} style={styles.headerGrad}>
+        <LinearGradient colors={['#1B5E8F', '#0C2F4E']} style={styles.headerGrad}>
           <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
             <Ionicons name="arrow-back" size={22} color={COLORS.white} />
           </TouchableOpacity>
@@ -58,7 +58,7 @@ export default function ForgotPasswordScreen({ navigation }) {
   return (
     <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
       <StatusBar barStyle="light-content" />
-      <LinearGradient colors={['#1a1a2e', '#16213e']} style={styles.header}>
+      <LinearGradient colors={['#1B5E8F', '#0C2F4E']} style={styles.header}>
         <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
           <Ionicons name="arrow-back" size={22} color={COLORS.white} />
         </TouchableOpacity>
@@ -132,7 +132,7 @@ const styles = StyleSheet.create({
   },
   backBtn: { padding: 4 },
   headerTitle: { fontSize: SIZES.lg, fontFamily: FONTS.bold, color: COLORS.white },
-  body: { flex: 1, backgroundColor: COLORS.white, padding: SPACING.xl, alignItems: 'center' },
+  body: { flex: 1, backgroundColor: COLORS.card, padding: SPACING.xl, alignItems: 'center' },
   iconCircle: {
     width: 80, height: 80, borderRadius: 40,
     backgroundColor: COLORS.primaryBg,
@@ -160,7 +160,7 @@ const styles = StyleSheet.create({
   backLink: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 4 },
   backLinkText: { fontSize: SIZES.base, color: COLORS.gray, fontFamily: FONTS.medium },
   successContainer: { flex: 1 },
-  successBody: { flex: 1, backgroundColor: COLORS.white, alignItems: 'center', justifyContent: 'center', padding: SPACING.xl },
+  successBody: { flex: 1, backgroundColor: COLORS.card, alignItems: 'center', justifyContent: 'center', padding: SPACING.xl },
   successEmoji: { fontSize: 64, marginBottom: SPACING.lg },
   successTitle: { fontSize: SIZES.h1, fontFamily: FONTS.bold, color: COLORS.black, marginBottom: SPACING.md },
   successSub: { fontSize: SIZES.base, color: COLORS.gray, textAlign: 'center', lineHeight: 24, marginBottom: SPACING.sm },

@@ -9,6 +9,7 @@ import {
   IconLayoutDashboard, IconUsers, IconBuildingStore, IconCalendar,
   IconStar, IconCurrencyRupee, IconBell, IconChartBar, IconSettings,
   IconLogout, IconChevronRight, IconMessage, IconCoin, IconBuildingBank,
+  IconTag, IconChecklist,
 } from '@tabler/icons-react';
 import { useAuthStore } from '../../store/authStore';
 import { authApi } from '../../api';
@@ -20,6 +21,8 @@ const NAV_ITEMS = [
   { path: '/restaurants', icon: IconBuildingStore, label: 'Restaurants' },
   { path: '/bookings', icon: IconCalendar, label: 'Bookings' },
   { path: '/reviews', icon: IconStar, label: 'Reviews' },
+  { path: '/offers', icon: IconTag, label: 'Offers', end: true },
+  { path: '/offers/approval', icon: IconChecklist, label: 'Offer Approval' },
   { divider: true, label: 'Finance' },
   { path: '/payments', icon: IconCurrencyRupee, label: 'Payments' },
   { path: '/commissions', icon: IconCoin, label: 'Commissions' },
@@ -41,8 +44,8 @@ export default function AdminShellLayout() {
     navigate('/login');
   };
 
-  const NavItem = ({ path, icon: Icon, label, badge }) => (
-    <NavLink to={path} style={{ textDecoration: 'none' }}>
+  const NavItem = ({ path, icon: Icon, label, badge, end }) => (
+    <NavLink to={path} end={end} style={{ textDecoration: 'none' }}>
       {({ isActive }) => (
         <UnstyledButton
           style={{

@@ -27,6 +27,7 @@ build/
 **/.expo/
 android/.gradle/
 **/.gradle/
+**/.kotlin/
 android/app/build/
 ios/build/
 ios/Pods/

@@ -81,7 +81,7 @@ export default function BookingConfirmScreen({ navigation, route }) {
     <View style={styles.container}>
       <StatusBar barStyle="light-content" />
 
-      <LinearGradient colors={['#1a1a2e', '#16213e']} style={styles.header}>
+      <LinearGradient colors={['#1B5E8F', '#0C2F4E']} style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
           <Ionicons name="arrow-back" size={22} color={COLORS.white} />
         </TouchableOpacity>
@@ -255,7 +255,7 @@ const styles = StyleSheet.create({
   headerTitle: { fontSize: SIZES.lg, fontFamily: FONTS.bold, color: COLORS.white },
   body: { flex: 1 },
   card: {
-    backgroundColor: COLORS.white,
+    backgroundColor: COLORS.card,
     margin: SPACING.lg,
     marginBottom: 0,
     borderRadius: BORDER_RADIUS.lg,
@@ -312,7 +312,7 @@ const styles = StyleSheet.create({
   billDivider: { height: 1, backgroundColor: COLORS.border, marginVertical: 8 },
   billNote: { fontSize: SIZES.xs, color: COLORS.lightGray, fontFamily: FONTS.regular, marginTop: SPACING.sm },
   cta: {
-    backgroundColor: COLORS.white,
+    backgroundColor: COLORS.card,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',

@@ -86,7 +86,7 @@ export default function EditProfileScreen({ navigation }) {
               value={name}
               onChangeText={setName}
               placeholder="Your name"
-              placeholderTextColor="#ced4da"
+              placeholderTextColor="#A79E95"
             />
           </View>
           <View style={styles.inputGroup}>
@@ -98,7 +98,7 @@ export default function EditProfileScreen({ navigation }) {
               placeholder="your@email.com"
               keyboardType="email-address"
               autoCapitalize="none"
-              placeholderTextColor="#ced4da"
+              placeholderTextColor="#A79E95"
             />
           </View>
           <View style={styles.inputGroup}>
@@ -108,7 +108,7 @@ export default function EditProfileScreen({ navigation }) {
               value={user?.phone || ''}
               editable={false}
               placeholder="Phone number"
-              placeholderTextColor="#ced4da"
+              placeholderTextColor="#A79E95"
             />
             <Text style={styles.helperText}>Phone cannot be changed</Text>
           </View>
@@ -140,13 +140,13 @@ export default function EditProfileScreen({ navigation }) {
                 onChangeText={onChange}
                 secureTextEntry
                 placeholder="••••••••"
-                placeholderTextColor="#ced4da"
+                placeholderTextColor="#A79E95"
               />
             </View>
           ))}
 
           <TouchableOpacity
-            style={[styles.saveBtn, { backgroundColor: '#212529' }, passwordMutation.isPending && { opacity: 0.6 }]}
+            style={[styles.saveBtn, { backgroundColor: '#FFFFFF', borderWidth: 1, borderColor: '#E2D8C9' }, passwordMutation.isPending && { opacity: 0.6 }]}
             onPress={handleChangePassword}
             disabled={passwordMutation.isPending}
           >
@@ -161,15 +161,15 @@ export default function EditProfileScreen({ navigation }) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f8f9fa' },
+  container: { flex: 1, backgroundColor: '#FBF7F1' },
   header: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
     paddingHorizontal: SPACING.md, paddingVertical: SPACING.sm,
-    backgroundColor: '#fff', borderBottomWidth: 1, borderBottomColor: '#f1f3f5',
+    backgroundColor: '#FFFFFF', borderBottomWidth: 1, borderBottomColor: '#EAE2D6',
   },
   backBtn: { padding: 8 },
   backText: { fontSize: 22, color: COLORS.primary },
-  headerTitle: { fontSize: 17, fontWeight: '700', color: '#212529' },
+  headerTitle: { fontSize: 17, fontWeight: '700', color: '#1E1B18' },
   scroll: { padding: SPACING.md, paddingBottom: 60 },
   avatarSection: { alignItems: 'center', paddingVertical: SPACING.lg },
   avatar: {
@@ -180,19 +180,19 @@ const styles = StyleSheet.create({
   changePhotoBtn: { marginTop: 12 },
   changePhotoText: { color: COLORS.primary, fontWeight: '600', fontSize: 14 },
   section: {
-    backgroundColor: '#fff', borderRadius: BORDER_RADIUS.md, padding: SPACING.md,
+    backgroundColor: '#FFFFFF', borderRadius: BORDER_RADIUS.md, padding: SPACING.md,
     marginBottom: SPACING.md, elevation: 1,
     shadowColor: '#000', shadowOpacity: 0.04, shadowRadius: 4, shadowOffset: { width: 0, height: 2 },
   },
-  sectionTitle: { fontSize: 16, fontWeight: '700', color: '#212529', marginBottom: 16 },
+  sectionTitle: { fontSize: 16, fontWeight: '700', color: '#1E1B18', marginBottom: 16 },
   inputGroup: { marginBottom: 16 },
-  inputLabel: { fontSize: 12, color: '#868e96', fontWeight: '600', marginBottom: 6, textTransform: 'uppercase', letterSpacing: 0.5 },
+  inputLabel: { fontSize: 12, color: '#6F6862', fontWeight: '600', marginBottom: 6, textTransform: 'uppercase', letterSpacing: 0.5 },
   input: {
-    backgroundColor: '#f8f9fa', borderRadius: 10, padding: 14,
-    fontSize: 15, color: '#212529', borderWidth: 1, borderColor: '#e9ecef',
+    backgroundColor: '#FBF7F1', borderRadius: 10, padding: 14,
+    fontSize: 15, color: '#1E1B18', borderWidth: 1, borderColor: '#E2D8C9',
   },
-  disabledInput: { color: '#ced4da' },
-  helperText: { fontSize: 11, color: '#ced4da', marginTop: 4 },
+  disabledInput: { color: '#A79E95' },
+  helperText: { fontSize: 11, color: '#A79E95', marginTop: 4 },
   saveBtn: { backgroundColor: COLORS.primary, borderRadius: 12, padding: 16, alignItems: 'center', marginTop: 4 },
   saveBtnText: { color: '#fff', fontWeight: '700', fontSize: 15 },
 });

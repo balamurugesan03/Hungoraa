@@ -1,29 +1,46 @@
-import React, { useEffect } from 'react';
-import { StatusBar, LogBox } from 'react-native';
+import React, { useEffect, useState, useCallback } from 'react';
+import { StatusBar, LogBox, View } from 'react-native';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import Toast from 'react-native-toast-message';
 import * as SplashScreen from 'expo-splash-screen';
 import * as Notifications from 'expo-notifications';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import { GoogleSignin } from '@react-native-google-signin/google-signin';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { useFonts } from 'expo-font';
+import {
+  Fraunces_400Regular,
+  Fraunces_500Medium,
+  Fraunces_600SemiBold,
+  Fraunces_700Bold,
+} from '@expo-google-fonts/fraunces';
+import {
+  Inter_400Regular,
+  Inter_500Medium,
+  Inter_600SemiBold,
+  Inter_700Bold,
+} from '@expo-google-fonts/inter';
 import RootNavigator from './src/navigation';
-import { COLORS } from './src/constants';
+import { COLOR } from './src/theme';
 
-// Web/server client ID — this is the audience the backend verifies Google ID
-// tokens against, so it must be a "Web application" OAuth client, not the
-// Android one. See mobile/.env (EXPO_PUBLIC_GOOGLE_CLIENT_ID).
-GoogleSignin.configure({
-  webClientId: process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID,
-  offlineAccess: false,
-});
+// Web/server client ID — the audience the backend verifies Google ID tokens
+// against (a "Web application" OAuth client). Guarded so the app still boots
+// where the native module is unavailable.
+try {
+  // eslint-disable-next-line global-require
+  const { GoogleSignin } = require('@react-native-google-signin/google-signin');
+  GoogleSignin.configure({
+    webClientId: process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID,
+    offlineAccess: false,
+  });
+} catch (e) {
+  console.warn('GoogleSignin unavailable (needs a dev build):', e?.message);
+}
 
 LogBox.ignoreLogs(['Non-serializable values', 'Require cycle']);
 
-// Keep splash screen visible until fonts load
-SplashScreen.preventAutoHideAsync();
+SplashScreen.preventAutoHideAsync().catch(() => {});
 
-// Notification handler
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
     shouldShowAlert: true,
@@ -43,54 +60,73 @@ const queryClient = new QueryClient({
 });
 
 export default function App() {
+  const [ready, setReady] = useState(false);
+
+  const [fontsLoaded, fontError] = useFonts({
+    Fraunces_400Regular,
+    Fraunces_500Medium,
+    Fraunces_600SemiBold,
+    Fraunces_700Bold,
+    Inter_400Regular,
+    Inter_500Medium,
+    Inter_600SemiBold,
+    Inter_700Bold,
+  });
+
   useEffect(() => {
-    initApp();
+    (async () => {
+      try {
+        let deviceId = await AsyncStorage.getItem('ds_device_id');
+        if (!deviceId) {
+          deviceId = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+          await AsyncStorage.setItem('ds_device_id', deviceId);
+        }
+        await registerForPushNotifications();
+      } catch (err) {
+        console.warn('App init error:', err);
+      } finally {
+        setReady(true);
+      }
+    })();
   }, []);
 
-  const initApp = async () => {
-    try {
-      // Generate device ID if needed
-      let deviceId = await AsyncStorage.getItem('ds_device_id');
-      if (!deviceId) {
-        deviceId = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-        await AsyncStorage.setItem('ds_device_id', deviceId);
-      }
+  const bootDone = ready && (fontsLoaded || fontError);
 
-      // Register for push notifications
-      await registerForPushNotifications();
-    } catch (err) {
-      console.warn('App init error:', err);
-    } finally {
-      await SplashScreen.hideAsync();
+  const onLayoutRootView = useCallback(async () => {
+    if (bootDone) {
+      await SplashScreen.hideAsync().catch(() => {});
     }
-  };
+  }, [bootDone]);
 
-  const registerForPushNotifications = async () => {
-    try {
-      const { status: existingStatus } = await Notifications.getPermissionsAsync();
-      let finalStatus = existingStatus;
-
-      if (existingStatus !== 'granted') {
-        const { status } = await Notifications.requestPermissionsAsync();
-        finalStatus = status;
-      }
-
-      if (finalStatus !== 'granted') return;
-
-      const token = await Notifications.getExpoPushTokenAsync();
-      await AsyncStorage.setItem('fcm_token', token.data);
-    } catch (err) {
-      console.warn('Push notification setup failed:', err);
-    }
-  };
+  if (!bootDone) return null;
 
   return (
-    <GestureHandlerRootView style={{ flex: 1 }}>
-      <QueryClientProvider client={queryClient}>
-        <StatusBar barStyle="light-content" backgroundColor={COLORS.dark} />
-        <RootNavigator />
-        <Toast />
-      </QueryClientProvider>
+    <GestureHandlerRootView style={{ flex: 1 }} onLayout={onLayoutRootView}>
+      <SafeAreaProvider>
+        <QueryClientProvider client={queryClient}>
+          <StatusBar barStyle="dark-content" backgroundColor={COLOR.bg} translucent={false} />
+          <View style={{ flex: 1, backgroundColor: COLOR.bg }}>
+            <RootNavigator />
+          </View>
+          <Toast />
+        </QueryClientProvider>
+      </SafeAreaProvider>
     </GestureHandlerRootView>
   );
+}
+
+async function registerForPushNotifications() {
+  try {
+    const { status: existingStatus } = await Notifications.getPermissionsAsync();
+    let finalStatus = existingStatus;
+    if (existingStatus !== 'granted') {
+      const { status } = await Notifications.requestPermissionsAsync();
+      finalStatus = status;
+    }
+    if (finalStatus !== 'granted') return;
+    const token = await Notifications.getExpoPushTokenAsync();
+    await AsyncStorage.setItem('fcm_token', token.data);
+  } catch (err) {
+    console.warn('Push notification setup failed:', err);
+  }
 }

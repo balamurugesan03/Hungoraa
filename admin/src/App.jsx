@@ -17,6 +17,7 @@ import SettingsPage from './pages/settings/SettingsPage';
 import CommissionsPage from './pages/commissions/CommissionsPage';
 import SettlementsPage from './pages/settlements/SettlementsPage';
 import OfferApprovalPage from './pages/offers/OfferApprovalPage';
+import OffersManagePage from './pages/offers/OffersManagePage';
 import DiscountAnalytics from './pages/analytics/DiscountAnalytics';
 import RevenueAnalytics from './pages/analytics/RevenueAnalytics';
 
@@ -56,6 +57,7 @@ export default function App() {
           <Route path="settings" element={<SettingsPage />} />
           <Route path="commissions" element={<CommissionsPage />} />
           <Route path="settlements" element={<SettlementsPage />} />
+          <Route path="offers" element={<OffersManagePage />} />
           <Route path="offers/approval" element={<OfferApprovalPage />} />
           <Route path="analytics/discounts" element={<DiscountAnalytics />} />
           <Route path="analytics/revenue" element={<RevenueAnalytics />} />

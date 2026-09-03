@@ -61,7 +61,7 @@ export default function RestaurantCardHorizontal({ restaurant, onPress, onSave }
 const styles = StyleSheet.create({
   card: {
     flexDirection: 'row',
-    backgroundColor: COLORS.white,
+    backgroundColor: COLORS.card,
     borderRadius: BORDER_RADIUS.lg,
     overflow: 'hidden',
     ...SHADOW.sm,

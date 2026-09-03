@@ -11,7 +11,7 @@ import { SPACING, BORDER_RADIUS } from '../../constants';
 
 const TYPE_COLORS = {
   percentage: '#457b9d', flat: '#2d6a4f', bogo: '#e63946',
-  early_bird: '#f4a261', happy_hours: '#6b4fbb',
+  early_bird: '#C8952B', happy_hours: '#6b4fbb',
 };
 
 const TYPE_LABELS = {
@@ -34,7 +34,7 @@ export default function OffersScreen({ navigation }) {
   };
 
   const renderItem = ({ item }) => {
-    const color = TYPE_COLORS[item.type] || '#868e96';
+    const color = TYPE_COLORS[item.type] || '#6F6862';
     const daysLeft = Math.max(0, Math.ceil((new Date(item.validUntil) - new Date()) / (1000 * 60 * 60 * 24)));
 
     return (
@@ -68,7 +68,7 @@ export default function OffersScreen({ navigation }) {
           </View>
           <View style={styles.metaRow}>
             <Text style={styles.meta}>Min. order ₹{item.minOrderAmount}</Text>
-            <Text style={[styles.expiry, { color: daysLeft <= 3 ? '#e63946' : '#868e96' }]}>
+            <Text style={[styles.expiry, { color: daysLeft <= 3 ? '#e63946' : '#6F6862' }]}>
               {daysLeft === 0 ? 'Expires today' : `${daysLeft} days left`}
             </Text>
           </View>
@@ -110,41 +110,41 @@ export default function OffersScreen({ navigation }) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f8f9fa' },
+  container: { flex: 1, backgroundColor: '#FBF7F1' },
   center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   header: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
     paddingHorizontal: SPACING.md, paddingVertical: SPACING.sm,
-    backgroundColor: '#fff', borderBottomWidth: 1, borderBottomColor: '#f1f3f5',
+    backgroundColor: '#FFFFFF', borderBottomWidth: 1, borderBottomColor: '#EAE2D6',
   },
   backBtn: { padding: 8 },
   backText: { fontSize: 22, color: COLORS.primary },
-  headerTitle: { fontSize: 17, fontWeight: '700', color: '#212529' },
+  headerTitle: { fontSize: 17, fontWeight: '700', color: '#1E1B18' },
   list: { padding: SPACING.md, gap: 14 },
   card: {
-    backgroundColor: '#fff', borderRadius: BORDER_RADIUS.md, borderLeftWidth: 4,
+    backgroundColor: '#FFFFFF', borderRadius: BORDER_RADIUS.md, borderLeftWidth: 4,
     elevation: 2, shadowColor: '#000', shadowOpacity: 0.06, shadowRadius: 8, shadowOffset: { width: 0, height: 4 },
     overflow: 'hidden',
   },
   cardTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', padding: SPACING.md },
   typeBadge: { paddingHorizontal: 10, paddingVertical: 3, borderRadius: 6, alignSelf: 'flex-start', marginBottom: 6 },
   typeText: { fontSize: 10, fontWeight: '800', letterSpacing: 0.5 },
-  title: { fontSize: 16, fontWeight: '700', color: '#212529', marginBottom: 4 },
-  restaurant: { fontSize: 12, color: '#868e96' },
+  title: { fontSize: 16, fontWeight: '700', color: '#1E1B18', marginBottom: 4 },
+  restaurant: { fontSize: 12, color: '#6F6862' },
   discountBox: { alignItems: 'center' },
   discountValue: { fontSize: 28, fontWeight: '900' },
-  discountOff: { fontSize: 11, color: '#868e96', fontWeight: '700' },
-  divider: { height: 1, backgroundColor: '#f1f3f5', marginHorizontal: SPACING.md, borderStyle: 'dashed' },
+  discountOff: { fontSize: 11, color: '#6F6862', fontWeight: '700' },
+  divider: { height: 1, backgroundColor: '#EAE2D6', marginHorizontal: SPACING.md, borderStyle: 'dashed' },
   cardBottom: { padding: SPACING.md },
   codeRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 },
-  code: { fontSize: 18, fontWeight: '800', fontFamily: 'monospace', color: '#212529', letterSpacing: 1 },
-  copyBtn: { backgroundColor: '#f1f3f5', paddingHorizontal: 14, paddingVertical: 7, borderRadius: 10 },
-  copyText: { fontSize: 13, fontWeight: '600', color: '#495057' },
+  code: { fontSize: 18, fontWeight: '800', fontFamily: 'monospace', color: '#1E1B18', letterSpacing: 1 },
+  copyBtn: { backgroundColor: '#EAE2D6', paddingHorizontal: 14, paddingVertical: 7, borderRadius: 10 },
+  copyText: { fontSize: 13, fontWeight: '600', color: '#6F6862' },
   metaRow: { flexDirection: 'row', justifyContent: 'space-between' },
-  meta: { fontSize: 12, color: '#868e96' },
+  meta: { fontSize: 12, color: '#6F6862' },
   expiry: { fontSize: 12, fontWeight: '600' },
   empty: { alignItems: 'center', paddingTop: 80, paddingHorizontal: 40 },
   emptyIcon: { fontSize: 64, marginBottom: 16 },
-  emptyTitle: { fontSize: 20, fontWeight: '700', color: '#212529', marginBottom: 8 },
-  emptyText: { fontSize: 14, color: '#868e96', textAlign: 'center' },
+  emptyTitle: { fontSize: 20, fontWeight: '700', color: '#1E1B18', marginBottom: 8 },
+  emptyText: { fontSize: 14, color: '#6F6862', textAlign: 'center' },
 });

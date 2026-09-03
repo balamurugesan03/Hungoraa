@@ -71,7 +71,7 @@ function RestaurantPicker({ onSelect }) {
                   </Text>
                   {item.averageRating > 0 && (
                     <View style={rp.ratingRow}>
-                      <Ionicons name="star" size={12} color="#f59e0b" />
+                      <Ionicons name="star" size={12} color="#C8952B" />
                       <Text style={rp.rating}>{item.averageRating.toFixed(1)}</Text>
                     </View>
                   )}
@@ -433,7 +433,7 @@ export default function PayBillScreen({ navigation }) {
       <StatusBar barStyle="light-content" />
 
       {/* Header */}
-      <LinearGradient colors={['#1a1a2e', '#16213e']} style={styles.header}>
+      <LinearGradient colors={['#1B5E8F', '#0C2F4E']} style={styles.header}>
         <TouchableOpacity onPress={goBack} style={styles.backBtn}>
           <Ionicons name="arrow-back" size={22} color="#fff" />
         </TouchableOpacity>
@@ -488,13 +488,13 @@ const styles = StyleSheet.create({
   headerSub: { fontSize: SIZES.xs, color: 'rgba(255,255,255,0.6)', fontFamily: FONTS.regular },
   stepDots: { flexDirection: 'row', gap: 6 },
   dot: { width: 6, height: 6, borderRadius: 3, backgroundColor: 'rgba(255,255,255,0.3)' },
-  dotActive: { backgroundColor: '#fff', width: 18 },
+  dotActive: { backgroundColor: '#FFFFFF', width: 18 },
 });
 
 const rp = StyleSheet.create({
   searchRow: {
     flexDirection: 'row', alignItems: 'center', gap: SPACING.sm,
-    backgroundColor: COLORS.white, margin: SPACING.md,
+    backgroundColor: COLORS.card, margin: SPACING.md,
     paddingHorizontal: SPACING.md, paddingVertical: 10,
     borderRadius: BORDER_RADIUS.md, borderWidth: 1.5, borderColor: COLORS.border,
   },
@@ -505,7 +505,7 @@ const rp = StyleSheet.create({
   emptySub: { fontSize: SIZES.sm, fontFamily: FONTS.regular, color: COLORS.gray, textAlign: 'center', paddingHorizontal: 40 },
   card: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    backgroundColor: COLORS.white, marginHorizontal: SPACING.md,
+    backgroundColor: COLORS.card, marginHorizontal: SPACING.md,
     marginBottom: SPACING.sm, borderRadius: BORDER_RADIUS.md,
     padding: SPACING.md, ...SHADOW.sm,
   },
@@ -530,7 +530,7 @@ const ba = StyleSheet.create({
   scroll: { padding: SPACING.lg },
   restaurantCard: {
     flexDirection: 'row', alignItems: 'center', gap: SPACING.md,
-    backgroundColor: COLORS.white, borderRadius: BORDER_RADIUS.md,
+    backgroundColor: COLORS.card, borderRadius: BORDER_RADIUS.md,
     padding: SPACING.md, marginBottom: SPACING.xl, ...SHADOW.sm,
   },
   restaurantAvatar: {
@@ -543,7 +543,7 @@ const ba = StyleSheet.create({
   label: { fontSize: SIZES.sm, fontFamily: FONTS.bold, color: COLORS.gray, marginBottom: SPACING.sm, textTransform: 'uppercase', letterSpacing: 1 },
   amountRow: {
     flexDirection: 'row', alignItems: 'center',
-    backgroundColor: COLORS.white, borderRadius: BORDER_RADIUS.lg,
+    backgroundColor: COLORS.card, borderRadius: BORDER_RADIUS.lg,
     borderWidth: 2, borderColor: COLORS.primary,
     paddingHorizontal: SPACING.lg, marginBottom: SPACING.xl, ...SHADOW.md,
   },
@@ -553,7 +553,7 @@ const ba = StyleSheet.create({
   quickGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: SPACING.sm, marginBottom: SPACING.xl },
   quickChip: {
     paddingHorizontal: 16, paddingVertical: 10, borderRadius: BORDER_RADIUS.md,
-    borderWidth: 1.5, borderColor: COLORS.border, backgroundColor: COLORS.white,
+    borderWidth: 1.5, borderColor: COLORS.border, backgroundColor: COLORS.card,
   },
   quickChipActive: { backgroundColor: COLORS.primary, borderColor: COLORS.primary },
   quickChipText: { fontSize: SIZES.sm, fontFamily: FONTS.medium, color: COLORS.dark },
@@ -571,7 +571,7 @@ const pv = StyleSheet.create({
   restaurantDotText: { fontSize: SIZES.xl, fontFamily: FONTS.bold, color: '#fff' },
   restaurantName: { fontSize: SIZES.lg, fontFamily: FONTS.bold, color: COLORS.dark },
   couponCard: {
-    backgroundColor: COLORS.white, borderRadius: BORDER_RADIUS.md,
+    backgroundColor: COLORS.card, borderRadius: BORDER_RADIUS.md,
     padding: SPACING.md, marginBottom: SPACING.md, ...SHADOW.sm,
   },
   couponLabel: { fontSize: SIZES.xs, fontFamily: FONTS.medium, color: COLORS.gray, marginBottom: 8 },
@@ -595,7 +595,7 @@ const pv = StyleSheet.create({
   offerBadgeText: { fontSize: SIZES.base, fontFamily: FONTS.bold, color: '#2d6a4f' },
   offerTitle: { fontSize: SIZES.xs, fontFamily: FONTS.regular, color: '#40916c' },
   breakdownCard: {
-    backgroundColor: COLORS.white, borderRadius: BORDER_RADIUS.lg,
+    backgroundColor: COLORS.card, borderRadius: BORDER_RADIUS.lg,
     padding: SPACING.lg, ...SHADOW.md, marginBottom: SPACING.xl,
   },
   breakdownTitle: { fontSize: SIZES.base, fontFamily: FONTS.bold, color: COLORS.dark, marginBottom: SPACING.md },
@@ -620,9 +620,9 @@ const pv = StyleSheet.create({
 const ps = StyleSheet.create({
   scroll: { padding: SPACING.lg, paddingBottom: 40 },
   amountCard: {
-    backgroundColor: '#fff5f5', borderRadius: BORDER_RADIUS.lg,
+    backgroundColor: '#F7E3E0', borderRadius: BORDER_RADIUS.lg,
     padding: SPACING.xl, alignItems: 'center', marginBottom: SPACING.xl,
-    borderWidth: 1.5, borderColor: '#ffcdd2',
+    borderWidth: 1.5, borderColor: '#F2C9C4',
   },
   amountLabel: { fontSize: SIZES.sm, fontFamily: FONTS.regular, color: COLORS.gray, marginBottom: 4 },
   amountValue: { fontSize: 40, fontFamily: FONTS.bold, color: '#e63946' },
@@ -630,11 +630,11 @@ const ps = StyleSheet.create({
   sectionLabel: { fontSize: 10, fontFamily: FONTS.bold, color: COLORS.gray, letterSpacing: 1.2, marginBottom: SPACING.md },
   method: {
     flexDirection: 'row', alignItems: 'center', gap: SPACING.md,
-    backgroundColor: COLORS.white, borderRadius: BORDER_RADIUS.md,
+    backgroundColor: COLORS.card, borderRadius: BORDER_RADIUS.md,
     padding: SPACING.md, marginBottom: SPACING.sm,
     borderWidth: 1.5, borderColor: COLORS.border,
   },
-  methodActive: { borderColor: '#e63946', backgroundColor: '#fff5f5' },
+  methodActive: { borderColor: '#e63946', backgroundColor: '#F7E3E0' },
   methodIcon: { width: 44, height: 44, borderRadius: 22, backgroundColor: COLORS.background, alignItems: 'center', justifyContent: 'center' },
   methodIconActive: { backgroundColor: '#e63946' },
   methodLabel: { fontSize: SIZES.sm, fontFamily: FONTS.bold, color: COLORS.dark },

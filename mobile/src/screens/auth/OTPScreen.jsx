@@ -82,7 +82,7 @@ export default function OTPScreen({ navigation, route }) {
   return (
     <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
       <StatusBar barStyle="light-content" />
-      <LinearGradient colors={['#1a1a2e', '#16213e']} style={styles.header}>
+      <LinearGradient colors={['#1B5E8F', '#0C2F4E']} style={styles.header}>
         <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
           <Ionicons name="arrow-back" size={22} color={COLORS.white} />
         </TouchableOpacity>
@@ -168,7 +168,7 @@ const styles = StyleSheet.create({
   },
   backBtn: { padding: 4 },
   headerTitle: { fontSize: SIZES.lg, fontFamily: FONTS.bold, color: COLORS.white },
-  body: { flex: 1, backgroundColor: COLORS.white, padding: SPACING.xl, alignItems: 'center' },
+  body: { flex: 1, backgroundColor: COLORS.card, padding: SPACING.xl, alignItems: 'center' },
   iconCircle: {
     width: 80,
     height: 80,

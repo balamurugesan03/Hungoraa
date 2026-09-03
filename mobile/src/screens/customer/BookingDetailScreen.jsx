@@ -12,7 +12,7 @@ import { COLORS, FONTS, SIZES, SPACING, BORDER_RADIUS, SHADOW } from '../../cons
 
 const STATUS_CONFIG = {
   confirmed: { color: '#2d6a4f', bg: '#d8f3dc', label: 'Confirmed', icon: 'checkmark-circle' },
-  pending:   { color: '#e76f00', bg: '#fff3e0', label: 'Pending',   icon: 'time' },
+  pending:   { color: '#C8952B', bg: '#F7EDD8', label: 'Pending',   icon: 'time' },
   seated:    { color: '#1a6fa8', bg: '#dbeafe', label: 'Seated',    icon: 'restaurant' },
   completed: { color: '#087f5b', bg: '#c3fae8', label: 'Completed', icon: 'trophy' },
   cancelled: { color: '#c92a2a', bg: '#ffe3e3', label: 'Cancelled', icon: 'close-circle' },
@@ -55,8 +55,8 @@ function InvoiceCard({ bookingId }) {
           <Text style={inv.invoiceId}>Invoice #{data.invoiceId}</Text>
           <Text style={inv.method}>{data.paymentMethod?.toUpperCase()}</Text>
         </View>
-        <View style={[inv.badge, { backgroundColor: isPaid ? '#d8f3dc' : '#fff3e0' }]}>
-          <Text style={[inv.badgeText, { color: isPaid ? '#2d6a4f' : '#e76f00' }]}>
+        <View style={[inv.badge, { backgroundColor: isPaid ? '#d8f3dc' : '#F7EDD8' }]}>
+          <Text style={[inv.badgeText, { color: isPaid ? '#2d6a4f' : '#C8952B' }]}>
             {isPaid ? '✓ Paid' : 'Pending'}
           </Text>
         </View>
@@ -136,7 +136,7 @@ export default function BookingDetailScreen({ navigation, route }) {
     return (
       <View style={styles.loadContainer}>
         <StatusBar barStyle="light-content" />
-        <LinearGradient colors={['#1a1a2e', '#16213e']} style={styles.header}>
+        <LinearGradient colors={['#1B5E8F', '#0C2F4E']} style={styles.header}>
           <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
             <Ionicons name="arrow-back" size={22} color="#fff" />
           </TouchableOpacity>
@@ -159,7 +159,7 @@ export default function BookingDetailScreen({ navigation, route }) {
     <View style={styles.container}>
       <StatusBar barStyle="light-content" />
 
-      <LinearGradient colors={['#1a1a2e', '#16213e']} style={styles.header}>
+      <LinearGradient colors={['#1B5E8F', '#0C2F4E']} style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
           <Ionicons name="arrow-back" size={22} color="#fff" />
         </TouchableOpacity>
@@ -221,8 +221,8 @@ export default function BookingDetailScreen({ navigation, route }) {
             <Text style={styles.sectionLabel}>ADVANCE PAID</Text>
             <View style={styles.payRow}>
               <Text style={styles.bodyText}>₹{booking.depositAmount} advance deposit</Text>
-              <View style={[styles.pill, { backgroundColor: booking.isPaid ? '#d8f3dc' : '#fff3e0' }]}>
-                <Text style={{ color: booking.isPaid ? '#2d6a4f' : '#e76f00', fontSize: 12, fontWeight: '700' }}>
+              <View style={[styles.pill, { backgroundColor: booking.isPaid ? '#d8f3dc' : '#F7EDD8' }]}>
+                <Text style={{ color: booking.isPaid ? '#2d6a4f' : '#C8952B', fontSize: 12, fontWeight: '700' }}>
                   {booking.isPaid ? '✓ Paid' : 'Pending'}
                 </Text>
               </View>
@@ -312,7 +312,7 @@ const styles = StyleSheet.create({
   statusChipText: { fontSize: SIZES.xs, fontFamily: FONTS.bold },
   body: { flex: 1 },
   section: {
-    backgroundColor: COLORS.white,
+    backgroundColor: COLORS.card,
     marginBottom: 8,
     padding: SPACING.lg,
   },
@@ -325,7 +325,7 @@ const styles = StyleSheet.create({
   bodyText: { fontSize: SIZES.base, fontFamily: FONTS.medium, color: COLORS.dark },
   gridRow: {
     flexDirection: 'row', flexWrap: 'wrap',
-    backgroundColor: COLORS.white, marginBottom: 8,
+    backgroundColor: COLORS.card, marginBottom: 8,
   },
   gridCell: {
     width: '50%', padding: SPACING.md,
@@ -346,7 +346,7 @@ const styles = StyleSheet.create({
   cancelBtn: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
     gap: 8, borderRadius: BORDER_RADIUS.md, padding: 16,
-    borderWidth: 1.5, borderColor: COLORS.error, backgroundColor: COLORS.white,
+    borderWidth: 1.5, borderColor: COLORS.error, backgroundColor: COLORS.card,
   },
   btnText: { fontSize: SIZES.base, fontFamily: FONTS.bold, color: '#fff' },
 });
@@ -357,7 +357,7 @@ const inv = StyleSheet.create({
     borderWidth: 1.5,
     borderColor: COLORS.border,
     padding: SPACING.md,
-    backgroundColor: '#fafafa',
+    backgroundColor: COLORS.sunken,
     alignItems: 'center',
     gap: 4,
   },

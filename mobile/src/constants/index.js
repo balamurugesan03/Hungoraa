@@ -1,5 +1,8 @@
 export { COLORS, GRADIENTS } from './colors';
 export { FONTS, SIZES, LINE_HEIGHTS } from './fonts';
+export {
+  COLOR, RADII, ELEVATION, MOTION, GRADIENT, scale, SCREEN_WIDTH, FONT, text, theme,
+} from '../theme';
 
 export const 
 API_URL = process.env.EXPO_PUBLIC_API_URL || 'http://10.0.2.2:5000/api';
@@ -22,27 +25,29 @@ export const BORDER_RADIUS = {
   full: 999,
 };
 
+// Blue-tinted layered elevation (logo blue), for a subtle 3D lift off the
+// light-blue app background.
 export const SHADOW = {
   sm: {
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.08,
-    shadowRadius: 4,
-    elevation: 2,
+    shadowColor: '#0C2F4E',
+    shadowOffset: { width: 0, height: 5 },
+    shadowOpacity: 0.12,
+    shadowRadius: 12,
+    elevation: 3,
   },
   md: {
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.12,
-    shadowRadius: 8,
-    elevation: 4,
+    shadowColor: '#0C2F4E',
+    shadowOffset: { width: 0, height: 12 },
+    shadowOpacity: 0.16,
+    shadowRadius: 24,
+    elevation: 9,
   },
   lg: {
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.15,
-    shadowRadius: 16,
-    elevation: 8,
+    shadowColor: '#0C2F4E',
+    shadowOffset: { width: 0, height: 22 },
+    shadowOpacity: 0.22,
+    shadowRadius: 40,
+    elevation: 20,
   },
 };
 

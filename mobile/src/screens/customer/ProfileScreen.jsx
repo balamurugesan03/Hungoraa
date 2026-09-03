@@ -29,7 +29,7 @@ const MENU_SECTIONS = [
   {
     title: 'Preferences',
     items: [
-      { icon: 'location-outline', label: 'Saved Addresses', screen: null, color: '#f4a261' },
+      { icon: 'location-outline', label: 'Saved Addresses', screen: null, color: '#C8952B' },
       { icon: 'card-outline', label: 'Payment Methods', screen: null, color: '#6b4fbb' },
       { icon: 'language-outline', label: 'Language', screen: null, color: '#457b9d', value: 'English' },
     ],
@@ -89,7 +89,7 @@ export default function ProfileScreen({ navigation }) {
       <StatusBar barStyle="light-content" />
 
       {/* Header */}
-      <LinearGradient colors={['#1a1a2e', '#16213e']} style={styles.header}>
+      <LinearGradient colors={['#1B5E8F', '#0C2F4E']} style={styles.header}>
         <Text style={styles.headerTitle}>My Profile</Text>
 
         <View style={styles.profileCard}>
@@ -246,7 +246,7 @@ const styles = StyleSheet.create({
   menuSection: { paddingHorizontal: SPACING.lg, paddingTop: SPACING.lg },
   sectionTitle: { fontSize: SIZES.sm, fontFamily: FONTS.bold, color: COLORS.gray, textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: SPACING.sm },
   menuCard: {
-    backgroundColor: COLORS.white,
+    backgroundColor: COLORS.card,
     borderRadius: BORDER_RADIUS.lg,
     overflow: 'hidden',
     ...SHADOW.sm,

@@ -57,7 +57,7 @@ export default function BillPaymentHistoryScreen({ navigation }) {
   return (
     <View style={styles.container}>
       <StatusBar barStyle="light-content" />
-      <LinearGradient colors={['#1a1a2e', '#16213e']} style={styles.header}>
+      <LinearGradient colors={['#1B5E8F', '#0C2F4E']} style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.back}>
           <Ionicons name="arrow-back" size={22} color="#fff" />
         </TouchableOpacity>
@@ -103,7 +103,7 @@ const styles = StyleSheet.create({
   emptySub: { fontSize: SIZES.sm, fontFamily: FONTS.regular, color: COLORS.gray, textAlign: 'center', paddingHorizontal: 40 },
   card: {
     flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between',
-    backgroundColor: COLORS.white, borderRadius: BORDER_RADIUS.md,
+    backgroundColor: COLORS.card, borderRadius: BORDER_RADIUS.md,
     padding: SPACING.md, marginBottom: SPACING.sm, ...SHADOW.sm,
   },
   cardLeft: { flexDirection: 'row', gap: SPACING.md, flex: 1 },

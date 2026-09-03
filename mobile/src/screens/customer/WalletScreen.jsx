@@ -106,7 +106,7 @@ export default function WalletScreen({ navigation }) {
               keyboardType="numeric"
               value={amount}
               onChangeText={setAmount}
-              placeholderTextColor="#ced4da"
+              placeholderTextColor="#A79E95"
             />
             <View style={styles.quickRow}>
               {QUICK_AMOUNTS.map((amt) => (
@@ -141,15 +141,15 @@ export default function WalletScreen({ navigation }) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f8f9fa' },
+  container: { flex: 1, backgroundColor: '#FBF7F1' },
   header: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
     paddingHorizontal: SPACING.md, paddingVertical: SPACING.sm,
-    backgroundColor: '#fff', borderBottomWidth: 1, borderBottomColor: '#f1f3f5',
+    backgroundColor: '#FFFFFF', borderBottomWidth: 1, borderBottomColor: '#EAE2D6',
   },
   backBtn: { padding: 8 },
   backText: { fontSize: 22, color: COLORS.primary },
-  headerTitle: { fontSize: 17, fontWeight: '700', color: '#212529' },
+  headerTitle: { fontSize: 17, fontWeight: '700', color: '#1E1B18' },
   scroll: { padding: SPACING.md, paddingBottom: 40 },
   balanceCard: {
     backgroundColor: COLORS.primary, borderRadius: BORDER_RADIUS.lg,
@@ -158,50 +158,50 @@ const styles = StyleSheet.create({
   balanceLabel: { color: 'rgba(255,255,255,0.7)', fontSize: 14, marginBottom: 8 },
   balance: { color: '#fff', fontSize: 42, fontWeight: '800', marginBottom: 20 },
   addBtn: {
-    backgroundColor: '#fff', borderRadius: 30,
+    backgroundColor: '#FFFFFF', borderRadius: 30,
     paddingHorizontal: 28, paddingVertical: 12,
   },
   addBtnText: { color: COLORS.primary, fontWeight: '700', fontSize: 15 },
   section: { marginBottom: SPACING.lg },
-  sectionTitle: { fontSize: 16, fontWeight: '700', color: '#212529', marginBottom: 12 },
+  sectionTitle: { fontSize: 16, fontWeight: '700', color: '#1E1B18', marginBottom: 12 },
   quickRow: { flexDirection: 'row', gap: 10, flexWrap: 'wrap' },
   quickChip: {
-    backgroundColor: '#fff', borderRadius: 20, paddingHorizontal: 20, paddingVertical: 10,
+    backgroundColor: '#FFFFFF', borderRadius: 20, paddingHorizontal: 20, paddingVertical: 10,
     borderWidth: 1.5, borderColor: COLORS.primary,
   },
   quickChipText: { color: COLORS.primary, fontWeight: '700', fontSize: 14 },
-  emptyText: { color: '#868e96', textAlign: 'center', paddingVertical: 24 },
+  emptyText: { color: '#6F6862', textAlign: 'center', paddingVertical: 24 },
   txRow: {
     flexDirection: 'row', alignItems: 'center', gap: 14,
-    backgroundColor: '#fff', borderRadius: BORDER_RADIUS.md, padding: SPACING.md,
+    backgroundColor: '#FFFFFF', borderRadius: BORDER_RADIUS.md, padding: SPACING.md,
     marginBottom: 10, elevation: 1,
     shadowColor: '#000', shadowOpacity: 0.04, shadowRadius: 4, shadowOffset: { width: 0, height: 2 },
   },
   txIcon: { width: 44, height: 44, borderRadius: 22, justifyContent: 'center', alignItems: 'center' },
-  txDesc: { fontSize: 14, fontWeight: '600', color: '#212529' },
-  txDate: { fontSize: 11, color: '#868e96', marginTop: 2 },
+  txDesc: { fontSize: 14, fontWeight: '600', color: '#1E1B18' },
+  txDate: { fontSize: 11, color: '#6F6862', marginTop: 2 },
   txAmount: { fontSize: 15, fontWeight: '800' },
   modalOverlay: {
     flex: 1, justifyContent: 'flex-end',
     backgroundColor: 'rgba(0,0,0,0.5)',
   },
   modalBox: {
-    backgroundColor: '#fff', borderTopLeftRadius: 24, borderTopRightRadius: 24,
+    backgroundColor: '#FFFFFF', borderTopLeftRadius: 24, borderTopRightRadius: 24,
     padding: 24, paddingBottom: 40,
   },
-  modalTitle: { fontSize: 20, fontWeight: '800', color: '#212529', marginBottom: 20 },
+  modalTitle: { fontSize: 20, fontWeight: '800', color: '#1E1B18', marginBottom: 20 },
   input: {
-    backgroundColor: '#f8f9fa', borderRadius: 12, padding: 16,
-    fontSize: 24, fontWeight: '700', color: '#212529',
-    borderWidth: 1, borderColor: '#e9ecef', textAlign: 'center', marginBottom: 16,
+    backgroundColor: '#FBF7F1', borderRadius: 12, padding: 16,
+    fontSize: 24, fontWeight: '700', color: '#1E1B18',
+    borderWidth: 1, borderColor: '#E2D8C9', textAlign: 'center', marginBottom: 16,
   },
-  modalNote: { fontSize: 12, color: '#868e96', textAlign: 'center', marginVertical: 12 },
+  modalNote: { fontSize: 12, color: '#6F6862', textAlign: 'center', marginVertical: 12 },
   modalActions: { flexDirection: 'row', gap: 12, marginTop: 8 },
   cancelBtn: {
     flex: 1, padding: 16, borderRadius: 12, alignItems: 'center',
-    backgroundColor: '#f8f9fa', borderWidth: 1, borderColor: '#dee2e6',
+    backgroundColor: '#FBF7F1', borderWidth: 1, borderColor: '#E2D8C9',
   },
-  cancelBtnText: { color: '#495057', fontWeight: '600' },
+  cancelBtnText: { color: '#6F6862', fontWeight: '600' },
   confirmBtn: { flex: 2, padding: 16, borderRadius: 12, alignItems: 'center', backgroundColor: COLORS.primary },
   confirmBtnText: { color: '#fff', fontWeight: '700', fontSize: 15 },
 });

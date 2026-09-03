@@ -64,7 +64,7 @@ export default function RegisterScreen({ navigation }) {
   return (
     <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
       <StatusBar barStyle="light-content" />
-      <LinearGradient colors={['#1a1a2e', '#16213e']} style={styles.header}>
+      <LinearGradient colors={['#1B5E8F', '#0C2F4E']} style={styles.header}>
         <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
           <Ionicons name="arrow-back" size={22} color={COLORS.white} />
         </TouchableOpacity>
@@ -177,7 +177,7 @@ function PasswordStrength({ password }) {
     { label: 'Number', met: /\d/.test(password) },
   ];
   const score = checks.filter((c) => c.met).length;
-  const colors = ['#e63946', '#f4a261', '#2d6a4f'];
+  const colors = ['#e63946', '#C8952B', '#2d6a4f'];
 
   return (
     <View style={styles.strengthContainer}>
@@ -239,7 +239,7 @@ const styles = StyleSheet.create({
   },
   backBtn: { padding: 4 },
   headerTitle: { fontSize: SIZES.lg, fontFamily: FONTS.bold, color: COLORS.white },
-  body: { flex: 1, backgroundColor: COLORS.white },
+  body: { flex: 1, backgroundColor: COLORS.card },
   bodyContent: { padding: SPACING.xl, paddingTop: SPACING.lg },
   title: { fontSize: SIZES.h2, fontFamily: FONTS.bold, color: COLORS.black, marginBottom: 4 },
   subtitle: { fontSize: SIZES.base, color: COLORS.gray, fontFamily: FONTS.regular, marginBottom: SPACING.lg },

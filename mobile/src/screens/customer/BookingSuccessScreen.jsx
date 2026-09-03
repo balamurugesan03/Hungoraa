@@ -22,7 +22,7 @@ export default function BookingSuccessScreen({ navigation, route }) {
   return (
     <View style={styles.container}>
       <StatusBar barStyle="light-content" />
-      <LinearGradient colors={['#1a1a2e', '#16213e']} style={styles.bg}>
+      <LinearGradient colors={['#1B5E8F', '#0C2F4E']} style={styles.bg}>
 
         <Animated.View style={[styles.successCircle, { transform: [{ scale: scaleAnim }] }]}>
           <LinearGradient colors={[COLORS.secondary, '#40916c']} style={styles.successCircleGrad}>
@@ -115,7 +115,7 @@ const styles = StyleSheet.create({
   title: { fontSize: SIZES.h2, fontFamily: FONTS.bold, color: COLORS.white, textAlign: 'center', marginBottom: 8 },
   subtitle: { fontSize: SIZES.base, color: 'rgba(255,255,255,0.7)', textAlign: 'center', fontFamily: FONTS.regular, marginBottom: SPACING.xl },
   bookingCard: {
-    backgroundColor: COLORS.white,
+    backgroundColor: COLORS.card,
     borderRadius: BORDER_RADIUS.xl,
     width: '100%',
     padding: SPACING.lg,

@@ -106,7 +106,7 @@ export default function BookingsScreen({ navigation }) {
     <View style={styles.container}>
       <StatusBar barStyle="light-content" />
 
-      <LinearGradient colors={['#1a1a2e', '#16213e']} style={styles.header}>
+      <LinearGradient colors={['#1B5E8F', '#0C2F4E']} style={styles.header}>
         <Text style={styles.headerTitle}>My Bookings</Text>
         <Text style={styles.headerSub}>Manage your reservations</Text>
       </LinearGradient>
@@ -180,14 +180,14 @@ const styles = StyleSheet.create({
   },
   headerTitle: { fontSize: SIZES.h2, fontFamily: FONTS.bold, color: COLORS.white },
   headerSub: { fontSize: SIZES.sm, color: 'rgba(255,255,255,0.6)', fontFamily: FONTS.regular, marginTop: 2 },
-  tabs: { flexDirection: 'row', backgroundColor: COLORS.white, borderBottomWidth: 1, borderBottomColor: COLORS.border },
+  tabs: { flexDirection: 'row', backgroundColor: COLORS.card, borderBottomWidth: 1, borderBottomColor: COLORS.border },
   tab: { flex: 1, paddingVertical: 14, alignItems: 'center', borderBottomWidth: 2, borderBottomColor: 'transparent' },
   tabActive: { borderBottomColor: COLORS.primary },
   tabText: { fontSize: SIZES.sm, fontFamily: FONTS.medium, color: COLORS.gray },
   tabTextActive: { color: COLORS.primary, fontFamily: FONTS.bold },
   list: { padding: SPACING.lg, gap: SPACING.md, paddingBottom: 100 },
   bookingCard: {
-    backgroundColor: COLORS.white,
+    backgroundColor: COLORS.card,
     borderRadius: BORDER_RADIUS.lg,
     overflow: 'hidden',
     ...SHADOW.sm,

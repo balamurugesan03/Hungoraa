@@ -52,8 +52,13 @@ export const reviewApi = {
 };
 
 export const offerApi = {
-  getAll: (params) => api.get('/admin/offers', { params }),
+  // Full offer console — every offer, any status
+  getAll: (params) => api.get('/offers/admin/all', { params }),
   getPending: () => api.get('/admin/offers/pending'),
+  // Admin-created offers go live immediately (no approval step)
+  create: (data) => api.post('/offers', data),
+  update: (id, data) => api.put(`/offers/${id}`, data),
+  toggleActive: (id, isActive) => api.put(`/offers/${id}`, { isActive }),
   approve: (id) => api.patch(`/offers/${id}/approve`),
   reject: (id, reason) => api.patch(`/offers/${id}/reject`, { reason }),
   delete: (id) => api.delete(`/offers/${id}`),

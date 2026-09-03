@@ -1,38 +1,48 @@
+// Back-compat shim — maps the legacy COLORS/GRADIENTS names onto the new
+// "elegant EasyDiner" light design system in `src/theme`. Screens that have not
+// yet been redesigned keep working (and stay visually coherent) through this;
+// redesigned screens import from `src/theme` directly.
+import { COLOR, GRADIENT } from '../theme';
+
 export const COLORS = {
-  primary: '#1B5E20',
-  primaryDark: '#0d3b13',
-  primaryLight: '#2E7D32',
-  primaryBg: '#E8F5E9',
+  primary: COLOR.blue,
+  primaryDark: COLOR.bluePressed,
+  primaryLight: COLOR.blueSoft,
+  primaryBg: COLOR.blueTint,
 
-  secondary: '#2d6a4f',
-  secondaryLight: '#40916c',
+  secondary: COLOR.wine,
+  secondaryLight: '#2E7DA8',
 
-  accent: '#f4a261',
+  accent: COLOR.gold,
 
-  black: '#1a1a2e',
-  dark: '#16213e',
-  darkGray: '#343a40',
-  gray: '#6c757d',
-  lightGray: '#adb5bd',
-  silver: '#ced4da',
-  border: '#e9ecef',
-  background: '#f8f9fa',
-  white: '#ffffff',
-  card: '#ffffff',
+  black: COLOR.ink,
+  dark: COLOR.ink,
+  darkGray: COLOR.inkSoft,
+  gray: COLOR.inkSoft,
+  lightGray: COLOR.inkFaint,
+  silver: COLOR.hairline,
+  border: COLOR.border,
 
-  success: '#2d6a4f',
-  warning: '#f4a261',
-  error: '#d32f2f',
-  info: '#457b9d',
+  background: COLOR.bg,
+  surface: COLOR.surface,
+  card: COLOR.surface,
+  sunken: COLOR.sunken,
+  white: COLOR.surface,
 
-  rating: '#ffc107',
-  overlay: 'rgba(0,0,0,0.5)',
-  overlayLight: 'rgba(0,0,0,0.3)',
+  success: COLOR.success,
+  warning: COLOR.warning,
+  error: COLOR.error,
+  info: COLOR.info,
+
+  rating: COLOR.gold,
+  overlay: COLOR.scrim,
+  overlayLight: COLOR.scrimSoft,
 };
 
 export const GRADIENTS = {
-  primary: ['#1B5E20', '#0d3b13'],
-  dark: ['#1a1a2e', '#16213e'],
-  card: ['rgba(0,0,0,0)', 'rgba(0,0,0,0.7)'],
-  success: ['#2d6a4f', '#40916c'],
+  primary: GRADIENT.terracotta,
+  dark: GRADIENT.wine,
+  header: GRADIENT.wine,
+  card: GRADIENT.scrimDown,
+  success: ['#2E7D5B', '#3E9E76'],
 };

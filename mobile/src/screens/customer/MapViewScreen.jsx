@@ -82,7 +82,7 @@ export default function MapViewScreen({ navigation, route }) {
         <View style={styles.center}>
           <Text style={{ fontSize: 48, marginBottom: 16 }}>🗺️</Text>
           <Text style={styles.loadingText}>Map view requires react-native-maps</Text>
-          <Text style={{ color: '#868e96', fontSize: 13, textAlign: 'center', marginTop: 8, paddingHorizontal: 40 }}>
+          <Text style={{ color: '#6F6862', fontSize: 13, textAlign: 'center', marginTop: 8, paddingHorizontal: 40 }}>
             Run: expo install react-native-maps
           </Text>
         </View>
@@ -156,25 +156,25 @@ export default function MapViewScreen({ navigation, route }) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f8f9fa' },
+  container: { flex: 1, backgroundColor: '#FBF7F1' },
   center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   header: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
     paddingHorizontal: SPACING.md, paddingVertical: SPACING.sm,
-    backgroundColor: '#fff', borderBottomWidth: 1, borderBottomColor: '#f1f3f5',
+    backgroundColor: '#FFFFFF', borderBottomWidth: 1, borderBottomColor: '#EAE2D6',
   },
   backBtn: { padding: 8 },
   backText: { fontSize: 22, color: COLORS.primary },
-  headerTitle: { fontSize: 17, fontWeight: '700', color: '#212529' },
-  loadingText: { color: '#868e96', marginTop: 12, fontSize: 14 },
+  headerTitle: { fontSize: 17, fontWeight: '700', color: '#1E1B18' },
+  loadingText: { color: '#6F6862', marginTop: 12, fontSize: 14 },
   bottomCard: {
     position: 'absolute', bottom: 24, left: 16, right: 16,
-    backgroundColor: '#fff', borderRadius: BORDER_RADIUS.lg, padding: 16,
+    backgroundColor: '#FFFFFF', borderRadius: BORDER_RADIUS.lg, padding: 16,
     flexDirection: 'row', alignItems: 'center',
     elevation: 8, shadowColor: '#000', shadowOpacity: 0.15, shadowRadius: 12, shadowOffset: { width: 0, height: 6 },
   },
-  selectedName: { fontSize: 16, fontWeight: '700', color: '#212529' },
-  selectedRating: { fontSize: 13, color: '#f4a261', marginTop: 4 },
+  selectedName: { fontSize: 16, fontWeight: '700', color: '#1E1B18' },
+  selectedRating: { fontSize: 13, color: '#C8952B', marginTop: 4 },
   viewBtn: { backgroundColor: COLORS.primary, borderRadius: 10, paddingHorizontal: 20, paddingVertical: 12 },
   viewBtnText: { color: '#fff', fontWeight: '700', fontSize: 14 },
 });

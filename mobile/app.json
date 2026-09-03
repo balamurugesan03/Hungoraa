@@ -2,7 +2,7 @@
   "expo": {
     "name": "Hungora",
     "slug": "hungora",
-    "version": "1.0.0",
+    "version": "1.0.3",
     "sdkVersion": "54.0.0",
     "orientation": "portrait",
     "icon": "./assets/hungora_darkgreen_gold_logo.png",
@@ -10,7 +10,7 @@
     "splash": {
       "image": "./assets/splash.png",
       "resizeMode": "contain",
-      "backgroundColor": "#0c2f4e"
+      "backgroundColor": "#EDF2F8"
     },
     "assetBundlePatterns": [
       "**/*"
@@ -27,7 +27,7 @@
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/hungora_darkgreen_gold_logo.png",
-        "backgroundColor": "#1B5E20"
+        "backgroundColor": "#EDF2F8"
       },
       "package": "com.hungora.app",
       "permissions": [
@@ -52,7 +52,8 @@
           "locationAlwaysAndWhenInUsePermission": "Allow Hungora to use your location."
         }
       ],
-      "@react-native-google-signin/google-signin"
+      "@react-native-google-signin/google-signin",
+      "expo-video"
     ],
     "scheme": "hungora",
     "extra": {

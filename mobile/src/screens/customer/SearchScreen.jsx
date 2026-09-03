@@ -1,14 +1,14 @@
-import React, { useState, useCallback } from 'react';
-import {
-  View, Text, StyleSheet, FlatList, TouchableOpacity, TextInput,
-  Platform, StatusBar, ActivityIndicator,
-} from 'react-native';
+import React, { useState, useCallback, useMemo } from 'react';
+import { View, Text, StyleSheet, FlatList, Pressable } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useQuery } from '@tanstack/react-query';
 import { useAppStore } from '../../store/appStore';
 import restaurantApi from '../../api/restaurant.api';
-import RestaurantCardHorizontal from '../../components/common/RestaurantCardHorizontal';
-import { COLORS, FONTS, SIZES, SPACING, BORDER_RADIUS, SHADOW } from '../../constants';
+import { toRestaurantCard } from '../../components/home/viewModels';
+import { COLOR, SPACING, text } from '../../theme';
+import {
+  Screen, AppBar, TextField, Chip, RestaurantRow, SkeletonRow, EmptyState, Sheet, Button,
+} from '../../components/ui';
 
 const FILTER_CUISINES = ['Indian', 'Chinese', 'Italian', 'Biryani', 'Pizza', 'Burger', 'Seafood', 'Thai'];
 const SORT_OPTIONS = [
@@ -23,231 +23,167 @@ export default function SearchScreen({ navigation }) {
   const { addRecentSearch, recentSearches } = useAppStore();
   const [query, setQuery] = useState('');
   const [activeQuery, setActiveQuery] = useState('');
-  const [selectedCuisine, setSelectedCuisine] = useState('');
+  const [cuisine, setCuisine] = useState('');
   const [sortBy, setSortBy] = useState('relevance');
-  const [showFilters, setShowFilters] = useState(false);
+  const [filtersOpen, setFiltersOpen] = useState(false);
 
   const { data, isLoading } = useQuery({
-    queryKey: ['search', activeQuery, selectedCuisine, sortBy],
+    queryKey: ['search', activeQuery, cuisine, sortBy],
     queryFn: () =>
-      restaurantApi.search(activeQuery, { cuisine: selectedCuisine, sortBy }).then((r) => r.data.data),
-    enabled: !!activeQuery || !!selectedCuisine,
+      restaurantApi.search(activeQuery, { cuisine, sortBy }).then((r) => r.data.data),
+    enabled: !!activeQuery || !!cuisine,
   });
 
-  const handleSearch = useCallback(() => {
-    if (!query.trim()) return;
-    setActiveQuery(query.trim());
-    addRecentSearch(query.trim());
-  }, [query]);
+  const results = useMemo(
+    () => (data?.restaurants || []).map((r) => toRestaurantCard(r)),
+    [data],
+  );
 
-  const clearSearch = () => {
-    setQuery('');
-    setActiveQuery('');
-  };
+  const runSearch = useCallback((term) => {
+    const q = (term ?? query).trim();
+    if (!q) return;
+    setQuery(q);
+    setActiveQuery(q);
+    addRecentSearch(q);
+  }, [query, addRecentSearch]);
 
-  const results = data?.restaurants || [];
+  const clear = () => { setQuery(''); setActiveQuery(''); };
+  const open = (item) => navigation.navigate('RestaurantDetail', { restaurantId: item.id, slug: item.slug });
+
+  const activeFilters = (cuisine ? 1 : 0) + (sortBy !== 'relevance' ? 1 : 0);
+  const showResults = !!activeQuery || !!cuisine;
 
   return (
-    <View style={styles.container}>
-      <StatusBar barStyle="dark-content" />
+    <Screen edges={['top']}>
+      <AppBar
+        title="Search"
+        onBack={() => navigation.goBack()}
+        right={
+          <Pressable onPress={() => setFiltersOpen(true)} hitSlop={8} style={styles.filterBtn}>
+            <Ionicons name="options-outline" size={20} color={COLOR.ink} />
+            {activeFilters > 0 ? <View style={styles.badge} /> : null}
+          </Pressable>
+        }
+      />
 
-      {/* Search Header */}
-      <View style={styles.header}>
-        <View style={styles.searchBar}>
-          <Ionicons name="search" size={18} color={COLORS.gray} />
-          <TextInput
-            style={styles.searchInput}
-            value={query}
-            onChangeText={setQuery}
-            placeholder="Search restaurants, cuisines..."
-            placeholderTextColor={COLORS.lightGray}
-            returnKeyType="search"
-            onSubmitEditing={handleSearch}
-            autoFocus
-          />
-          {query.length > 0 && (
-            <TouchableOpacity onPress={clearSearch}>
-              <Ionicons name="close-circle" size={18} color={COLORS.gray} />
-            </TouchableOpacity>
-          )}
-        </View>
-        <TouchableOpacity
-          style={[styles.filterBtn, showFilters && styles.filterBtnActive]}
-          onPress={() => setShowFilters(!showFilters)}
-        >
-          <Ionicons name="options-outline" size={18} color={showFilters ? COLORS.white : COLORS.primary} />
-        </TouchableOpacity>
+      <View style={styles.searchWrap}>
+        <TextField
+          icon="search"
+          placeholder="Restaurants, cuisines, a dish…"
+          value={query}
+          onChangeText={setQuery}
+          returnKeyType="search"
+          onSubmitEditing={() => runSearch()}
+          rightIcon={query ? 'close-circle' : undefined}
+          onPressRightIcon={clear}
+          autoFocus
+        />
       </View>
 
-      {/* Filters Panel */}
-      {showFilters && (
-        <View style={styles.filtersPanel}>
-          <Text style={styles.filterLabel}>Cuisine</Text>
-          <FlatList
-            data={FILTER_CUISINES}
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.filterList}
-            keyExtractor={(item) => item}
-            renderItem={({ item }) => (
-              <TouchableOpacity
-                style={[styles.filterChip, selectedCuisine === item && styles.filterChipActive]}
-                onPress={() => setSelectedCuisine(selectedCuisine === item ? '' : item)}
-              >
-                <Text style={[styles.filterChipText, selectedCuisine === item && styles.filterChipTextActive]}>
-                  {item}
-                </Text>
-              </TouchableOpacity>
-            )}
-          />
-          <Text style={styles.filterLabel}>Sort By</Text>
-          <FlatList
-            data={SORT_OPTIONS}
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.filterList}
-            keyExtractor={(item) => item.id}
-            renderItem={({ item }) => (
-              <TouchableOpacity
-                style={[styles.filterChip, sortBy === item.id && styles.filterChipActive]}
-                onPress={() => setSortBy(item.id)}
-              >
-                <Text style={[styles.filterChipText, sortBy === item.id && styles.filterChipTextActive]}>
-                  {item.label}
-                </Text>
-              </TouchableOpacity>
-            )}
-          />
-        </View>
-      )}
+      {!showResults ? (
+        <View style={styles.discover}>
+          {recentSearches.length > 0 ? (
+            <>
+              <Text style={[text.overline, styles.blockLabel]}>Recent</Text>
+              <View style={styles.recentWrap}>
+                {recentSearches.slice(0, 8).map((term) => (
+                  <Chip key={term} label={term} icon="time-outline" onPress={() => runSearch(term)} />
+                ))}
+              </View>
+            </>
+          ) : null}
 
-      {/* Recent Searches (no active query) */}
-      {!activeQuery && recentSearches.length > 0 && (
-        <View style={styles.recentSection}>
-          <Text style={styles.recentTitle}>Recent Searches</Text>
-          {recentSearches.slice(0, 6).map((term) => (
-            <TouchableOpacity
-              key={term}
-              style={styles.recentItem}
-              onPress={() => { setQuery(term); setActiveQuery(term); }}
-            >
-              <Ionicons name="time-outline" size={16} color={COLORS.gray} />
-              <Text style={styles.recentText}>{term}</Text>
-            </TouchableOpacity>
-          ))}
-        </View>
-      )}
+          <Text style={[text.overline, styles.blockLabel]}>Popular cuisines</Text>
+          <View style={styles.recentWrap}>
+            {FILTER_CUISINES.map((c) => (
+              <Chip key={c} label={c} onPress={() => { setCuisine(c); }} />
+            ))}
+          </View>
 
-      {/* No query, no recents */}
-      {!activeQuery && recentSearches.length === 0 && (
-        <View style={styles.emptySearch}>
-          <Text style={styles.emptyEmoji}>🔍</Text>
-          <Text style={styles.emptyTitle}>Discover Restaurants</Text>
-          <Text style={styles.emptySub}>Search by name, cuisine, or location</Text>
+          {recentSearches.length === 0 ? (
+            <EmptyState
+              icon="search-outline"
+              title="Find your next table"
+              message="Search by restaurant, cuisine, dish or neighbourhood."
+            />
+          ) : null}
         </View>
-      )}
-
-      {/* Results */}
-      {activeQuery && (
+      ) : (
         <FlatList
-          data={results}
-          keyExtractor={(item) => item._id || item.id}
-          contentContainerStyle={styles.resultsList}
+          data={isLoading ? [] : results}
+          keyExtractor={(item) => item.id}
+          contentContainerStyle={styles.results}
           showsVerticalScrollIndicator={false}
+          ItemSeparatorComponent={() => <View style={styles.sep} />}
           ListHeaderComponent={
-            <Text style={styles.resultsCount}>
-              {isLoading ? 'Searching...' : `${results.length} results for "${activeQuery}"`}
+            <Text style={[text.caption, styles.count]}>
+              {isLoading
+                ? 'Searching…'
+                : `${results.length} ${results.length === 1 ? 'result' : 'results'}${activeQuery ? ` for "${activeQuery}"` : ''}`}
             </Text>
           }
           ListEmptyComponent={
-            !isLoading ? (
-              <View style={styles.noResults}>
-                <Text style={styles.noResultsEmoji}>😕</Text>
-                <Text style={styles.noResultsText}>No restaurants found</Text>
-                <Text style={styles.noResultsSub}>Try a different search term</Text>
+            isLoading ? (
+              <View style={styles.skelWrap}>
+                {[0, 1, 2, 3].map((i) => <SkeletonRow key={i} />)}
               </View>
-            ) : null
+            ) : (
+              <EmptyState
+                icon="sad-outline"
+                title="No matches"
+                message="Try a different spelling or a broader term."
+              />
+            )
           }
           renderItem={({ item }) => (
-            <RestaurantCardHorizontal
-              restaurant={item}
-              onPress={() => navigation.navigate('RestaurantDetail', { id: item._id || item.id })}
-            />
+            <RestaurantRow item={item} onPress={() => open(item)} />
           )}
         />
       )}
 
-      {isLoading && activeQuery && (
-        <View style={styles.loadingOverlay}>
-          <ActivityIndicator size="large" color={COLORS.primary} />
+      <Sheet visible={filtersOpen} onClose={() => setFiltersOpen(false)} title="Filters">
+        <Text style={[text.overline, styles.blockLabel]}>Cuisine</Text>
+        <View style={styles.recentWrap}>
+          {FILTER_CUISINES.map((c) => (
+            <Chip
+              key={c}
+              label={c}
+              selected={cuisine === c}
+              onPress={() => setCuisine(cuisine === c ? '' : c)}
+            />
+          ))}
         </View>
-      )}
-    </View>
+        <Text style={[text.overline, styles.blockLabel, styles.mt]}>Sort by</Text>
+        <View style={styles.recentWrap}>
+          {SORT_OPTIONS.map((o) => (
+            <Chip
+              key={o.id}
+              label={o.label}
+              selected={sortBy === o.id}
+              onPress={() => setSortBy(o.id)}
+            />
+          ))}
+        </View>
+        <Button label="Show results" onPress={() => setFiltersOpen(false)} style={styles.applyBtn} />
+      </Sheet>
+    </Screen>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: COLORS.white },
-  header: {
-    flexDirection: 'row',
-    gap: SPACING.sm,
-    padding: SPACING.lg,
-    paddingTop: Platform.OS === 'ios' ? 56 : 36,
-    backgroundColor: COLORS.white,
-    borderBottomWidth: 1,
-    borderBottomColor: COLORS.border,
+  filterBtn: { padding: 6 },
+  badge: {
+    position: 'absolute', top: 4, right: 4,
+    width: 8, height: 8, borderRadius: 4, backgroundColor: COLOR.terracotta,
   },
-  searchBar: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: SPACING.sm,
-    backgroundColor: COLORS.background,
-    borderRadius: BORDER_RADIUS.md,
-    paddingHorizontal: SPACING.md,
-    height: 48,
-    borderWidth: 1.5,
-    borderColor: COLORS.border,
-  },
-  searchInput: { flex: 1, fontSize: SIZES.base, color: COLORS.dark, fontFamily: FONTS.regular },
-  filterBtn: {
-    width: 48,
-    height: 48,
-    borderRadius: BORDER_RADIUS.md,
-    backgroundColor: COLORS.primaryBg,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1.5,
-    borderColor: COLORS.primary,
-  },
-  filterBtnActive: { backgroundColor: COLORS.primary },
-  filtersPanel: { backgroundColor: COLORS.white, paddingVertical: SPACING.sm, borderBottomWidth: 1, borderBottomColor: COLORS.border },
-  filterLabel: { fontSize: SIZES.xs, fontFamily: FONTS.bold, color: COLORS.gray, paddingHorizontal: SPACING.lg, marginBottom: 6, textTransform: 'uppercase' },
-  filterList: { paddingHorizontal: SPACING.lg, gap: SPACING.sm, paddingBottom: SPACING.sm },
-  filterChip: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: BORDER_RADIUS.full,
-    borderWidth: 1.5,
-    borderColor: COLORS.border,
-    backgroundColor: COLORS.background,
-  },
-  filterChipActive: { backgroundColor: COLORS.primary, borderColor: COLORS.primary },
-  filterChipText: { fontSize: SIZES.xs, fontFamily: FONTS.medium, color: COLORS.gray },
-  filterChipTextActive: { color: COLORS.white },
-  recentSection: { padding: SPACING.lg },
-  recentTitle: { fontSize: SIZES.base, fontFamily: FONTS.bold, color: COLORS.dark, marginBottom: SPACING.md },
-  recentItem: { flexDirection: 'row', alignItems: 'center', gap: SPACING.sm, paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: COLORS.border },
-  recentText: { fontSize: SIZES.base, color: COLORS.dark, fontFamily: FONTS.regular },
-  emptySearch: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: SPACING.xl },
-  emptyEmoji: { fontSize: 64, marginBottom: SPACING.md },
-  emptyTitle: { fontSize: SIZES.lg, fontFamily: FONTS.bold, color: COLORS.dark, marginBottom: 8 },
-  emptySub: { fontSize: SIZES.base, color: COLORS.gray, textAlign: 'center', fontFamily: FONTS.regular },
-  resultsList: { padding: SPACING.lg, gap: SPACING.md },
-  resultsCount: { fontSize: SIZES.sm, color: COLORS.gray, fontFamily: FONTS.regular, marginBottom: SPACING.sm },
-  noResults: { alignItems: 'center', paddingVertical: 40 },
-  noResultsEmoji: { fontSize: 48, marginBottom: SPACING.md },
-  noResultsText: { fontSize: SIZES.lg, fontFamily: FONTS.bold, color: COLORS.dark },
-  noResultsSub: { fontSize: SIZES.base, color: COLORS.gray, fontFamily: FONTS.regular, marginTop: 4 },
-  loadingOverlay: { ...StyleSheet.absoluteFillObject, alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(255,255,255,0.8)' },
+  searchWrap: { paddingHorizontal: SPACING.lg, paddingBottom: SPACING.sm },
+  discover: { padding: SPACING.lg, gap: SPACING.sm },
+  blockLabel: { marginBottom: 4 },
+  mt: { marginTop: SPACING.lg },
+  recentWrap: { flexDirection: 'row', flexWrap: 'wrap', gap: SPACING.xs },
+  results: { padding: SPACING.lg, paddingTop: SPACING.xs },
+  count: { marginBottom: SPACING.sm },
+  sep: { height: SPACING.sm },
+  skelWrap: { gap: SPACING.xs },
+  applyBtn: { marginTop: SPACING.xl },
 });

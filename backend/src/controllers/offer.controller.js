@@ -11,8 +11,14 @@ exports.getAllOffers = async (req, res, next) => {
   try {
     const { city, type, page = 1, limit = 20 } = req.query;
     const now = new Date();
+    const todayName = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'][now.getDay()];
 
-    const query = { isActive: true, approvalStatus: 'approved', validTo: { $gte: now } };
+    const query = {
+      isActive: true,
+      approvalStatus: 'approved',
+      validFrom: { $lte: now },
+      validTo: { $gte: now },
+    };
     if (type) query.type = type;
 
     const skip = (parseInt(page) - 1) * parseInt(limit);
@@ -20,10 +26,56 @@ exports.getAllOffers = async (req, res, next) => {
       Offer.find(query)
         .populate({
           path: 'restaurant',
-          select: 'name slug logo address averageRating',
+          select: 'name slug logo images address averageRating',
           match: city ? { 'address.city': { $regex: city, $options: 'i' } } : {},
         })
-        .sort({ createdAt: -1 })
+        // Featured offers surface first on the app home banner
+        .sort({ isFeatured: -1, createdAt: -1 })
+        .skip(skip)
+        .limit(parseInt(limit))
+        .lean(),
+      Offer.countDocuments(query),
+    ]);
+
+    // Drop offers whose restaurant was filtered out by the city match, and
+    // day-scoped offers (e.g. weekend-only) that don't apply today.
+    const visible = offers.filter(
+      (o) => o.restaurant !== null
+        && (!o.validDays?.length || o.validDays.includes(todayName)),
+    );
+
+    return successResponse(res, 200, 'Offers fetched', {
+      offers: visible,
+      pagination: { page: parseInt(page), limit: parseInt(limit), total, pages: Math.ceil(total / parseInt(limit)) },
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// ─── Admin: list every offer (any status) for the management console ──────────
+exports.adminListOffers = async (req, res, next) => {
+  try {
+    const {
+      restaurantId, approvalStatus, isActive, search, page = 1, limit = 50,
+    } = req.query;
+
+    const query = {};
+    if (restaurantId) query.restaurant = restaurantId;
+    if (approvalStatus) query.approvalStatus = approvalStatus;
+    if (isActive === 'true' || isActive === 'false') query.isActive = isActive === 'true';
+    if (search) {
+      query.$or = [
+        { title: { $regex: search, $options: 'i' } },
+        { code: { $regex: search, $options: 'i' } },
+      ];
+    }
+
+    const skip = (parseInt(page) - 1) * parseInt(limit);
+    const [offers, total] = await Promise.all([
+      Offer.find(query)
+        .populate('restaurant', 'name slug address')
+        .sort({ isFeatured: -1, createdAt: -1 })
         .skip(skip)
         .limit(parseInt(limit))
         .lean(),
@@ -31,7 +83,7 @@ exports.getAllOffers = async (req, res, next) => {
     ]);
 
     return successResponse(res, 200, 'Offers fetched', {
-      offers: offers.filter((o) => o.restaurant !== null),
+      offers,
       pagination: { page: parseInt(page), limit: parseInt(limit), total, pages: Math.ceil(total / parseInt(limit)) },
     });
   } catch (err) {
@@ -95,12 +147,14 @@ exports.validateCoupon = async (req, res, next) => {
 exports.createOffer = async (req, res, next) => {
   try {
     const { restaurantId, fundedBy, fundingBreakup, approvalRequired, ...rest } = req.body;
+    const isAdmin = req.user.role === 'admin';
 
-    if (!(await verifyOwner(restaurantId, req.user._id))) {
+    if (!isAdmin && !(await verifyOwner(restaurantId, req.user._id))) {
       return errorResponse(res, 403, 'Access denied');
     }
 
     const restaurant = await Restaurant.findById(restaurantId);
+    if (!restaurant) return errorResponse(res, 404, 'Restaurant not found');
 
     // Validate combined funding sums to 100
     if (fundedBy === 'combined' && fundingBreakup) {
@@ -112,8 +166,10 @@ exports.createOffer = async (req, res, next) => {
       }
     }
 
-    // Determine if approval is required
-    const needsApproval = approvalRequired ?? restaurant.discountPolicy?.requiresApproval ?? false;
+    // Determine if approval is required. Admin-created offers go live directly.
+    const needsApproval = isAdmin
+      ? false
+      : (approvalRequired ?? restaurant.discountPolicy?.requiresApproval ?? false);
     const autoApproveBelow = restaurant.discountPolicy?.autoApproveBelow ?? 0;
     const discountValue = parseFloat(rest.discountValue || 0);
 
@@ -152,17 +208,19 @@ exports.createOffer = async (req, res, next) => {
   }
 };
 
-// ─── Owner: Update offer ──────────────────────────────────────────────────────
+// ─── Owner / Admin: Update offer ─────────────────────────────────────────────
 exports.updateOffer = async (req, res, next) => {
   try {
     const offer = await Offer.findById(req.params.id).populate('restaurant');
     if (!offer) return errorResponse(res, 404, 'Offer not found');
-    if (offer.restaurant.owner.toString() !== req.user._id.toString()) {
+    const isAdmin = req.user.role === 'admin';
+    if (!isAdmin && offer.restaurant.owner.toString() !== req.user._id.toString()) {
       return errorResponse(res, 403, 'Access denied');
     }
-    // Editing an approved offer resets it to draft until re-submitted
+    // Editing an approved owner offer resets it to draft until re-submitted.
+    // Admin edits stay live.
     const updates = { ...req.body };
-    if (offer.approvalStatus === 'approved' && offer.approvalRequired) {
+    if (!isAdmin && offer.approvalStatus === 'approved' && offer.approvalRequired) {
       updates.approvalStatus = 'draft';
     }
 

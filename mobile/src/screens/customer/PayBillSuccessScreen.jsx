@@ -32,7 +32,7 @@ export default function PayBillSuccessScreen({ route, navigation }) {
   return (
     <View style={styles.container}>
       <StatusBar barStyle="light-content" />
-      <LinearGradient colors={['#1a1a2e', '#16213e']} style={styles.hero}>
+      <LinearGradient colors={['#1B5E8F', '#0C2F4E']} style={styles.hero}>
         <Animated.View style={[styles.checkCircle, { transform: [{ scale: scaleAnim }] }]}>
           <LinearGradient colors={['#2d6a4f', '#40916c']} style={styles.checkGrad}>
             <Ionicons name="checkmark" size={48} color="#fff" />
@@ -121,7 +121,7 @@ const styles = StyleSheet.create({
   },
   savingsText: { fontSize: SIZES.base, fontFamily: FONTS.bold, color: '#2d6a4f' },
   receiptCard: {
-    backgroundColor: COLORS.white, borderRadius: BORDER_RADIUS.lg,
+    backgroundColor: COLORS.card, borderRadius: BORDER_RADIUS.lg,
     padding: SPACING.lg, ...SHADOW.md, marginBottom: SPACING.xl,
   },
   receiptHeader: {

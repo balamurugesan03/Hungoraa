@@ -26,7 +26,7 @@ export default function SplashScreen({ navigation }) {
   }, []);
 
   return (
-    <LinearGradient colors={['#1a1a2e', '#16213e', '#1B5E20']} style={styles.container} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}>
+    <LinearGradient colors={['#1B5E8F', '#0C2F4E', '#081E33']} style={styles.container} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}>
       <StatusBar barStyle="light-content" />
       <Animated.View style={{ transform: [{ scale: scaleAnim }], opacity: opacityAnim }}>
         <Text style={styles.emoji}>🍽️</Text>

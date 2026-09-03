@@ -8,6 +8,9 @@ router.get('/', optionalAuth, ctrl.getAllOffers);
 router.get('/restaurant/:restaurantId', optionalAuth, ctrl.getRestaurantOffers);
 router.post('/validate-coupon', protect, authorize('customer'), ctrl.validateCoupon);
 
+// Admin — full offer console (list every offer, any status)
+router.get('/admin/all', protect, authorize('admin'), ctrl.adminListOffers);
+
 // Owner — create / edit
 router.post('/', protect, authorize('owner', 'admin'), ctrl.createOffer);
 router.put('/:id', protect, authorize('owner', 'admin'), ctrl.updateOffer);

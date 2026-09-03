@@ -99,7 +99,7 @@ export default function ReviewScreen({ navigation, route }) {
           <TextInput
             style={styles.textArea}
             placeholder="Share your experience with other diners..."
-            placeholderTextColor="#ced4da"
+            placeholderTextColor="#A79E95"
             value={comment}
             onChangeText={setComment}
             multiline
@@ -125,35 +125,35 @@ export default function ReviewScreen({ navigation, route }) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f8f9fa' },
+  container: { flex: 1, backgroundColor: '#FBF7F1' },
   header: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
     paddingHorizontal: SPACING.md, paddingVertical: SPACING.sm,
-    backgroundColor: '#fff', borderBottomWidth: 1, borderBottomColor: '#f1f3f5',
+    backgroundColor: '#FFFFFF', borderBottomWidth: 1, borderBottomColor: '#EAE2D6',
   },
   backBtn: { padding: 8 },
   backText: { fontSize: 22, color: COLORS.primary },
-  headerTitle: { fontSize: 17, fontWeight: '700', color: '#212529' },
+  headerTitle: { fontSize: 17, fontWeight: '700', color: '#1E1B18' },
   scroll: { padding: SPACING.md, paddingBottom: 40 },
-  restaurantName: { fontSize: 20, fontWeight: '800', color: '#212529', textAlign: 'center', marginBottom: SPACING.md },
+  restaurantName: { fontSize: 20, fontWeight: '800', color: '#1E1B18', textAlign: 'center', marginBottom: SPACING.md },
   card: {
-    backgroundColor: '#fff', borderRadius: BORDER_RADIUS.md,
+    backgroundColor: '#FFFFFF', borderRadius: BORDER_RADIUS.md,
     padding: SPACING.md, marginBottom: SPACING.sm,
     elevation: 1, shadowColor: '#000', shadowOpacity: 0.04, shadowRadius: 4, shadowOffset: { width: 0, height: 2 },
   },
-  sectionTitle: { fontSize: 15, fontWeight: '700', color: '#212529', marginBottom: 16 },
+  sectionTitle: { fontSize: 15, fontWeight: '700', color: '#1E1B18', marginBottom: 16 },
   starsCenter: { alignItems: 'center', gap: 8 },
   ratingLabel: { fontSize: 16, fontWeight: '600', color: COLORS.primary, marginTop: 4 },
   subRatingRow: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: '#f1f3f5',
+    paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: '#EAE2D6',
   },
-  subRatingLabel: { fontSize: 14, color: '#495057', fontWeight: '500' },
+  subRatingLabel: { fontSize: 14, color: '#6F6862', fontWeight: '500' },
   textArea: {
-    backgroundColor: '#f8f9fa', borderRadius: 10, padding: 14,
-    fontSize: 15, color: '#212529', minHeight: 120, borderWidth: 1, borderColor: '#e9ecef',
+    backgroundColor: '#FBF7F1', borderRadius: 10, padding: 14,
+    fontSize: 15, color: '#1E1B18', minHeight: 120, borderWidth: 1, borderColor: '#E2D8C9',
   },
-  charCount: { fontSize: 11, color: '#868e96', textAlign: 'right', marginTop: 6 },
+  charCount: { fontSize: 11, color: '#6F6862', textAlign: 'right', marginTop: 6 },
   submitBtn: {
     backgroundColor: COLORS.primary, borderRadius: BORDER_RADIUS.md,
     padding: 18, alignItems: 'center', marginTop: 8,

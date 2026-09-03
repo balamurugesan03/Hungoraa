@@ -107,7 +107,11 @@ export default function CustomerNavigator() {
         },
       })}
     >
-      <Tab.Screen name="Home" component={HomeStack} options={{ tabBarLabel: 'Discover' }} />
+      <Tab.Screen
+        name="Home"
+        component={HomeStack}
+        options={{ tabBarLabel: 'Discover', tabBarStyle: { display: 'none' } }}
+      />
       <Tab.Screen name="Search" component={SearchScreen} />
       <Tab.Screen name="Bookings" component={BookingsStack} options={{ tabBarLabel: 'My Bookings' }} />
       <Tab.Screen name="Profile" component={ProfileStack} />
@@ -117,17 +121,13 @@ export default function CustomerNavigator() {
 
 const styles = StyleSheet.create({
   tabBar: {
-    height: Platform.OS === 'ios' ? 85 : 65,
-    paddingBottom: Platform.OS === 'ios' ? 20 : 8,
-    paddingTop: 8,
-    backgroundColor: COLORS.white,
+    height: Platform.OS === 'ios' ? 85 : 66,
+    paddingBottom: Platform.OS === 'ios' ? 20 : 10,
+    paddingTop: 10,
+    backgroundColor: COLORS.card,
     borderTopWidth: 1,
     borderTopColor: COLORS.border,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: -4 },
-    shadowOpacity: 0.08,
-    shadowRadius: 8,
-    elevation: 8,
+    elevation: 0,
   },
   tabLabel: {
     fontSize: 11,

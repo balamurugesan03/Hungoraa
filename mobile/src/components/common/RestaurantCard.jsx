@@ -58,7 +58,7 @@ export default function RestaurantCard({ restaurant, onPress }) {
 const styles = StyleSheet.create({
   card: {
     width: CARD_WIDTH,
-    backgroundColor: COLORS.white,
+    backgroundColor: COLORS.card,
     borderRadius: BORDER_RADIUS.lg,
     overflow: 'hidden',
     ...SHADOW.md,

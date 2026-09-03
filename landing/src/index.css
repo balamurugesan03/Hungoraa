@@ -1,25 +1,35 @@
 :root {
-  /* Dark luxury restaurant palette — charcoal/black environment, warm gold
-     accents (candlelight / brass / pendant-light warmth), cream typography. */
-  --bg-void: #0b0908;
-  --bg-deep: #050403;
-  --bg-panel: #17130f;
-  --bg-panel-2: #1f1912;
-  --border-soft: rgba(233, 210, 169, 0.12);
-  --border-strong: rgba(233, 210, 169, 0.28);
+  /* Deep-blue "logo blue" palette — ink-navy environment lit by an electric-blue
+     glow, with brass/gold accents. Matches the Hungora mobile app brand. */
+  --bg-void: #071522;
+  --bg-deep: #040c15;
+  --bg-panel: #0c1f30;
+  --bg-panel-2: #14293c;
+  --border-soft: rgba(120, 178, 235, 0.14);
+  --border-strong: rgba(120, 178, 235, 0.3);
 
-  --text-hi: #f3ead9;
-  --text-mid: #c9bba3;
-  --text-low: #8a7b66;
-  --text-inverse: #1b140d;
+  --text-hi: #eef4fb;
+  --text-mid: #a7bccf;
+  --text-low: #6b8298;
+  --text-inverse: #05121f;
 
-  --accent-violet: #d4af6a;
-  --accent-cyan: #a97f3f;
+  /* var names kept for back-compat across component CSS:
+     --accent-violet = primary gold, --accent-cyan = electric blue */
+  --accent-violet: #c8952b;
+  --accent-gold: #c8952b;
+  --accent-cyan: #3f93d8;
+  --accent-blue: #3f93d8;
   --accent-amber: #e8c27a;
-  --gradient-brand: linear-gradient(120deg, #7a5a2c 0%, #d4af6a 55%, #f3d9a0 100%);
-  --gradient-warm: linear-gradient(120deg, #b8862f 0%, #f3d9a0 100%);
 
-  --font-display: 'Space Grotesk', 'Inter', sans-serif;
+  /* rgb triplets for rgba() glows */
+  --glow-blue: 63, 147, 216;
+  --glow-gold: 200, 149, 43;
+
+  --gradient-brand: linear-gradient(118deg, #1c4e70 0%, #3f93d8 42%, #e8c27a 100%);
+  --gradient-warm: linear-gradient(120deg, #b8862f 0%, #f3d9a0 100%);
+  --gradient-blue: linear-gradient(135deg, #123a58 0%, #3f93d8 100%);
+
+  --font-display: 'Bricolage Grotesque', 'Inter', sans-serif;
   --font-body: 'Inter', sans-serif;
 
   --radius-lg: 24px;
@@ -43,11 +53,11 @@ html {
 
 body {
   background:
-    radial-gradient(ellipse 70% 50% at 18% 0%, rgba(212, 175, 106, 0.12), transparent 62%),
-    radial-gradient(ellipse 60% 45% at 100% 15%, rgba(184, 134, 47, 0.16), transparent 64%),
-    radial-gradient(ellipse 55% 40% at 12% 80%, rgba(212, 175, 106, 0.06), transparent 68%),
-    radial-gradient(ellipse 50% 35% at 90% 90%, rgba(184, 134, 47, 0.1), transparent 65%),
-    linear-gradient(180deg, var(--bg-void) 0%, #0d0a08 45%, var(--bg-deep) 100%);
+    radial-gradient(ellipse 72% 52% at 16% -4%, rgba(var(--glow-blue), 0.22), transparent 62%),
+    radial-gradient(ellipse 58% 44% at 102% 12%, rgba(var(--glow-blue), 0.16), transparent 64%),
+    radial-gradient(ellipse 46% 40% at 88% 92%, rgba(var(--glow-gold), 0.1), transparent 66%),
+    radial-gradient(ellipse 55% 40% at 6% 82%, rgba(var(--glow-blue), 0.1), transparent 70%),
+    linear-gradient(180deg, var(--bg-void) 0%, #081a2a 44%, var(--bg-deep) 100%);
   background-attachment: fixed;
   color: var(--text-hi);
   font-family: var(--font-body);
@@ -96,8 +106,8 @@ h4 {
   font-weight: 600;
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: var(--accent-violet);
-  background: rgba(212, 175, 106, 0.12);
+  color: var(--accent-amber);
+  background: rgba(var(--glow-blue), 0.1);
   border: 1px solid var(--border-soft);
   backdrop-filter: blur(8px);
 }
@@ -108,7 +118,7 @@ h4 {
   height: 6px;
   border-radius: 50%;
   background: var(--gradient-brand);
-  box-shadow: 0 0 12px 2px rgba(212, 175, 106, 0.7);
+  box-shadow: 0 0 12px 2px rgba(var(--glow-gold), 0.7);
 }
 
 .gradient-text {
@@ -161,7 +171,7 @@ h4 {
   overflow: hidden;
   background: var(--gradient-brand);
   color: var(--text-inverse);
-  box-shadow: 0 8px 30px -6px rgba(212, 175, 106, 0.45);
+  box-shadow: 0 10px 34px -6px rgba(var(--glow-blue), 0.5);
 }
 
 .btn-primary::after {
@@ -179,37 +189,37 @@ h4 {
 
 .btn-primary:hover {
   transform: translateY(-2px);
-  box-shadow: 0 14px 40px -8px rgba(212, 175, 106, 0.6);
+  box-shadow: 0 16px 46px -8px rgba(var(--glow-blue), 0.68);
 }
 
 .btn-ghost {
   border: 1px solid var(--border-strong);
   color: var(--text-hi);
-  background: rgba(233, 210, 169, 0.05);
+  background: rgba(150, 196, 236, 0.05);
 }
 
 .btn-ghost:hover {
   border-color: var(--accent-violet);
-  background: rgba(212, 175, 106, 0.12);
+  background: rgba(var(--glow-gold), 0.12);
   transform: translateY(-2px);
 }
 
 .glass-card {
   position: relative;
-  background: linear-gradient(180deg, rgba(233, 210, 169, 0.07) 0%, rgba(233, 210, 169, 0.02) 100%);
+  background: linear-gradient(180deg, rgba(150, 196, 236, 0.07) 0%, rgba(150, 196, 236, 0.02) 100%);
   border: 1px solid var(--border-soft);
   border-radius: var(--radius-lg);
   backdrop-filter: blur(20px) saturate(140%);
   -webkit-backdrop-filter: blur(20px) saturate(140%);
-  box-shadow: inset 0 1px 0 rgba(233, 210, 169, 0.07), 0 1px 2px rgba(0, 0, 0, 0.35),
+  box-shadow: inset 0 1px 0 rgba(150, 196, 236, 0.07), 0 1px 2px rgba(0, 0, 0, 0.35),
     0 20px 40px -24px rgba(0, 0, 0, 0.7);
 }
 
 .noise-grid {
   position: absolute;
   inset: 0;
-  background-image: linear-gradient(rgba(233, 210, 169, 0.04) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(233, 210, 169, 0.04) 1px, transparent 1px);
+  background-image: linear-gradient(rgba(150, 196, 236, 0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(150, 196, 236, 0.04) 1px, transparent 1px);
   background-size: 64px 64px;
   mask-image: radial-gradient(ellipse 60% 50% at 50% 0%, black 40%, transparent 100%);
   pointer-events: none;

@@ -175,10 +175,11 @@ export default function MenuGallery() {
           gl={{ alpha: true, antialias: true }}
           onPointerMissed={() => setFocusedIndex(null)}
         >
-          <fog attach="fog" args={['#0b0908', 6, 15]} />
-          <ambientLight intensity={0.5} color="#3a2a18" />
-          <directionalLight position={[3, 5, 4]} intensity={1.1} color="#ffcf8a" />
-          <pointLight position={[-3, 2, -2]} intensity={0.4} color="#d4af6a" decay={2} />
+          <fog attach="fog" args={['#071522', 6, 15]} />
+          <ambientLight intensity={0.5} color="#173250" />
+          <directionalLight position={[3, 5, 4]} intensity={1.05} color="#a9d2f0" />
+          <pointLight position={[-3, 2, -2]} intensity={0.5} color="#3f93d8" decay={2} />
+          <pointLight position={[2.5, 1.5, 3]} intensity={0.35} color="#e8c27a" decay={2} />
 
           <CameraRig focused={focusedIndex !== null} />
           <Carousel focusedIndex={focusedIndex} hoveredIndex={hoveredIndex} onHover={setHoveredIndex} onSelect={setFocusedIndex} />

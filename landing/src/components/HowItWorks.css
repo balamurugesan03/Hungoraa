@@ -39,7 +39,7 @@
 
 .how__step:hover {
   border-color: var(--border-strong);
-  background: linear-gradient(180deg, rgba(184, 134, 47, 0.1), rgba(184, 134, 47, 0.02));
+  background: linear-gradient(180deg, rgba(var(--glow-blue), 0.1), rgba(var(--glow-blue), 0.02));
 }
 
 .how__step-ghost {
@@ -76,7 +76,7 @@
 
 .how__step:hover .how__step-icon {
   transform: scale(1.08);
-  box-shadow: 0 12px 30px -8px rgba(212, 175, 106, 0.55);
+  box-shadow: 0 12px 30px -8px rgba(var(--glow-blue), 0.55);
 }
 
 .how__step-num {

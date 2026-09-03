@@ -11,7 +11,7 @@
   position: absolute;
   inset: -40% -10% auto -10%;
   height: 240px;
-  background: radial-gradient(ellipse 50% 50% at 50% 0%, rgba(184, 134, 47, 0.24), transparent 70%);
+  background: radial-gradient(ellipse 50% 50% at 50% 0%, rgba(var(--glow-blue), 0.24), transparent 70%);
   pointer-events: none;
 }
 
@@ -60,7 +60,7 @@
   height: 52px;
   border-radius: 16px;
   margin-bottom: 24px;
-  background: rgba(212, 175, 106, 0.12);
+  background: rgba(var(--glow-blue), 0.12);
   color: var(--accent-violet);
   border: 1px solid var(--border-soft);
 }
@@ -115,7 +115,7 @@
 
 .value-card:hover {
   border-color: var(--border-strong);
-  background: linear-gradient(180deg, rgba(184, 134, 47, 0.16), rgba(184, 134, 47, 0.02));
+  background: linear-gradient(180deg, rgba(var(--glow-blue), 0.16), rgba(var(--glow-blue), 0.02));
 }
 
 .value-card__icon {
@@ -125,7 +125,7 @@
   height: 40px;
   border-radius: 12px;
   margin-bottom: 16px;
-  background: rgba(184, 134, 47, 0.2);
+  background: rgba(var(--glow-blue), 0.2);
   color: var(--accent-violet);
   border: 1px solid var(--border-soft);
 }
@@ -153,11 +153,11 @@
 }
 
 .about__vm-card:first-child {
-  background: linear-gradient(160deg, rgba(212, 175, 106, 0.14), rgba(255, 255, 255, 0.02));
+  background: linear-gradient(160deg, rgba(var(--glow-blue), 0.14), rgba(255, 255, 255, 0.02));
 }
 
 .about__vm-card:last-child {
-  background: linear-gradient(160deg, rgba(184, 134, 47, 0.24), rgba(255, 255, 255, 0.02));
+  background: linear-gradient(160deg, rgba(var(--glow-blue), 0.24), rgba(255, 255, 255, 0.02));
 }
 
 .about__vm-icon {
@@ -167,7 +167,7 @@
   height: 48px;
   border-radius: 14px;
   margin-bottom: 20px;
-  background: rgba(212, 175, 106, 0.1);
+  background: rgba(var(--glow-blue), 0.1);
   color: var(--accent-violet);
   border: 1px solid var(--border-soft);
 }

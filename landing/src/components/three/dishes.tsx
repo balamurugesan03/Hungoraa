@@ -584,7 +584,7 @@ export function Plinth() {
     <group>
       <mesh position={[0, -0.02, 0]}>
         <cylinderGeometry args={[0.42, 0.46, 0.05, 48]} />
-        <meshPhysicalMaterial color="#1c150e" roughness={0.3} metalness={0.15} clearcoat={0.6} clearcoatRoughness={0.25} />
+        <meshPhysicalMaterial color="#0c1a26" roughness={0.28} metalness={0.2} clearcoat={0.6} clearcoatRoughness={0.25} />
       </mesh>
       <mesh position={[0, 0.006, 0]} rotation={[Math.PI / 2, 0, 0]}>
         <torusGeometry args={[0.43, 0.008, 10, 64]} />

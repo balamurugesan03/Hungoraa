@@ -11,8 +11,10 @@ gsap.registerPlugin(ScrollTrigger)
 
 const GOLD = '#d4af6a'
 const WARM_GLOW = '#ffb35c'
-const WOOD = '#1b130c'
-const CLOTH = '#241a11'
+const BLUE_KEY = '#8fc1e8'
+const BLUE_FILL = '#3f93d8'
+const WOOD = '#0e1a26'
+const CLOTH = '#122230'
 
 const woodMat = { color: WOOD, roughness: 0.35, metalness: 0.1 } as const
 const brassMat = { color: GOLD, metalness: 0.9, roughness: 0.25, clearcoat: 1, clearcoatRoughness: 0.15 } as const
@@ -197,7 +199,7 @@ function DiningHall() {
       {/* Floor */}
       <mesh position={[0, -1.32, -5]} rotation={[-Math.PI / 2, 0, 0]}>
         <planeGeometry args={[30, 30]} />
-        <meshStandardMaterial color="#140f0a" roughness={0.35} metalness={0.08} />
+        <meshStandardMaterial color="#08131f" roughness={0.3} metalness={0.12} />
       </mesh>
 
       {tablePositions.map((p, i) => (
@@ -233,10 +235,11 @@ export default function RestaurantScene() {
         camera={{ position: [0.3, 1.75, 9.2], fov: 45 }}
         gl={{ alpha: true, antialias: true, powerPreference: 'high-performance' }}
       >
-        <fog attach="fog" args={['#0b0908', 5, 17]} />
-        <ambientLight intensity={0.32} color="#3a2a18" />
-        <directionalLight position={[2, 5, 4]} intensity={0.9} color="#ffcf8a" />
-        <pointLight position={[-1.5, 1.6, 1]} intensity={0.7} color={WARM_GLOW} distance={6} decay={2} />
+        <fog attach="fog" args={['#071522', 5, 17]} />
+        <ambientLight intensity={0.36} color="#16324c" />
+        <directionalLight position={[2, 5, 4]} intensity={0.85} color={BLUE_KEY} />
+        <pointLight position={[-2, 1.8, 2]} intensity={0.85} color={BLUE_FILL} distance={7} decay={2} />
+        <pointLight position={[1.6, 1.4, 1]} intensity={0.5} color={WARM_GLOW} distance={5} decay={2} />
 
         <CameraRig />
         <DiningHall />

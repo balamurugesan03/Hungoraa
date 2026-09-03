@@ -1,4 +1,5 @@
 import logo from '../assets/logo.svg'
+import { IconArrowRight } from './Icons'
 import './Footer.css'
 
 const columns = [
@@ -21,7 +22,7 @@ const columns = [
     ],
   },
   {
-    title: 'Restaurants',
+    title: 'Partners',
     links: [
       { label: 'Partner with us', href: '#restaurants' },
       { label: 'Owner dashboard', href: '#' },
@@ -44,40 +45,45 @@ export default function Footer() {
     <footer className="footer">
       <div className="footer__cta section">
         <h2>
-          Ready to skip the wait? <span className="gradient-text">Download Hungora.</span>
+          Ready to skip the wait? <span className="accent">Download Hungora.</span>
         </h2>
         <a href="#download" className="btn btn-primary">
-          Get the app
+          Get the app <IconArrowRight size={16} />
         </a>
       </div>
 
       <div className="footer__main">
-        <div className="footer__brand">
-          <a href="#top" className="navbar__brand">
-            <img src={logo} alt="Hungora" className="navbar__brand-icon" />
-            Hungora
-          </a>
-          <p>Book. Dine. Pay. All from one app.</p>
-        </div>
+        <div className="footer__inner">
+          <div className="footer__brand">
+            <a href="#top" className="footer__logo">
+              <img src={logo} alt="Hungora" />
+              <span>Hungora</span>
+            </a>
+            <p>Reserve. Dine. Settle. All from one app.</p>
+          </div>
 
-        <div className="footer__columns">
-          {columns.map((c) => (
-            <div key={c.title}>
-              <h4>{c.title}</h4>
-              <ul>
-                {c.links.map((l) => (
-                  <li key={l.label}>
-                    <a href={l.href}>{l.label}</a>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ))}
+          <div className="footer__columns">
+            {columns.map((c) => (
+              <div key={c.title}>
+                <h4 className="mono">{c.title}</h4>
+                <ul>
+                  {c.links.map((l) => (
+                    <li key={l.label}>
+                      <a href={l.href}>{l.label}</a>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
 
       <div className="footer__bottom">
-        <span>© {new Date().getFullYear()} Hungora. All rights reserved.</span>
+        <div className="footer__inner">
+          <span className="mono">© {new Date().getFullYear()} Hungora — a DineSmart platform</span>
+          <span className="mono">Made for the table</span>
+        </div>
       </div>
     </footer>
   )

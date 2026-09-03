@@ -2,7 +2,6 @@ import { useEffect, useRef } from 'react'
 import gsap from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import { useStaggerReveal } from '../hooks/useReveal'
-import { useTilt } from '../hooks/useTilt'
 import { IconBolt, IconCalendar, IconReceipt } from './Icons'
 import './HowItWorks.css'
 
@@ -13,58 +12,42 @@ const steps = [
     icon: IconCalendar,
     step: '01',
     title: 'Find & hold your table',
-    body: 'Search nearby restaurants, pick a slot, and we hold your table for 5 minutes while you confirm — no more turning up to a walk-in queue.',
+    body: 'Search nearby restaurants, pick a slot, and we hold the table for 5 minutes while you confirm — no walk-in queue, no calling ahead.',
+    meta: '5:00 hold timer',
   },
   {
     icon: IconBolt,
     step: '02',
-    title: 'Unlock live offers',
-    body: 'Apply restaurant, platform, or bank-funded offers automatically — the best available discount is applied before you even ask.',
+    title: 'Offers apply themselves',
+    body: 'Restaurant, platform, and bank-funded discounts are calculated automatically — the best available price is locked before you ask.',
+    meta: 'Auto-stacked',
   },
   {
     icon: IconReceipt,
     step: '03',
-    title: 'Split & pay the bill',
-    body: 'Scan the table QR, review the itemized bill, split it your way, and pay — the restaurant gets settled automatically in the background.',
+    title: 'Split & settle the bill',
+    body: 'Scan the table QR, review the itemised bill, split it any way, and pay. The restaurant is settled automatically in the background.',
+    meta: 'Instant settlement',
   },
 ]
 
-function Step({ icon: Icon, step, title, body }: (typeof steps)[number]) {
-  const tiltRef = useTilt<HTMLDivElement>(6)
-  return (
-    <div className="how__step glass-card" ref={tiltRef}>
-      <span className="how__step-ghost" aria-hidden="true">
-        {step}
-      </span>
-      <div className="how__step-top">
-        <span className="how__step-icon">
-          <Icon size={22} />
-        </span>
-        <span className="how__step-num">{step}</span>
-      </div>
-      <h3>{title}</h3>
-      <p>{body}</p>
-    </div>
-  )
-}
-
 export default function HowItWorks() {
   const rootRef = useRef<HTMLDivElement>(null)
-  const connectorRef = useRef<HTMLDivElement>(null)
-  const ref = useStaggerReveal<HTMLDivElement>({ stagger: 0.16 })
+  const lineRef = useRef<HTMLDivElement>(null)
+  const stepsRef = useStaggerReveal<HTMLDivElement>({ stagger: 0.14 })
 
   useEffect(() => {
-    const el = connectorRef.current
+    const el = lineRef.current
     if (!el) return
     const ctx = gsap.context(() => {
       gsap.fromTo(
         el,
-        { scaleX: 0 },
+        { scaleY: 0 },
         {
-          scaleX: 1,
-          transformOrigin: 'left center',
-          ease: 'power2.out',
-          scrollTrigger: { trigger: el, start: 'top 78%', end: 'bottom 55%', scrub: 0.6 },
+          scaleY: 1,
+          transformOrigin: 'top center',
+          ease: 'none',
+          scrollTrigger: { trigger: rootRef.current, start: 'top 62%', end: 'bottom 78%', scrub: 0.6 },
         },
       )
     }, rootRef)
@@ -75,20 +58,41 @@ export default function HowItWorks() {
     <section id="how-it-works" className="section how" ref={rootRef}>
       <div className="section-head">
         <span className="eyebrow">How it works</span>
-        <h2>From hungry to seated to paid — three taps.</h2>
-        <p>No paperwork at the table, no waiting for a card machine, no splitting arguments.</p>
+        <h2>Hungry to seated to settled — three taps.</h2>
+        <p>No paperwork at the table. No waiting on a card machine. No splitting argument.</p>
       </div>
 
-      <div className="how__steps-wrap">
-        <div className="how__connector-track" aria-hidden="true">
-          <div className="how__connector" ref={connectorRef} />
+      <div className="how__timeline">
+        <div className="how__rail" aria-hidden="true">
+          <div className="how__rail-fill" ref={lineRef} />
         </div>
-        <div className="how__steps" ref={ref}>
-          {steps.map((s) => (
-            <Step key={s.step} {...s} />
+
+        <div className="how__steps" ref={stepsRef}>
+          {steps.map(({ icon: Icon, step, title, body, meta }) => (
+            <div className="how__step" key={step}>
+              <div className="how__node" aria-hidden="true">
+                <span className="how__node-num mono">{step}</span>
+              </div>
+              <div className="how__card panel ticks spotlight" onMouseMove={spotlight}>
+                <div className="how__card-top">
+                  <span className="how__card-icon">
+                    <Icon size={20} />
+                  </span>
+                  <span className="how__card-meta mono">{meta}</span>
+                </div>
+                <h3>{title}</h3>
+                <p>{body}</p>
+              </div>
+            </div>
           ))}
         </div>
       </div>
     </section>
   )
+}
+
+function spotlight(e: React.MouseEvent<HTMLDivElement>) {
+  const r = e.currentTarget.getBoundingClientRect()
+  e.currentTarget.style.setProperty('--mx', `${((e.clientX - r.left) / r.width) * 100}%`)
+  e.currentTarget.style.setProperty('--my', `${((e.clientY - r.top) / r.height) * 100}%`)
 }

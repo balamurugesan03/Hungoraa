@@ -4,20 +4,25 @@ import './Navbar.css'
 
 const links = [
   { label: 'Menu', href: '#menu' },
-  { label: 'About', href: '#about' },
   { label: 'How it works', href: '#how-it-works' },
   { label: 'Features', href: '#features' },
   { label: 'Restaurants', href: '#restaurants' },
-  { label: 'Get the app', href: '#download' },
 ]
 
 export default function Navbar() {
   const [scrolled, setScrolled] = useState(false)
+  const [progress, setProgress] = useState(0)
   const [open, setOpen] = useState(false)
 
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 24)
-    window.addEventListener('scroll', onScroll)
+    const onScroll = () => {
+      const h = document.documentElement
+      setScrolled(h.scrollTop > 20)
+      const max = h.scrollHeight - h.clientHeight
+      setProgress(max > 0 ? h.scrollTop / max : 0)
+    }
+    onScroll()
+    window.addEventListener('scroll', onScroll, { passive: true })
     return () => window.removeEventListener('scroll', onScroll)
   }, [])
 
@@ -26,12 +31,13 @@ export default function Navbar() {
       <div className="navbar__inner">
         <a href="#top" className="navbar__brand">
           <img src={logo} alt="Hungora" className="navbar__brand-icon" />
-          Hungora
+          <span>Hungora</span>
         </a>
 
         <nav className="navbar__links">
           {links.map((l) => (
             <a key={l.href} href={l.href}>
+              <span className="navbar__link-dot" />
               {l.label}
             </a>
           ))}
@@ -43,12 +49,18 @@ export default function Navbar() {
           </a>
         </div>
 
-        <button className="navbar__burger" onClick={() => setOpen((v) => !v)} aria-label="Toggle menu">
-          <span />
+        <button
+          className={`navbar__burger ${open ? 'is-open' : ''}`}
+          onClick={() => setOpen((v) => !v)}
+          aria-label="Toggle menu"
+          aria-expanded={open}
+        >
           <span />
           <span />
         </button>
       </div>
+
+      <div className="navbar__progress" style={{ transform: `scaleX(${progress})` }} aria-hidden="true" />
 
       {open && (
         <div className="navbar__mobile">

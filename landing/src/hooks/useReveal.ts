@@ -1,81 +1,60 @@
 import { useEffect, useRef } from 'react'
-import gsap from 'gsap'
-import { ScrollTrigger } from 'gsap/ScrollTrigger'
-
-gsap.registerPlugin(ScrollTrigger)
 
 type RevealOptions = {
+  /** seconds between each child */
+  stagger?: number
+  /** viewport rootMargin bottom trigger */
+  start?: string
+  /** unused legacy knobs kept for call-site compatibility */
   y?: number
   duration?: number
-  stagger?: number
-  start?: string
 }
 
-/** Animates the direct children of the returned ref in as they scroll into view. */
-export function useStaggerReveal<T extends HTMLElement>({
-  y = 36,
-  duration = 0.9,
-  stagger = 0.12,
-  start = 'top 82%',
-}: RevealOptions = {}) {
+const io = (cb: (el: Element) => void, rootMargin: string) =>
+  new IntersectionObserver(
+    (entries, obs) => {
+      entries.forEach((e) => {
+        if (e.isIntersecting) {
+          cb(e.target)
+          obs.unobserve(e.target)
+        }
+      })
+    },
+    { rootMargin, threshold: 0.05 },
+  )
+
+/** Reveals each direct child of the returned ref as it scrolls into view, with a stagger. */
+export function useStaggerReveal<T extends HTMLElement>({ stagger = 0.09, start = '0px 0px -12% 0px' }: RevealOptions = {}) {
   const ref = useRef<T>(null)
 
   useEffect(() => {
     const el = ref.current
     if (!el) return
-    const targets = Array.from(el.children)
-    const ctx = gsap.context(() => {
-      gsap.fromTo(
-        targets,
-        { opacity: 0, y },
-        {
-          opacity: 1,
-          y: 0,
-          duration,
-          stagger,
-          ease: 'power3.out',
-          scrollTrigger: {
-            trigger: el,
-            start,
-          },
-        },
-      )
-    }, el)
-    return () => ctx.revert()
-  }, [])
+    const kids = Array.from(el.children) as HTMLElement[]
+    kids.forEach((k, i) => {
+      k.classList.add('reveal')
+      k.style.transitionDelay = `${i * stagger}s`
+    })
+    const obs = io((t) => t.classList.add('is-in'), start)
+    kids.forEach((k) => obs.observe(k))
+    return () => obs.disconnect()
+  }, [stagger, start])
 
   return ref
 }
 
-/** Animates the returned element itself as it scrolls into view. */
-export function useRevealSelf<T extends HTMLElement>({
-  y = 40,
-  duration = 1,
-  start = 'top 85%',
-}: RevealOptions = {}) {
+/** Reveals the returned element itself as it scrolls into view. */
+export function useRevealSelf<T extends HTMLElement>({ start = '0px 0px -10% 0px' }: RevealOptions = {}) {
   const ref = useRef<T>(null)
 
   useEffect(() => {
     const el = ref.current
     if (!el) return
-    const ctx = gsap.context(() => {
-      gsap.fromTo(
-        el,
-        { opacity: 0, y },
-        {
-          opacity: 1,
-          y: 0,
-          duration,
-          ease: 'power3.out',
-          scrollTrigger: {
-            trigger: el,
-            start,
-          },
-        },
-      )
-    }, el)
-    return () => ctx.revert()
-  }, [])
+    el.classList.add('reveal')
+    const obs = io((t) => t.classList.add('is-in'), start)
+    obs.observe(el)
+    return () => obs.disconnect()
+  }, [start])
 
   return ref
 }

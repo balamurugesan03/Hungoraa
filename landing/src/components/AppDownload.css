@@ -2,102 +2,126 @@
   position: relative;
   overflow: hidden;
   display: grid;
-  grid-template-columns: 1.2fr 0.8fr;
+  grid-template-columns: 1fr auto;
   align-items: center;
-  gap: 40px;
-  padding: 72px;
+  gap: 56px;
+  padding: 64px;
+  background: var(--amber-deep); /* logo navy */
+  border-color: var(--amber-deep);
+  box-shadow: var(--shadow-lg);
+}
+
+.download__panel.ticks::before,
+.download__panel.ticks::after {
+  border-color: rgba(255, 255, 255, 0.28);
 }
 
 .download__glow {
   position: absolute;
   top: -40%;
-  right: -10%;
+  right: -8%;
   width: 480px;
   height: 480px;
-  border-radius: 50%;
-  background: var(--gradient-brand);
-  filter: blur(120px);
-  opacity: 0.14;
+  background: radial-gradient(circle, rgba(142, 201, 242, 0.22), transparent 66%);
   pointer-events: none;
 }
 
+.download__copy {
+  position: relative;
+  max-width: 44ch;
+}
+
+.download__copy .eyebrow {
+  margin-bottom: 20px;
+  color: #8ec9f2;
+}
+
+.download__copy .eyebrow::before {
+  background: rgba(142, 201, 242, 0.5);
+}
+
 .download__copy h2 {
-  font-size: clamp(2rem, 3.4vw, 2.8rem);
-  margin-top: 16px;
+  font-size: clamp(1.9rem, 3.4vw, 2.8rem);
+  color: #fff;
+}
+
+.download__copy h2 .accent {
+  color: #8ec9f2;
 }
 
 .download__copy p {
   margin-top: 20px;
-  max-width: 460px;
-  color: var(--text-mid);
+  color: rgba(255, 255, 255, 0.64);
+  font-size: 1rem;
 }
 
 .download__badges {
+  margin-top: 30px;
   display: flex;
-  gap: 16px;
-  margin-top: 36px;
+  gap: 12px;
   flex-wrap: wrap;
 }
 
 .download__badge {
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
   padding: 12px 20px;
-  border-radius: 14px;
-  border: 1px solid var(--border-strong);
-  font-size: 0.8rem;
-  color: var(--text-mid);
-  transition: border-color 0.3s ease, transform 0.3s ease;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: var(--r);
+  color: #fff;
+  transition: border-color 0.25s var(--ease), transform 0.25s var(--ease);
+}
+
+.download__badge:hover {
+  border-color: #8ec9f2;
+  transform: translateY(-2px);
+}
+
+.download__badge span {
+  font-size: 0.66rem;
+  line-height: 1.35;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: rgba(255, 255, 255, 0.55);
 }
 
 .download__badge strong {
   display: block;
-  font-size: 0.95rem;
-  color: var(--text-hi);
-}
-
-.download__badge:hover {
-  border-color: var(--accent-violet);
-  transform: translateY(-2px);
-}
-
-.download__qr-stage {
-  display: flex;
-  justify-content: center;
-  transform-style: preserve-3d;
-  perspective: 800px;
+  font-family: var(--font-display);
+  font-size: 0.98rem;
+  letter-spacing: -0.01em;
+  text-transform: none;
+  color: #fff;
 }
 
 .download__qr {
+  position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 14px;
-  padding: 28px 32px;
-  color: var(--text-hi);
-}
-
-.download__qr svg {
-  color: var(--text-hi);
+  padding: 26px;
+  background: #fff;
+  border-radius: var(--r);
+  color: var(--amber-deep);
+  box-shadow: 0 20px 44px -22px rgba(0, 0, 0, 0.5);
 }
 
 .download__qr span {
-  font-size: 0.8rem;
-  color: var(--text-low);
+  font-size: 0.64rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--bone-3);
 }
 
 @media (max-width: 860px) {
   .download__panel {
     grid-template-columns: 1fr;
-    padding: 48px 32px;
-    text-align: center;
+    gap: 36px;
+    padding: 40px 28px;
   }
-  .download__copy p {
-    margin-left: auto;
-    margin-right: auto;
-  }
-  .download__badges {
-    justify-content: center;
+  .download__qr {
+    justify-self: start;
   }
 }

@@ -1,207 +1,90 @@
-import { useEffect, useRef, useState } from 'react'
-import { Canvas, useFrame, useThree, type ThreeEvent } from '@react-three/fiber'
-import { Sparkles } from '@react-three/drei'
-import gsap from 'gsap'
-import * as THREE from 'three'
 import { useRevealSelf } from '../hooks/useReveal'
-import { DishModel, Plinth, dishMeta, dishOrder, type DishId } from './three/dishes'
+import { IconArrowRight } from './Icons'
 import './MenuGallery.css'
 
-const RADIUS = 3.3
-const DEFAULT_CAM = new THREE.Vector3(0, 1.25, 7.6)
-const FOCUS_CAM = new THREE.Vector3(0, 1.02, 3.1)
+type Dish = { img: string; name: string; cuisine: string; price: string }
 
-/** Tweens the R3F camera toward a wide view or a close "reveal" dolly, driven by `focusedId`. */
-function CameraRig({ focused }: { focused: boolean }) {
-  const { camera } = useThree()
+const U = (id: string) => `https://images.unsplash.com/${id}?w=640&q=72&auto=format&fit=crop&crop=entropy`
 
-  useEffect(() => {
-    const target = focused ? FOCUS_CAM : DEFAULT_CAM
-    gsap.to(camera.position, { x: target.x, y: target.y, z: target.z, duration: 1.1, ease: 'power3.inOut' })
-  }, [focused, camera])
+const rowA: Dish[] = [
+  { img: 'photo-1565299624946-b28f40a0ae38', name: 'Wood-fired pizza', cuisine: 'Italian', price: '₹420' },
+  { img: 'photo-1589302168068-964664d93dc0', name: 'Hyderabadi biryani', cuisine: 'South Indian', price: '₹380' },
+  { img: 'photo-1568901346375-23c9450c58cd', name: 'Smokehouse burger', cuisine: 'Grill', price: '₹340' },
+  { img: 'photo-1553621042-f6e147245754', name: 'Sushi platter', cuisine: 'Japanese', price: '₹690' },
+  { img: 'photo-1631452180519-c014fe946bc7', name: 'Butter chicken', cuisine: 'North Indian', price: '₹360' },
+  { img: 'photo-1569718212165-3a8278d5f624', name: 'Prawn ramen', cuisine: 'Japanese', price: '₹450' },
+  { img: 'photo-1473093295043-cdd812d0e601', name: 'Pesto farfalle', cuisine: 'Italian', price: '₹390' },
+  { img: 'photo-1606491956689-2ea866880c84', name: 'Mumbai pav bhaji', cuisine: 'Street', price: '₹160' },
+  { img: 'photo-1600891964092-4316c288032e', name: 'Steak frites', cuisine: 'French', price: '₹720' },
+  { img: 'photo-1546069901-ba9599a7e63c', name: 'Salmon poke bowl', cuisine: 'Hawaiian', price: '₹410' },
+]
 
-  useFrame(() => camera.lookAt(0, 0.18, 0))
-  return null
-}
+const rowB: Dish[] = [
+  { img: 'photo-1617093727343-374698b1b08d', name: 'Chicken laksa', cuisine: 'Thai', price: '₹360' },
+  { img: 'photo-1544025162-d76694265947', name: 'Smoked ribs', cuisine: 'BBQ', price: '₹560' },
+  { img: 'photo-1601050690597-df0568f70950', name: 'Punjabi samosa', cuisine: 'Snacks', price: '₹90' },
+  { img: 'photo-1585032226651-759b368d7246', name: 'Hakka noodles', cuisine: 'Indo-Chinese', price: '₹220' },
+  { img: 'photo-1512621776951-a57141f2eefd', name: 'Garden bowl', cuisine: 'Vegan', price: '₹280' },
+  { img: 'photo-1567620905732-2d1ec7ab7445', name: 'Brunch stack', cuisine: 'Brunch', price: '₹240' },
+  { img: 'photo-1596797038530-2c107229654b', name: 'Rogan josh', cuisine: 'Kashmiri', price: '₹420' },
+  { img: 'photo-1626074353765-517a681e40be', name: 'Tandoori chicken', cuisine: 'Tandoor', price: '₹390' },
+  { img: 'photo-1504674900247-0877df9cc836', name: 'Thai beef salad', cuisine: 'Thai', price: '₹330' },
+  { img: 'photo-1512058564366-18510be2db19', name: 'Seafood paella', cuisine: 'Spanish', price: '₹640' },
+]
 
-function DishStation({
-  id,
-  index,
-  total,
-  hovered,
-  onHover,
-  onSelect,
-}: {
-  id: DishId
-  index: number
-  total: number
-  hovered: boolean
-  onHover: (i: number | null) => void
-  onSelect: (i: number) => void
-}) {
-  const wrapRef = useRef<THREE.Group>(null!)
-  const spinRef = useRef<THREE.Group>(null!)
-  const angle = (index / total) * Math.PI * 2
-  const x = Math.sin(angle) * RADIUS
-  const z = Math.cos(angle) * RADIUS
-
-  useFrame((_, delta) => {
-    if (spinRef.current) spinRef.current.rotation.y += delta * (hovered ? 0.9 : 0.35)
-    if (wrapRef.current) {
-      wrapRef.current.position.y = THREE.MathUtils.lerp(wrapRef.current.position.y, hovered ? 0.1 : 0, 0.1)
-      const s = THREE.MathUtils.lerp(wrapRef.current.scale.x, hovered ? 1.16 : 1, 0.12)
-      wrapRef.current.scale.setScalar(s)
-    }
-  })
-
+function Track({ dishes, reverse }: { dishes: Dish[]; reverse?: boolean }) {
   return (
-    <group position={[x, 0, z]} rotation={[0, -angle, 0]}>
-      <group
-        ref={wrapRef}
-        onPointerOver={(e: ThreeEvent<PointerEvent>) => {
-          e.stopPropagation()
-          onHover(index)
-          document.body.style.cursor = 'pointer'
-        }}
-        onPointerOut={(e: ThreeEvent<PointerEvent>) => {
-          e.stopPropagation()
-          onHover(null)
-          document.body.style.cursor = 'auto'
-        }}
-        onClick={(e: ThreeEvent<MouseEvent>) => {
-          e.stopPropagation()
-          onSelect(index)
-        }}
-      >
-        <Plinth />
-        <group ref={spinRef} position={[0, 0.24, 0]}>
-          <DishModel id={id} />
-        </group>
-        {hovered && <pointLight position={[0, 0.6, 0.3]} intensity={1.1} color="#f3d9a0" distance={2.4} decay={2} />}
-      </group>
-    </group>
-  )
-}
-
-function Carousel({
-  focusedIndex,
-  hoveredIndex,
-  onHover,
-  onSelect,
-}: {
-  focusedIndex: number | null
-  hoveredIndex: number | null
-  onHover: (i: number | null) => void
-  onSelect: (i: number) => void
-}) {
-  const groupRef = useRef<THREE.Group>(null!)
-  const targetRot = useRef(0)
-  const drag = useRef({ active: false, startX: 0, startRot: 0 })
-  const total = dishOrder.length
-
-  useEffect(() => {
-    if (focusedIndex !== null) {
-      const angle = (focusedIndex / total) * Math.PI * 2
-      targetRot.current = -angle
-    }
-  }, [focusedIndex, total])
-
-  useFrame((_, delta) => {
-    const g = groupRef.current
-    if (!g) return
-    if (focusedIndex === null && !drag.current.active) {
-      targetRot.current += delta * 0.025
-    }
-    g.rotation.y = THREE.MathUtils.lerp(g.rotation.y, targetRot.current, drag.current.active ? 1 : 0.07)
-  })
-
-  const onPointerDown = (e: ThreeEvent<PointerEvent>) => {
-    if (focusedIndex !== null) return
-    drag.current = { active: true, startX: e.clientX, startRot: groupRef.current.rotation.y }
-  }
-  const onPointerMoveCapture = (e: ThreeEvent<PointerEvent>) => {
-    if (!drag.current.active) return
-    targetRot.current = drag.current.startRot + (e.clientX - drag.current.startX) * 0.006
-  }
-  const endDrag = () => {
-    drag.current.active = false
-  }
-
-  return (
-    <group>
-      <mesh position={[0, 0, -1]} onPointerDown={onPointerDown} onPointerMove={onPointerMoveCapture} onPointerUp={endDrag} onPointerOut={endDrag}>
-        <planeGeometry args={[44, 20]} />
-        <meshBasicMaterial transparent opacity={0} depthWrite={false} />
-      </mesh>
-      <group ref={groupRef}>
-        {dishOrder.map((id, i) => (
-          <DishStation
-            key={id}
-            id={id}
-            index={i}
-            total={total}
-            hovered={hoveredIndex === i}
-            onHover={onHover}
-            onSelect={onSelect}
-          />
-        ))}
-      </group>
-    </group>
+    <div className={`menu__track ${reverse ? 'menu__track--rev' : ''}`}>
+      {[0, 1].map((dup) => (
+        <div className="menu__group" key={dup} aria-hidden={dup === 1}>
+          {dishes.map((d) => (
+            <figure className="dish" key={d.name}>
+              <img
+                src={U(d.img)}
+                alt={`${d.name} — ${d.cuisine}`}
+                loading="lazy"
+                decoding="async"
+                width={320}
+                height={224}
+              />
+              <figcaption className="dish__label">
+                <span className="dish__name">{d.name}</span>
+                <span className="dish__meta mono">
+                  <span className="dish__cuisine">{d.cuisine}</span>
+                  <span className="dish__price">{d.price}</span>
+                </span>
+              </figcaption>
+            </figure>
+          ))}
+        </div>
+      ))}
+    </div>
   )
 }
 
 export default function MenuGallery() {
-  const [hoveredIndex, setHoveredIndex] = useState<number | null>(null)
-  const [focusedIndex, setFocusedIndex] = useState<number | null>(null)
   const headRef = useRevealSelf<HTMLDivElement>()
 
-  const focusedId = focusedIndex !== null ? dishOrder[focusedIndex] : null
-  const focused = focusedId ? dishMeta[focusedId] : null
-
   return (
-    <section id="menu" className="section menu">
-      <div className="section-head" ref={headRef}>
-        <span className="eyebrow">The Menu</span>
+    <section id="menu" className="section band menu">
+      <div className="section-head menu__head" ref={headRef}>
+        <span className="eyebrow">On the pass</span>
         <h2>
-          Dishes you can <span className="gradient-text">walk around.</span>
+          Tonight, across <span className="accent">every kitchen.</span>
         </h2>
-        <p>Drag to spin the table, hover to bring a dish forward, click to step in close.</p>
+        <p>A live crawl of what partner restaurants are plating right now — reserve any of them in the app.</p>
       </div>
 
-      <div className="menu__stage">
-        <Canvas
-          dpr={[1, 1.5]}
-          camera={{ position: [DEFAULT_CAM.x, DEFAULT_CAM.y, DEFAULT_CAM.z], fov: 38 }}
-          gl={{ alpha: true, antialias: true }}
-          onPointerMissed={() => setFocusedIndex(null)}
-        >
-          <fog attach="fog" args={['#080808', 6, 15]} />
-          <ambientLight intensity={0.42} color="#241a0c" />
-          <directionalLight position={[3, 5, 4]} intensity={1.15} color="#f0d79a" />
-          <pointLight position={[-3, 2, -2]} intensity={0.45} color="#d4af37" decay={2} />
-          <pointLight position={[2.6, 1.4, 3]} intensity={0.3} color="#2e7d32" decay={2} />
-
-          <CameraRig focused={focusedIndex !== null} />
-          <Carousel focusedIndex={focusedIndex} hoveredIndex={hoveredIndex} onHover={setHoveredIndex} onSelect={setFocusedIndex} />
-          <Sparkles count={44} scale={[9, 5, 9]} size={1.7} speed={0.2} color="#d4af37" opacity={0.4} />
-        </Canvas>
-
-        <div className={`menu__hint ${focusedIndex !== null ? 'is-hidden' : ''}`}>Drag to rotate · Click a dish to explore</div>
-
-        <div className={`menu__detail glass-card ${focused ? 'is-open' : ''}`}>
-          {focused && (
-            <>
-              <button className="menu__detail-close" onClick={() => setFocusedIndex(null)} aria-label="Close dish details">
-                ✕
-              </button>
-              <span className="menu__detail-tag">{focused.tag}</span>
-              <h3>{focused.name}</h3>
-              <p>{focused.desc}</p>
-              <strong className="menu__detail-price">{focused.price}</strong>
-            </>
-          )}
-        </div>
+      <div className="menu__marquee">
+        <Track dishes={rowA} />
+        <Track dishes={rowB} reverse />
+        <div className="menu__fade menu__fade--l" />
+        <div className="menu__fade menu__fade--r" />
       </div>
+
+      <a href="#download" className="menu__cta">
+        See every menu in the app <IconArrowRight size={15} />
+      </a>
     </section>
   )
 }

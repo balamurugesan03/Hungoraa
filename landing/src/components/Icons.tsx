@@ -198,6 +198,57 @@ export function IconQuote({ size, className }: IconProps) {
   )
 }
 
+export function IconCheck({ size, className }: IconProps) {
+  return (
+    <svg {...base(size)} className={className}>
+      <path d="M4 12.5 9 17.5 20 6.5" />
+    </svg>
+  )
+}
+
+export function IconClock({ size, className }: IconProps) {
+  return (
+    <svg {...base(size)} className={className}>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M12 7v5l3.5 2" />
+    </svg>
+  )
+}
+
+export function IconSplit({ size, className }: IconProps) {
+  return (
+    <svg {...base(size)} className={className}>
+      <path d="M4 4h6l10 16M20 4h-6" />
+      <path d="M14 20h6v-6" />
+    </svg>
+  )
+}
+
+export function IconPin({ size, className }: IconProps) {
+  return (
+    <svg {...base(size)} className={className}>
+      <path d="M12 21s7-5.5 7-12a7 7 0 1 0-14 0c0 6.5 7 12 7 12Z" />
+      <circle cx="12" cy="9" r="2.6" />
+    </svg>
+  )
+}
+
+export function IconPlus({ size, className }: IconProps) {
+  return (
+    <svg {...base(size)} className={className}>
+      <path d="M12 5v14M5 12h14" />
+    </svg>
+  )
+}
+
+export function IconMinus({ size, className }: IconProps) {
+  return (
+    <svg {...base(size)} className={className}>
+      <path d="M5 12h14" />
+    </svg>
+  )
+}
+
 export function IconQr({ size, className }: IconProps) {
   return (
     <svg {...base(size)} className={className}>

@@ -1,108 +1,114 @@
-.how__steps-wrap {
+.how__timeline {
   position: relative;
-}
-
-.how__connector-track {
-  position: absolute;
-  top: 52px;
-  left: 12%;
-  right: 12%;
-  height: 2px;
-  border-radius: 2px;
-  background: var(--border-soft);
-  overflow: hidden;
-  z-index: -1;
-}
-
-.how__connector {
-  height: 100%;
-  width: 100%;
-  background: var(--gradient-brand);
-  transform: scaleX(0);
+  padding-left: 0;
 }
 
 .how__steps {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  display: flex;
+  flex-direction: column;
   gap: 28px;
 }
 
 .how__step {
-  position: relative;
-  overflow: hidden;
-  padding: 32px 28px;
-  transform-style: preserve-3d;
-  perspective: 800px;
-  transition: border-color 0.4s var(--ease-out), background 0.4s var(--ease-out);
-  will-change: transform;
+  display: grid;
+  grid-template-columns: 64px 1fr;
+  gap: 28px;
+  align-items: start;
 }
 
-.how__step:hover {
-  border-color: var(--border-strong);
-  background: linear-gradient(180deg, rgba(var(--glow-gold), 0.1), rgba(var(--glow-gold), 0.02));
-}
-
-.how__step-ghost {
+/* rail runs through the centre of the node column */
+.how__rail {
   position: absolute;
-  top: -18px;
-  right: 8px;
-  font-family: var(--font-display);
-  font-size: 6rem;
-  font-weight: 700;
-  line-height: 1;
-  color: rgba(255, 255, 255, 0.06);
-  pointer-events: none;
-  user-select: none;
+  left: 31px;
+  top: 24px;
+  bottom: 24px;
+  width: 1px;
+  background: var(--line);
 }
 
-.how__step-top {
+.how__rail-fill {
+  position: absolute;
+  inset: 0;
+  background: var(--amber);
+  transform: scaleY(0);
+}
+
+.how__node {
   position: relative;
+  z-index: 1;
+  width: 64px;
+  height: 64px;
+  display: grid;
+  place-items: center;
+  background: #fff;
+  border: 1px solid var(--line-2);
+  border-radius: var(--r);
+  box-shadow: var(--shadow-sm);
+}
+
+.how__node-num {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--amber);
+}
+
+.how__card {
+  padding: 30px 32px;
+}
+
+.how__card-top {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 24px;
+  margin-bottom: 20px;
 }
 
-.how__step-icon {
+.how__card-icon {
   display: grid;
   place-items: center;
-  width: 48px;
-  height: 48px;
-  border-radius: 14px;
-  background: var(--gradient-brand);
-  color: var(--text-inverse);
-  transition: transform 0.4s var(--ease-out), box-shadow 0.4s var(--ease-out);
+  width: 40px;
+  height: 40px;
+  border: 1px solid var(--line-amber);
+  border-radius: var(--r);
+  background: var(--ink-2);
+  color: var(--amber);
 }
 
-.how__step:hover .how__step-icon {
-  transform: scale(1.08);
-  box-shadow: 0 12px 30px -8px rgba(var(--glow-gold), 0.55);
+.how__card-meta {
+  font-size: 0.66rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--bone-3);
 }
 
-.how__step-num {
-  font-family: var(--font-display);
-  font-size: 0.85rem;
-  color: var(--text-low);
-  letter-spacing: 0.08em;
-}
-
-.how__step h3 {
-  position: relative;
-  font-size: 1.25rem;
+.how__card h3 {
+  font-size: 1.4rem;
   margin-bottom: 12px;
 }
 
-.how__step p {
-  position: relative;
-  color: var(--text-mid);
-  font-size: 0.95rem;
+.how__card p {
+  color: var(--bone-2);
+  font-size: 0.98rem;
+  max-width: 54ch;
 }
 
-@media (max-width: 860px) {
-  .how__steps {
-    grid-template-columns: 1fr;
+@media (max-width: 640px) {
+  .how__step {
+    grid-template-columns: 48px 1fr;
+    gap: 18px;
   }
-  .how__connector-track {
-    display: none;
+  .how__rail {
+    left: 23px;
+  }
+  .how__node {
+    width: 48px;
+    height: 48px;
+  }
+  .how__node-num {
+    font-size: 0.9rem;
+  }
+  .how__card {
+    padding: 24px 22px;
   }
 }

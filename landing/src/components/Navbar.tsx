@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import logo from '../assets/logo.svg'
+import Wordmark from './Wordmark'
 import './Navbar.css'
 
 const links = [
@@ -31,7 +32,7 @@ export default function Navbar() {
       <div className="navbar__inner">
         <a href="#top" className="navbar__brand">
           <img src={logo} alt="Hungora" className="navbar__brand-icon" />
-          <span>Hungora</span>
+          <Wordmark />
         </a>
 
         <nav className="navbar__links">

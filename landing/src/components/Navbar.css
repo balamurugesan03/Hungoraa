@@ -2,13 +2,13 @@
   position: fixed;
   inset: 0 0 auto 0;
   z-index: 100;
-  padding: 18px 0;
+  padding: 13px 0;
   border-bottom: 1px solid transparent;
   transition: background 0.4s var(--ease), border-color 0.4s var(--ease), padding 0.4s var(--ease);
 }
 
 .navbar--scrolled {
-  padding: 10px 0;
+  padding: 8px 0;
   background: rgba(255, 255, 255, 0.82);
   backdrop-filter: blur(18px) saturate(160%);
   -webkit-backdrop-filter: blur(18px) saturate(160%);
@@ -29,19 +29,22 @@
 .navbar__brand {
   display: flex;
   align-items: center;
-  gap: 11px;
-  font-family: var(--font-display);
-  font-weight: 600;
-  font-size: 1.06rem;
-  letter-spacing: -0.03em;
+  gap: 14px;
+  font-size: 1.66rem;
 }
 
 .navbar__brand-icon {
-  width: 30px;
-  height: 30px;
+  width: 54px;
+  height: 54px;
   border-radius: var(--r);
   object-fit: cover;
   border: 1px solid var(--line-2);
+  transition: width 0.4s var(--ease), height 0.4s var(--ease);
+}
+
+.navbar--scrolled .navbar__brand-icon {
+  width: 46px;
+  height: 46px;
 }
 
 .navbar__links {

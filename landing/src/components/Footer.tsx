@@ -1,5 +1,6 @@
 import logo from '../assets/logo.svg'
 import { IconArrowRight } from './Icons'
+import Wordmark from './Wordmark'
 import './Footer.css'
 
 const columns = [
@@ -57,7 +58,7 @@ export default function Footer() {
           <div className="footer__brand">
             <a href="#top" className="footer__logo">
               <img src={logo} alt="Hungora" />
-              <span>Hungora</span>
+              <Wordmark />
             </a>
             <p>Reserve. Dine. Settle. All from one app.</p>
           </div>

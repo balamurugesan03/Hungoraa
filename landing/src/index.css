@@ -31,6 +31,10 @@
   --gold: #c8820c;
   --gold-soft: #f2b957;
 
+  /* --- exact logo palette, used only in the "Hungora" wordmark --- */
+  --mark-gold: #f9a91b;
+  --mark-red: #cd302b;
+
   /* --- success --- */
   --mint: #1f9d6b;
 
@@ -215,6 +219,21 @@ h4 {
 
 .accent {
   color: var(--amber);
+}
+
+/* "Hungora" wordmark — logo colours: "go" red, the rest gold */
+.wordmark {
+  font-family: var(--font-display);
+  font-weight: 700;
+  letter-spacing: -0.03em;
+}
+
+.wordmark__g {
+  color: var(--mark-gold);
+}
+
+.wordmark__r {
+  color: var(--mark-red);
 }
 
 .mono {

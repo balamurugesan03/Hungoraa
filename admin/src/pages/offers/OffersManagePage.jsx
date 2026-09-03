@@ -2,13 +2,13 @@ import { useState, useMemo } from 'react';
 import {
   Stack, Title, Group, Button, Card, Text, Badge, ActionIcon, Select,
   Modal, TextInput, NumberInput, Switch, Grid, Box, Skeleton, Textarea,
-  MultiSelect, Alert, SegmentedControl,
+  MultiSelect, Alert, SegmentedControl, FileInput, Image,
 } from '@mantine/core';
 import { DateInput } from '@mantine/dates';
 import { useForm } from '@mantine/form';
 import {
   IconPlus, IconEdit, IconTrash, IconTag, IconInfoCircle, IconStar,
-  IconDeviceMobile, IconClock,
+  IconDeviceMobile, IconClock, IconUpload,
 } from '@tabler/icons-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { notifications } from '@mantine/notifications';
@@ -34,6 +34,7 @@ function randomCode() {
 function OfferModal({ opened, onClose, offer, restaurants }) {
   const qc = useQueryClient();
   const isEdit = !!offer?._id;
+  const [uploading, setUploading] = useState(false);
 
   const form = useForm({
     initialValues: {
@@ -51,7 +52,9 @@ function OfferModal({ opened, onClose, offer, restaurants }) {
       applicableTo: offer?.applicableTo || ['booking'],
       isActive: offer?.isActive ?? true,
       isFeatured: offer?.isFeatured ?? false,
-      imageUrl: offer?.image?.url || '',
+      image: offer?.image?.url
+        ? { url: offer.image.url, publicId: offer.image.publicId || '' }
+        : null,
     },
     validate: {
       restaurantId: (v) => (v ? null : 'Pick a restaurant'),
@@ -75,6 +78,24 @@ function OfferModal({ opened, onClose, offer, restaurants }) {
     else if (v === 'weekday') form.setFieldValue('validDays', DAYS.slice(0, 5));
   };
 
+  const handleImageUpload = async (file) => {
+    if (!file) return;
+    setUploading(true);
+    try {
+      const { data } = await offerApi.uploadImage(file);
+      form.setFieldValue('image', { url: data.data.url, publicId: data.data.publicId });
+      notifications.show({ title: 'Banner uploaded', color: 'green' });
+    } catch (err) {
+      notifications.show({
+        title: 'Upload failed',
+        message: err.response?.data?.message || 'Use a JPG, PNG or WebP under 5 MB',
+        color: 'red',
+      });
+    } finally {
+      setUploading(false);
+    }
+  };
+
   const mutation = useMutation({
     mutationFn: (values) => {
       const payload = {
@@ -92,7 +113,7 @@ function OfferModal({ opened, onClose, offer, restaurants }) {
         applicableTo: values.applicableTo,
         isActive: values.isActive,
         isFeatured: values.isFeatured,
-        image: values.imageUrl ? { url: values.imageUrl.trim() } : undefined,
+        image: values.image || null,
       };
       return isEdit ? offerApi.update(offer._id, payload) : offerApi.create(payload);
     },
@@ -207,11 +228,41 @@ function OfferModal({ opened, onClose, offer, restaurants }) {
             </Grid.Col>
 
             <Grid.Col span={12}>
-              <TextInput
-                label="Banner Image URL (optional)"
-                placeholder="https://…  — shown behind the app home-screen offer card"
-                {...form.getInputProps('imageUrl')}
-              />
+              <Text size="sm" fw={500} mb={2}>Banner Image (optional)</Text>
+              <Text size="xs" c="dimmed" mb={8}>
+                Shown behind the offer card on the app home screen. JPG, PNG or WebP, up to 5 MB.
+              </Text>
+              {form.values.image?.url ? (
+                <Group gap="sm" align="center">
+                  <Image
+                    src={form.values.image.url}
+                    w={132}
+                    h={78}
+                    radius="sm"
+                    fit="cover"
+                    alt="Banner preview"
+                  />
+                  <Button
+                    size="xs"
+                    variant="light"
+                    color="red"
+                    leftSection={<IconTrash size={13} />}
+                    onClick={() => form.setFieldValue('image', null)}
+                  >
+                    Remove
+                  </Button>
+                </Group>
+              ) : (
+                <FileInput
+                  placeholder="Upload banner image"
+                  accept="image/png,image/jpeg,image/webp"
+                  leftSection={<IconUpload size={16} />}
+                  onChange={handleImageUpload}
+                  disabled={uploading}
+                  clearable
+                />
+              )}
+              {uploading && <Text size="xs" c="dimmed" mt={6}>Uploading…</Text>}
             </Grid.Col>
             <Grid.Col span={12}>
               <Textarea label="Description" placeholder="Terms, what's included…" rows={2} {...form.getInputProps('description')} />

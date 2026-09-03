@@ -58,6 +58,11 @@ export const offerApi = {
   // Admin-created offers go live immediately (no approval step)
   create: (data) => api.post('/offers', data),
   update: (id, data) => api.put(`/offers/${id}`, data),
+  uploadImage: (file) => {
+    const fd = new FormData();
+    fd.append('image', file);
+    return api.post('/offers/upload-image', fd);
+  },
   toggleActive: (id, isActive) => api.put(`/offers/${id}`, { isActive }),
   approve: (id) => api.patch(`/offers/${id}/approve`),
   reject: (id, reason) => api.patch(`/offers/${id}/reject`, { reason }),

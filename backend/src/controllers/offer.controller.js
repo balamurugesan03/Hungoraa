@@ -2,6 +2,7 @@ const Offer = require('../models/Offer');
 const Restaurant = require('../models/Restaurant');
 const Notification = require('../models/Notification');
 const { successResponse, errorResponse } = require('../utils/response');
+const { deleteImage } = require('../config/cloudinary');
 
 const verifyOwner = async (restaurantId, userId) =>
   !!(await Restaurant.findOne({ _id: restaurantId, owner: userId }));
@@ -208,6 +209,21 @@ exports.createOffer = async (req, res, next) => {
   }
 };
 
+// ─── Owner / Admin: Upload an offer banner image ─────────────────────────────
+// Returns the hosted URL + Cloudinary publicId; the client then sends these
+// back inside the normal JSON offer payload as `image: { url, publicId }`.
+exports.uploadOfferImage = async (req, res, next) => {
+  try {
+    if (!req.file) return errorResponse(res, 400, 'No image file received');
+    return successResponse(res, 200, 'Image uploaded', {
+      url: req.file.path,
+      publicId: req.file.filename,
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
 // ─── Owner / Admin: Update offer ─────────────────────────────────────────────
 exports.updateOffer = async (req, res, next) => {
   try {
@@ -220,6 +236,15 @@ exports.updateOffer = async (req, res, next) => {
     // Editing an approved owner offer resets it to draft until re-submitted.
     // Admin edits stay live.
     const updates = { ...req.body };
+
+    // Banner image changed or cleared — drop the old Cloudinary asset.
+    if (Object.prototype.hasOwnProperty.call(req.body, 'image')) {
+      const oldPublicId = offer.image?.publicId;
+      const newPublicId = req.body.image?.publicId;
+      if (oldPublicId && oldPublicId !== newPublicId) {
+        deleteImage(oldPublicId).catch(() => {});
+      }
+    }
     if (!isAdmin && offer.approvalStatus === 'approved' && offer.approvalRequired) {
       updates.approvalStatus = 'draft';
     }
@@ -363,6 +388,7 @@ exports.deleteOffer = async (req, res, next) => {
     if (offer.restaurant.owner.toString() !== req.user._id.toString() && req.user.role !== 'admin') {
       return errorResponse(res, 403, 'Access denied');
     }
+    if (offer.image?.publicId) deleteImage(offer.image.publicId).catch(() => {});
     await offer.deleteOne();
     return successResponse(res, 200, 'Offer deleted');
   } catch (err) {

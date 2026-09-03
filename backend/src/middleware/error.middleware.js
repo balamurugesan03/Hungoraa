@@ -23,6 +23,14 @@ const errorHandler = (err, req, res, next) => {
     statusCode = 400;
   }
 
+  // Multer / file-upload errors
+  if (err.name === 'MulterError') {
+    message = err.code === 'LIMIT_FILE_SIZE'
+      ? 'File too large — maximum size is 5 MB'
+      : `Upload error: ${err.message}`;
+    statusCode = 400;
+  }
+
   // JWT errors
   if (err.name === 'JsonWebTokenError') {
     message = 'Invalid token';

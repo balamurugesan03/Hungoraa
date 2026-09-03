@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const ctrl = require('../controllers/offer.controller');
 const { protect, authorize, optionalAuth } = require('../middleware/auth.middleware');
+const { uploadSingle } = require('../config/cloudinary');
 
 // Public / Customer
 router.get('/', optionalAuth, ctrl.getAllOffers);
@@ -10,6 +11,15 @@ router.post('/validate-coupon', protect, authorize('customer'), ctrl.validateCou
 
 // Admin — full offer console (list every offer, any status)
 router.get('/admin/all', protect, authorize('admin'), ctrl.adminListOffers);
+
+// Owner / Admin — upload a banner image, returns { url, publicId }
+router.post(
+  '/upload-image',
+  protect,
+  authorize('owner', 'admin'),
+  uploadSingle('offers', 'image'),
+  ctrl.uploadOfferImage,
+);
 
 // Owner — create / edit
 router.post('/', protect, authorize('owner', 'admin'), ctrl.createOffer);

@@ -8,7 +8,7 @@
   border-radius: var(--radius-lg);
   overflow: hidden;
   border: 1px solid var(--border-soft);
-  background: radial-gradient(ellipse 70% 60% at 50% 30%, rgba(var(--glow-blue), 0.08), transparent 70%), var(--bg-panel);
+  background: radial-gradient(ellipse 70% 60% at 50% 30%, rgba(var(--glow-gold), 0.08), transparent 70%), var(--bg-panel);
 }
 
 .menu__stage canvas {

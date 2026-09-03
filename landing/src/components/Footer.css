@@ -2,8 +2,8 @@
   position: relative;
   border-top: 1px solid var(--border-soft);
   background:
-    radial-gradient(ellipse 60% 60% at 85% 0%, rgba(var(--glow-blue), 0.14), transparent 65%),
-    linear-gradient(180deg, #081a2a 0%, var(--bg-deep) 55%, #03090f 100%);
+    radial-gradient(ellipse 60% 60% at 85% 0%, rgba(var(--glow-gold), 0.14), transparent 65%),
+    linear-gradient(180deg, #0a0a0a 0%, var(--bg-deep) 55%, #030303 100%);
 }
 
 .footer__cta {
@@ -74,7 +74,7 @@
   text-align: center;
   font-size: 0.8rem;
   color: var(--text-mid);
-  background: rgba(var(--glow-blue), 0.04);
+  background: rgba(var(--glow-gold), 0.04);
 }
 
 @media (max-width: 860px) {

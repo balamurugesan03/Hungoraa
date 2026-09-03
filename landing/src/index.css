@@ -1,35 +1,36 @@
 :root {
-  /* Deep-blue "logo blue" palette — ink-navy environment lit by an electric-blue
-     glow, with brass/gold accents. Matches the Hungora mobile app brand. */
-  --bg-void: #071522;
-  --bg-deep: #040c15;
-  --bg-panel: #0c1f30;
-  --bg-panel-2: #14293c;
-  --border-soft: rgba(120, 178, 235, 0.14);
-  --border-strong: rgba(120, 178, 235, 0.3);
+  /* VIRUNDHU-style luxury palette — near-black theatre, Temple Gold accents,
+     warm cream typography, a single banana-leaf-green highlight. */
+  --bg-void: #080808;
+  --bg-deep: #030303;
+  --bg-panel: #100f0e;
+  --bg-panel-2: #191714;
+  --border-soft: rgba(212, 175, 55, 0.14);
+  --border-strong: rgba(212, 175, 55, 0.32);
 
-  --text-hi: #eef4fb;
-  --text-mid: #a7bccf;
-  --text-low: #6b8298;
-  --text-inverse: #05121f;
+  --text-hi: #f5e7c1; /* warm cream */
+  --text-mid: #c9bc9c;
+  --text-low: #8b8168;
+  --text-inverse: #0a0a0a;
 
   /* var names kept for back-compat across component CSS:
-     --accent-violet = primary gold, --accent-cyan = electric blue */
-  --accent-violet: #c8952b;
-  --accent-gold: #c8952b;
-  --accent-cyan: #3f93d8;
-  --accent-blue: #3f93d8;
-  --accent-amber: #e8c27a;
+     --accent-violet = Temple Gold, --accent-cyan = banana-leaf green */
+  --accent-violet: #d4af37;
+  --accent-gold: #d4af37;
+  --accent-cyan: #2e7d32;
+  --accent-green: #2e7d32;
+  --accent-amber: #e8cf8a;
 
-  /* rgb triplets for rgba() glows */
-  --glow-blue: 63, 147, 216;
-  --glow-gold: 200, 149, 43;
+  /* rgb triplets for rgba() washes/glows */
+  --glow-gold: 212, 175, 55;
+  --glow-green: 46, 125, 50;
+  --glow-cream: 245, 231, 193;
 
-  --gradient-brand: linear-gradient(118deg, #1c4e70 0%, #3f93d8 42%, #e8c27a 100%);
+  --gradient-brand: linear-gradient(118deg, #8a6a1c 0%, #d4af37 52%, #f4e3ab 100%);
   --gradient-warm: linear-gradient(120deg, #b8862f 0%, #f3d9a0 100%);
-  --gradient-blue: linear-gradient(135deg, #123a58 0%, #3f93d8 100%);
+  --gradient-gold: linear-gradient(135deg, #a6821f 0%, #d4af37 55%, #f6e9bb 100%);
 
-  --font-display: 'Bricolage Grotesque', 'Inter', sans-serif;
+  --font-display: 'Playfair Display', 'Cinzel', Georgia, serif;
   --font-body: 'Inter', sans-serif;
 
   --radius-lg: 24px;
@@ -53,17 +54,29 @@ html {
 
 body {
   background:
-    radial-gradient(ellipse 72% 52% at 16% -4%, rgba(var(--glow-blue), 0.22), transparent 62%),
-    radial-gradient(ellipse 58% 44% at 102% 12%, rgba(var(--glow-blue), 0.16), transparent 64%),
-    radial-gradient(ellipse 46% 40% at 88% 92%, rgba(var(--glow-gold), 0.1), transparent 66%),
-    radial-gradient(ellipse 55% 40% at 6% 82%, rgba(var(--glow-blue), 0.1), transparent 70%),
-    linear-gradient(180deg, var(--bg-void) 0%, #081a2a 44%, var(--bg-deep) 100%);
+    radial-gradient(ellipse 70% 48% at 16% -4%, rgba(var(--glow-gold), 0.16), transparent 60%),
+    radial-gradient(ellipse 54% 42% at 102% 10%, rgba(var(--glow-gold), 0.12), transparent 62%),
+    radial-gradient(ellipse 44% 38% at 90% 94%, rgba(var(--glow-green), 0.08), transparent 66%),
+    radial-gradient(ellipse 50% 38% at 4% 84%, rgba(var(--glow-gold), 0.07), transparent 70%),
+    linear-gradient(180deg, var(--bg-void) 0%, #0a0a0a 45%, var(--bg-deep) 100%);
   background-attachment: fixed;
   color: var(--text-hi);
   font-family: var(--font-body);
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
   overflow-x: hidden;
+}
+
+/* Fine film grain over the whole page — fixed, subtle, non-interactive. */
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  pointer-events: none;
+  opacity: 0.05;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
 }
 
 img,
@@ -91,8 +104,8 @@ h3,
 h4 {
   font-family: var(--font-display);
   font-weight: 600;
-  letter-spacing: -0.01em;
-  line-height: 1.1;
+  letter-spacing: -0.005em;
+  line-height: 1.08;
 }
 
 .eyebrow {
@@ -101,24 +114,26 @@ h4 {
   gap: 8px;
   padding: 7px 16px 7px 12px;
   border-radius: 100px;
-  font-family: var(--font-display);
-  font-size: 0.75rem;
+  font-family: var(--font-body);
+  font-size: 0.72rem;
   font-weight: 600;
-  letter-spacing: 0.14em;
+  letter-spacing: 0.22em;
   text-transform: uppercase;
   color: var(--accent-amber);
-  background: rgba(var(--glow-blue), 0.1);
+  background: rgba(var(--glow-gold), 0.08);
   border: 1px solid var(--border-soft);
   backdrop-filter: blur(8px);
 }
 
 .eyebrow::before {
-  content: '';
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: var(--gradient-brand);
-  box-shadow: 0 0 12px 2px rgba(var(--glow-gold), 0.7);
+  content: '✦';
+  width: auto;
+  height: auto;
+  font-size: 0.7rem;
+  color: var(--accent-gold);
+  background: none;
+  box-shadow: none;
+  text-shadow: 0 0 10px rgba(var(--glow-gold), 0.8);
 }
 
 .gradient-text {
@@ -133,7 +148,7 @@ h4 {
   width: 100%;
   max-width: 1240px;
   margin: 0 auto;
-  padding: 128px 32px;
+  padding: 136px 32px;
 }
 
 .section-head {
@@ -142,8 +157,9 @@ h4 {
 }
 
 .section-head h2 {
-  font-size: clamp(2rem, 3.6vw, 3rem);
+  font-size: clamp(2.1rem, 3.8vw, 3.3rem);
   margin-top: 16px;
+  letter-spacing: -0.01em;
 }
 
 .section-head p {
@@ -159,9 +175,11 @@ h4 {
   gap: 10px;
   padding: 14px 28px;
   border-radius: 100px;
-  font-family: var(--font-display);
+  font-family: var(--font-body);
   font-weight: 600;
-  font-size: 0.95rem;
+  font-size: 0.9rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
   transition: transform 0.35s var(--ease-out), box-shadow 0.35s var(--ease-out), border-color 0.35s var(--ease-out);
   white-space: nowrap;
 }
@@ -171,14 +189,14 @@ h4 {
   overflow: hidden;
   background: var(--gradient-brand);
   color: var(--text-inverse);
-  box-shadow: 0 10px 34px -6px rgba(var(--glow-blue), 0.5);
+  box-shadow: 0 10px 34px -6px rgba(var(--glow-gold), 0.5);
 }
 
 .btn-primary::after {
   content: '';
   position: absolute;
   inset: 0;
-  background: linear-gradient(115deg, transparent 30%, rgba(255, 240, 210, 0.4) 48%, transparent 66%);
+  background: linear-gradient(115deg, transparent 30%, rgba(255, 246, 224, 0.45) 48%, transparent 66%);
   transform: translateX(-120%);
 }
 
@@ -189,44 +207,44 @@ h4 {
 
 .btn-primary:hover {
   transform: translateY(-2px);
-  box-shadow: 0 16px 46px -8px rgba(var(--glow-blue), 0.68);
+  box-shadow: 0 16px 46px -8px rgba(var(--glow-gold), 0.7);
 }
 
 .btn-ghost {
   border: 1px solid var(--border-strong);
   color: var(--text-hi);
-  background: rgba(150, 196, 236, 0.05);
+  background: rgba(var(--glow-cream), 0.04);
 }
 
 .btn-ghost:hover {
-  border-color: var(--accent-violet);
-  background: rgba(var(--glow-gold), 0.12);
+  border-color: var(--accent-gold);
+  background: rgba(var(--glow-gold), 0.1);
   transform: translateY(-2px);
 }
 
 .glass-card {
   position: relative;
-  background: linear-gradient(180deg, rgba(150, 196, 236, 0.07) 0%, rgba(150, 196, 236, 0.02) 100%);
+  background: linear-gradient(180deg, rgba(var(--glow-cream), 0.06) 0%, rgba(var(--glow-cream), 0.015) 100%);
   border: 1px solid var(--border-soft);
   border-radius: var(--radius-lg);
-  backdrop-filter: blur(20px) saturate(140%);
-  -webkit-backdrop-filter: blur(20px) saturate(140%);
-  box-shadow: inset 0 1px 0 rgba(150, 196, 236, 0.07), 0 1px 2px rgba(0, 0, 0, 0.35),
-    0 20px 40px -24px rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(20px) saturate(130%);
+  -webkit-backdrop-filter: blur(20px) saturate(130%);
+  box-shadow: inset 0 1px 0 rgba(var(--glow-cream), 0.06), 0 1px 2px rgba(0, 0, 0, 0.4),
+    0 26px 50px -28px rgba(0, 0, 0, 0.8);
 }
 
 .noise-grid {
   position: absolute;
   inset: 0;
-  background-image: linear-gradient(rgba(150, 196, 236, 0.04) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(150, 196, 236, 0.04) 1px, transparent 1px);
+  background-image: linear-gradient(rgba(var(--glow-gold), 0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(var(--glow-gold), 0.035) 1px, transparent 1px);
   background-size: 64px 64px;
   mask-image: radial-gradient(ellipse 60% 50% at 50% 0%, black 40%, transparent 100%);
   pointer-events: none;
 }
 
 ::selection {
-  background: var(--accent-violet);
+  background: var(--accent-gold);
   color: var(--bg-deep);
 }
 
@@ -245,6 +263,6 @@ h4 {
 
 @media (max-width: 720px) {
   .section {
-    padding: 88px 20px;
+    padding: 92px 20px;
   }
 }

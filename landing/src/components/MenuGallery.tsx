@@ -175,15 +175,15 @@ export default function MenuGallery() {
           gl={{ alpha: true, antialias: true }}
           onPointerMissed={() => setFocusedIndex(null)}
         >
-          <fog attach="fog" args={['#071522', 6, 15]} />
-          <ambientLight intensity={0.5} color="#173250" />
-          <directionalLight position={[3, 5, 4]} intensity={1.05} color="#a9d2f0" />
-          <pointLight position={[-3, 2, -2]} intensity={0.5} color="#3f93d8" decay={2} />
-          <pointLight position={[2.5, 1.5, 3]} intensity={0.35} color="#e8c27a" decay={2} />
+          <fog attach="fog" args={['#080808', 6, 15]} />
+          <ambientLight intensity={0.42} color="#241a0c" />
+          <directionalLight position={[3, 5, 4]} intensity={1.15} color="#f0d79a" />
+          <pointLight position={[-3, 2, -2]} intensity={0.45} color="#d4af37" decay={2} />
+          <pointLight position={[2.6, 1.4, 3]} intensity={0.3} color="#2e7d32" decay={2} />
 
           <CameraRig focused={focusedIndex !== null} />
           <Carousel focusedIndex={focusedIndex} hoveredIndex={hoveredIndex} onHover={setHoveredIndex} onSelect={setFocusedIndex} />
-          <Sparkles count={30} scale={[8, 4, 8]} size={1.5} speed={0.25} color="#d4af6a" opacity={0.35} />
+          <Sparkles count={44} scale={[9, 5, 9]} size={1.7} speed={0.2} color="#d4af37" opacity={0.4} />
         </Canvas>
 
         <div className={`menu__hint ${focusedIndex !== null ? 'is-hidden' : ''}`}>Drag to rotate · Click a dish to explore</div>

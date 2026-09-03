@@ -1,7 +1,7 @@
 import * as THREE from 'three'
 import Steam from './Steam'
 
-const GOLD = '#d4af6a'
+const GOLD = '#d4af37'
 const RICE = '#f3e3b8'
 const SAFFRON = '#e8a33d'
 const CHICKEN_BROWN = '#7a4a2b'
@@ -584,11 +584,11 @@ export function Plinth() {
     <group>
       <mesh position={[0, -0.02, 0]}>
         <cylinderGeometry args={[0.42, 0.46, 0.05, 48]} />
-        <meshPhysicalMaterial color="#0c1a26" roughness={0.28} metalness={0.2} clearcoat={0.6} clearcoatRoughness={0.25} />
+        <meshPhysicalMaterial color="#171310" roughness={0.28} metalness={0.18} clearcoat={0.6} clearcoatRoughness={0.25} />
       </mesh>
       <mesh position={[0, 0.006, 0]} rotation={[Math.PI / 2, 0, 0]}>
         <torusGeometry args={[0.43, 0.008, 10, 64]} />
-        <meshPhysicalMaterial color={GOLD} metalness={0.9} roughness={0.25} clearcoat={1} />
+        <meshPhysicalMaterial color="#d4af37" metalness={0.9} roughness={0.25} clearcoat={1} />
       </mesh>
     </group>
   )

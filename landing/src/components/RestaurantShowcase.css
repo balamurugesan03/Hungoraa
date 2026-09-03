@@ -32,7 +32,7 @@
 
 .restaurants__arrows button:hover {
   border-color: var(--accent-violet);
-  background: rgba(var(--glow-blue), 0.12);
+  background: rgba(var(--glow-gold), 0.12);
 }
 
 .restaurants__arrow-icon--left {
@@ -69,7 +69,7 @@
   height: 150px;
   display: grid;
   place-items: center;
-  color: rgba(150, 196, 236, 0.22);
+  color: rgba(245, 231, 193, 0.22);
 }
 
 .restaurant-card__offer {
@@ -84,7 +84,7 @@
   font-size: 0.75rem;
   font-weight: 700;
   color: var(--text-hi);
-  background: rgba(7, 18, 30, 0.8);
+  background: rgba(8, 8, 8, 0.8);
   border: 1px solid rgba(var(--glow-gold), 0.5);
   backdrop-filter: blur(6px);
 }

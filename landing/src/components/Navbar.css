@@ -11,7 +11,7 @@
 
 .navbar--scrolled {
   padding: 12px 0;
-  background: rgba(7, 18, 30, 0.78);
+  background: rgba(8, 8, 8, 0.78);
   backdrop-filter: blur(20px) saturate(150%);
   -webkit-backdrop-filter: blur(20px) saturate(150%);
   border-bottom: 1px solid var(--border-soft);
@@ -101,7 +101,7 @@
   flex-direction: column;
   gap: 20px;
   padding: 24px 32px 28px;
-  background: rgba(7, 18, 30, 0.97);
+  background: rgba(8, 8, 8, 0.97);
   backdrop-filter: blur(20px);
   border-top: 1px solid var(--border-soft);
 }

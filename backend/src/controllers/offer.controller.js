@@ -2,7 +2,7 @@ const Offer = require('../models/Offer');
 const Restaurant = require('../models/Restaurant');
 const Notification = require('../models/Notification');
 const { successResponse, errorResponse } = require('../utils/response');
-const { deleteImage } = require('../config/cloudinary');
+const { deleteImage } = require('../config/upload');
 
 const verifyOwner = async (restaurantId, userId) =>
   !!(await Restaurant.findOne({ _id: restaurantId, owner: userId }));

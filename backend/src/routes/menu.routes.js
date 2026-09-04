@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const ctrl = require('../controllers/menu.controller');
 const { protect, authorize, optionalAuth } = require('../middleware/auth.middleware');
-const { uploadSingle } = require('../config/cloudinary');
+const { uploadSingle } = require('../config/upload');
 
 // Public: get menu (also used by mobile via GET /restaurants/:id/menu)
 router.get('/:restaurantId', optionalAuth, ctrl.getMenu);

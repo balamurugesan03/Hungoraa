@@ -54,6 +54,23 @@ app.use(compression());
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
+// ─── Uploaded files (local disk — see config/upload.js) ───────────────────────
+// helmet's default Cross-Origin-Resource-Policy blocks cross-origin <img>
+// loads, which matters here since dev clients load these from a different
+// origin than the API; images are meant to be publicly viewable anyway.
+const { UPLOAD_ROOT } = require('./config/upload');
+app.use(
+  '/uploads',
+  express.static(UPLOAD_ROOT, {
+    maxAge: '365d',
+    immutable: true,
+    setHeaders: (res) => {
+      res.set('Cross-Origin-Resource-Policy', 'cross-origin');
+      res.set('Access-Control-Allow-Origin', '*');
+    },
+  })
+);
+
 // ─── Logging ─────────────────────────────────────────────────────────────────
 if (process.env.NODE_ENV !== 'test') {
   app.use(

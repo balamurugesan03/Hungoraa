@@ -5,7 +5,7 @@ const bookingCtrl = require('../controllers/booking.controller');
 const menuCtrl = require('../controllers/menu.controller');
 const reviewCtrl = require('../controllers/review.controller');
 const { protect, authorize, optionalAuth } = require('../middleware/auth.middleware');
-const { uploadMultiple, uploadSingle } = require('../config/cloudinary');
+const { uploadMultiple, uploadSingle } = require('../config/upload');
 
 // ─── Named static routes first (before /:id wildcard) ────────────────────────
 router.get('/nearby', ctrl.getNearbyRestaurants);

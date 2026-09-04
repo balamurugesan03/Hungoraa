@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const ctrl = require('../controllers/offer.controller');
 const { protect, authorize, optionalAuth } = require('../middleware/auth.middleware');
-const { uploadSingle } = require('../config/cloudinary');
+const { uploadSingle } = require('../config/upload');
 
 // Public / Customer
 router.get('/', optionalAuth, ctrl.getAllOffers);

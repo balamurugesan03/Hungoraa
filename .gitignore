@@ -32,6 +32,10 @@ android/app/build/
 ios/build/
 ios/Pods/
 
+# Uploaded files (local-disk uploads — see backend/src/config/upload.js)
+backend/uploads/*
+!backend/uploads/.gitkeep
+
 # Logs
 logs/
 *.log

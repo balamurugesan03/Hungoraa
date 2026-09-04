@@ -2,7 +2,7 @@ const bcrypt = require('bcryptjs');
 const User = require('../models/User');
 const Wallet = require('../models/Wallet');
 const { successResponse, errorResponse } = require('../utils/response');
-const { uploadSingle } = require('../config/cloudinary');
+const { uploadSingle } = require('../config/upload');
 
 exports.getMe = async (req, res) => {
   try {

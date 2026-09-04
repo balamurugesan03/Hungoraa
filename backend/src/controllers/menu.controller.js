@@ -1,7 +1,7 @@
 const Menu = require('../models/Menu');
 const Restaurant = require('../models/Restaurant');
 const { successResponse, errorResponse } = require('../utils/response');
-const { deleteImage } = require('../config/cloudinary');
+const { deleteImage } = require('../config/upload');
 
 const verifyOwner = async (restaurantId, userId, userRole) => {
   if (userRole === 'admin') return true;

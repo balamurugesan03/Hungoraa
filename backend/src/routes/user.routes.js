@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const ctrl = require('../controllers/user.controller');
 const { protect, authorize } = require('../middleware/auth.middleware');
-const { uploadSingle } = require('../config/cloudinary');
+const { uploadSingle } = require('../config/upload');
 
 router.use(protect);
 

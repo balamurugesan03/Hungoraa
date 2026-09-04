@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { protect, authorize } = require('../middleware/auth.middleware');
-const { uploadFields } = require('../config/cloudinary');
+const { uploadFields } = require('../config/upload');
 const {
   getDashboard, getStats,
   getAllUsers, getUserById, toggleBlockUser, deleteUser, resetUserPassword,

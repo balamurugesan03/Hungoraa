@@ -2,7 +2,7 @@ const Restaurant = require('../models/Restaurant');
 const Branch = require('../models/Branch');
 const User = require('../models/User');
 const { successResponse, errorResponse, paginatedResponse } = require('../utils/response');
-const { deleteImage } = require('../config/cloudinary');
+const { deleteImage } = require('../config/upload');
 
 const PRICE_RANGE_MAP = { '1': '$', '2': '$$', '3': '$$$', '4': '$$$$' };
 

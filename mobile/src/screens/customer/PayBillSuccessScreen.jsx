@@ -8,7 +8,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { COLORS, FONTS, SIZES, SPACING, BORDER_RADIUS, SHADOW } from '../../constants';
 
 export default function PayBillSuccessScreen({ route, navigation }) {
-  const { billPayment, restaurantName } = route.params || {};
+  const { billPayment, restaurantName, coinsEarned } = route.params || {};
+  const discountTotal = billPayment?.discountBreakup?.total || 0;
 
   const scaleAnim = useRef(new Animated.Value(0)).current;
   const fadeAnim = useRef(new Animated.Value(0)).current;
@@ -23,10 +24,10 @@ export default function PayBillSuccessScreen({ route, navigation }) {
   const rows = [
     { label: 'Restaurant', value: restaurantName || '—' },
     { label: 'Bill Amount', value: `₹${(billPayment?.billAmount || 0).toLocaleString()}` },
-    { label: 'Discount', value: billPayment?.discountAmount > 0 ? `- ₹${billPayment.discountAmount.toLocaleString()}` : '₹0', highlight: '#2d6a4f' },
+    { label: 'Discount', value: discountTotal > 0 ? `- ₹${discountTotal.toLocaleString()}` : '₹0', highlight: '#2d6a4f' },
     { label: 'You Paid', value: `₹${(billPayment?.finalAmount || 0).toLocaleString()}`, bold: true },
     { label: 'Payment Method', value: (billPayment?.paymentMethod || 'razorpay').toUpperCase() },
-    { label: 'Reference', value: billPayment?.billPaymentId || '—', mono: true },
+    { label: 'Reference', value: billPayment?._id || '—', mono: true },
   ];
 
   return (
@@ -45,11 +46,20 @@ export default function PayBillSuccessScreen({ route, navigation }) {
       </LinearGradient>
 
       <ScrollView contentContainerStyle={styles.scroll}>
-        {billPayment?.discountAmount > 0 && (
+        {discountTotal > 0 && (
           <View style={styles.savingsBanner}>
             <Ionicons name="pricetag" size={16} color="#2d6a4f" />
             <Text style={styles.savingsText}>
-              You saved ₹{billPayment.discountAmount.toLocaleString()} with offer!
+              You saved ₹{discountTotal.toLocaleString()} with offer!
+            </Text>
+          </View>
+        )}
+
+        {coinsEarned > 0 && (
+          <View style={styles.coinsBanner}>
+            <Ionicons name="sparkles" size={16} color="#C8952B" />
+            <Text style={styles.coinsText}>
+              +{coinsEarned} coins added to your Hungora Wallet — use them on your next bill!
             </Text>
           </View>
         )}
@@ -120,6 +130,13 @@ const styles = StyleSheet.create({
     borderWidth: 1, borderColor: '#52b788',
   },
   savingsText: { fontSize: SIZES.base, fontFamily: FONTS.bold, color: '#2d6a4f' },
+  coinsBanner: {
+    flexDirection: 'row', alignItems: 'center', gap: 8,
+    backgroundColor: '#F7EDD8', borderRadius: BORDER_RADIUS.md,
+    padding: SPACING.md, marginBottom: SPACING.lg,
+    borderWidth: 1, borderColor: '#C8952B',
+  },
+  coinsText: { fontSize: SIZES.sm, fontFamily: FONTS.bold, color: '#8a6a1c', flex: 1 },
   receiptCard: {
     backgroundColor: COLORS.card, borderRadius: BORDER_RADIUS.lg,
     padding: SPACING.lg, ...SHADOW.md, marginBottom: SPACING.xl,

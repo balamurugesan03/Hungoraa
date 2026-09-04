@@ -94,7 +94,7 @@ function BillAmountEntry({ restaurant, onNext }) {
 
   const fetchMutation = useMutation({
     mutationFn: (grossAmount) =>
-      billPaymentApi.fetchBill({ restaurantId: restaurant._id, grossAmount }).then((r) => r.data.data),
+      billPaymentApi.fetchBill({ restaurantId: restaurant._id, billAmount: grossAmount }).then((r) => r.data.data),
     onSuccess: (data, grossAmount) => {
       onNext({ billPaymentId: data.billPayment._id, grossAmount });
     },
@@ -187,10 +187,10 @@ function BillPreview({ restaurant, billPaymentId, grossAmount, onPay, onBack }) 
 
   const applyMutation = useMutation({
     mutationFn: () =>
-      billPaymentApi.applyOffer(billPaymentId, { couponCode }).then((r) => r.data.data),
+      billPaymentApi.applyOffer(billPaymentId, { offerCode: couponCode }).then((r) => r.data.data),
     onSuccess: (data) => {
       setDiscountBreakup(data.billPayment.discountBreakup);
-      setNetPaid(data.billPayment.netPaid);
+      setNetPaid(data.billPayment.finalAmount);
       setAppliedOffer(data.billPayment.offer);
       Toast.show({ type: 'success', text1: 'Offer applied!' });
     },
@@ -320,17 +320,20 @@ function BillPreview({ restaurant, billPaymentId, grossAmount, onPay, onBack }) 
 }
 
 // ─── Step 4: Payment Method ───────────────────────────────────────────────────
-function PaymentStep({ previewData, onSuccess, onBack }) {
+function PaymentStep({ restaurant, previewData, onSuccess, onBack }) {
   const [method, setMethod] = useState('razorpay');
 
   const completeMutation = useMutation({
     mutationFn: () =>
-      billPaymentApi.completeBillPayment(previewData.billPaymentId, {
+      billPaymentApi.pay({
+        restaurantId: restaurant._id,
+        billAmount: previewData.grossAmount,
+        offerId: previewData.offer?._id,
         paymentMethod: method,
       }).then((r) => r.data.data),
     onSuccess: (data) => {
       if (method === 'wallet') {
-        onSuccess(data.billPayment);
+        onSuccess(data.billPayment, data.coinsEarned);
       } else {
         Alert.alert(
           'Razorpay Payment',
@@ -417,8 +420,8 @@ export default function PayBillScreen({ navigation }) {
   const handleSelectRestaurant = (r) => { setRestaurant(r); setStep(1); };
   const handleBillFetched = (draft) => { setBillDraft(draft); setStep(2); };
   const handlePreviewNext = (data) => { setPreviewData(data); setStep(3); };
-  const handleSuccess = (billPayment) => {
-    navigation.replace('PayBillSuccess', { billPayment, restaurantName: restaurant?.name });
+  const handleSuccess = (billPayment, coinsEarned) => {
+    navigation.replace('PayBillSuccess', { billPayment, coinsEarned, restaurantName: restaurant?.name });
   };
 
   const goBack = () => {
@@ -464,6 +467,7 @@ export default function PayBillScreen({ navigation }) {
         )}
         {step === 3 && previewData && (
           <PaymentStep
+            restaurant={restaurant}
             previewData={previewData}
             onSuccess={handleSuccess}
             onBack={() => setStep(2)}

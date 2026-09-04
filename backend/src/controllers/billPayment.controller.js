@@ -9,6 +9,7 @@ const Wallet = require('../models/Wallet');
 const Notification = require('../models/Notification');
 const discountService = require('../services/discount.service');
 const commissionService = require('../services/commission.service');
+const loyaltyService = require('../services/loyalty.service');
 const { successResponse, errorResponse } = require('../utils/response');
 
 const getRazorpay = () => new Razorpay({
@@ -183,7 +184,18 @@ exports.createBillPayment = async (req, res, next) => {
       billPayment.invoice = inv._id;
       await billPayment.save();
 
-      return successResponse(res, 201, 'Payment successful', { billPayment });
+      const cashback = await loyaltyService.awardBillPaymentCashback({
+        userId: req.user._id,
+        amount: finalAmount,
+        restaurantName: restaurant.name,
+        billPaymentId: billPayment._id,
+      });
+
+      return successResponse(res, 201, 'Payment successful', {
+        billPayment,
+        coinsEarned: cashback?.coins || 0,
+        walletBalance: cashback?.walletBalance,
+      });
     }
 
     // Razorpay — create order
@@ -266,8 +278,19 @@ exports.completeBillPayment = async (req, res, next) => {
     billPayment.invoice = inv._id;
     await billPayment.save();
 
+    const cashback = await loyaltyService.awardBillPaymentCashback({
+      userId: billPayment.customer,
+      amount: billPayment.finalAmount,
+      restaurantName: restaurant?.name,
+      billPaymentId: billPayment._id,
+    });
+
     await billPayment.populate('restaurant', 'name address');
-    return successResponse(res, 200, 'Payment completed', { billPayment });
+    return successResponse(res, 200, 'Payment completed', {
+      billPayment,
+      coinsEarned: cashback?.coins || 0,
+      walletBalance: cashback?.walletBalance,
+    });
   } catch (err) {
     next(err);
   }

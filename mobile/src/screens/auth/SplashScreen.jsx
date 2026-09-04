@@ -32,7 +32,9 @@ export default function SplashScreen({ navigation }) {
         <Text style={styles.emoji}>🍽️</Text>
       </Animated.View>
       <Animated.View style={{ opacity: opacityAnim, transform: [{ translateY: slideAnim }] }}>
-        <Text style={styles.appName}>Hungora</Text>
+        <Text style={styles.appName}>
+          <Text style={styles.appNameGold}>Hun</Text><Text style={styles.appNameRed}>go</Text><Text style={styles.appNameGold}>ra</Text>
+        </Text>
         <Text style={styles.tagline}>Your Table, Your Way</Text>
       </Animated.View>
       <Animated.View style={[styles.dotsContainer, { opacity: opacityAnim }]}>
@@ -63,6 +65,8 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     letterSpacing: -1,
   },
+  appNameGold: { color: '#F9A91B' },
+  appNameRed: { color: '#CD302B' },
   tagline: {
     fontSize: SIZES.md,
     fontFamily: FONTS.regular,

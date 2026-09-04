@@ -119,7 +119,9 @@ export default function LoginScreen({ navigation }) {
     <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
       <StatusBar barStyle="light-content" />
       <LinearGradient colors={['#1B5E8F', '#0C2F4E']} style={styles.header}>
-        <Text style={styles.logo}>🍽️ Hungora</Text>
+        <Text style={styles.logo}>
+          🍽️ <Text style={styles.logoGold}>Hun</Text><Text style={styles.logoRed}>go</Text><Text style={styles.logoGold}>ra</Text>
+        </Text>
         <Text style={styles.headerSub}>Your Table, Your Way</Text>
       </LinearGradient>
 
@@ -282,6 +284,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   logo: { fontSize: 28, fontFamily: FONTS.extraBold, color: COLORS.white },
+  logoGold: { color: '#F9A91B' },
+  logoRed: { color: '#CD302B' },
   headerSub: { fontSize: SIZES.sm, color: 'rgba(255,255,255,0.6)', marginTop: 4, fontFamily: FONTS.regular },
   body: { flex: 1, backgroundColor: COLORS.card },
   bodyContent: { padding: SPACING.xl, paddingTop: SPACING.lg },

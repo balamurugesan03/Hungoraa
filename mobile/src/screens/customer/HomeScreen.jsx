@@ -101,82 +101,85 @@ export default function HomeScreen({ navigation }) {
       <StatusBar style="light" />
       <ScrollView
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingTop: insets.top + SPACING.xs, paddingBottom: 110 + insets.bottom }}
+        contentContainerStyle={{ paddingBottom: 110 + insets.bottom }}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#FFFFFF" colors={['#FFFFFF']} />
         }
       >
-        {/* Brand */}
-        <Brandmark />
+        {/* Navy zone — brand through "What's on your mind?", ends in a curved shape */}
+        <View style={[styles.navyZone, { paddingTop: insets.top + SPACING.xs }]}>
+          {/* Brand */}
+          <Brandmark />
 
-        {/* Top bar */}
-        <View style={styles.topBar}>
-          <Pressable style={styles.location} onPress={() => setLocOpen(true)}>
-            <Ionicons name="location" size={15} color="#F9A91B" />
-            <Text style={styles.locText} numberOfLines={1}>{city || 'Select location'}</Text>
-            <Ionicons name="chevron-down" size={15} color={COLOR.onNavySoft} />
+          {/* Top bar */}
+          <View style={styles.topBar}>
+            <Pressable style={styles.location} onPress={() => setLocOpen(true)}>
+              <Ionicons name="location" size={15} color="#F9A91B" />
+              <Text style={styles.locText} numberOfLines={1}>{city || 'Select location'}</Text>
+              <Ionicons name="chevron-down" size={15} color={COLOR.onNavySoft} />
+            </Pressable>
+            <View style={styles.topRight}>
+              <Pressable hitSlop={8} style={styles.bell} onPress={() => go('Notifications')}>
+                <Ionicons name="notifications-outline" size={20} color={COLOR.onNavy} />
+                {unreadQ.data > 0 ? <View style={styles.badge} /> : null}
+              </Pressable>
+              <Pressable onPress={() => go('Profile')} hitSlop={6}>
+                <Avatar name={user?.name || 'U'} uri={avatarUrl} size={38} />
+              </Pressable>
+            </View>
+          </View>
+
+          {/* Greeting */}
+          <View style={styles.greet}>
+            <Text style={[text.display, styles.onNavy]}>{greetingForNow()}, {firstName}.</Text>
+            <Text style={[text.body, styles.greetSub]}>What are you dining on today?</Text>
+          </View>
+
+          {/* Search (opens Search screen) */}
+          <Pressable style={styles.search} onPress={() => go('Search')}>
+            <Ionicons name="search" size={18} color={COLOR.inkFaint} />
+            <Text style={styles.searchText}>Restaurants, cuisines, a dish…</Text>
+            <View style={styles.searchMic}>
+              <Ionicons name="mic-outline" size={16} color={COLOR.terracotta} />
+            </View>
           </Pressable>
-          <View style={styles.topRight}>
-            <Pressable hitSlop={8} style={styles.bell} onPress={() => go('Notifications')}>
-              <Ionicons name="notifications-outline" size={20} color={COLOR.onNavy} />
-              {unreadQ.data > 0 ? <View style={styles.badge} /> : null}
-            </Pressable>
-            <Pressable onPress={() => go('Profile')} hitSlop={6}>
-              <Avatar name={user?.name || 'U'} uri={avatarUrl} size={38} />
-            </Pressable>
-          </View>
+
+          {/* Cuisine chips */}
+          <FlatList
+            data={[{ id: 'all', label: 'All' }, ...cuisines]}
+            keyExtractor={(c) => c.id}
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.chips}
+            renderItem={({ item }) => (
+              <Chip
+                label={item.label}
+                selected={category.id === item.id}
+                onPress={() => setCategory(item)}
+              />
+            )}
+          />
+
+          {/* Offers banner — live, auto-sliding (EasyDiner style) */}
+          {offersQ.isLoading ? (
+            <View style={styles.railPad}><SkeletonCard style={styles.skelBanner} /></View>
+          ) : promos.length ? (
+            <View style={styles.bannerWrap}>
+              <OffersBanner promos={promos} onOpen={(p) => go('Offers', { offerId: p.id })} />
+            </View>
+          ) : null}
+
+          {/* Primary actions */}
+          <QuickActions onPress={handleQuickAction} />
         </View>
 
-        {/* Greeting */}
-        <View style={styles.greet}>
-          <Text style={[text.display, styles.onNavy]}>{greetingForNow()}, {firstName}.</Text>
-          <Text style={[text.body, styles.greetSub]}>What are you dining on today?</Text>
-        </View>
-
-        {/* Search (opens Search screen) */}
-        <Pressable style={styles.search} onPress={() => go('Search')}>
-          <Ionicons name="search" size={18} color={COLOR.inkFaint} />
-          <Text style={styles.searchText}>Restaurants, cuisines, a dish…</Text>
-          <View style={styles.searchMic}>
-            <Ionicons name="mic-outline" size={16} color={COLOR.terracotta} />
-          </View>
-        </Pressable>
-
-        {/* Cuisine chips */}
-        <FlatList
-          data={[{ id: 'all', label: 'All' }, ...cuisines]}
-          keyExtractor={(c) => c.id}
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.chips}
-          renderItem={({ item }) => (
-            <Chip
-              label={item.label}
-              selected={category.id === item.id}
-              onPress={() => setCategory(item)}
-            />
-          )}
-        />
-
-        {/* Offers banner — live, auto-sliding (EasyDiner style) */}
-        {offersQ.isLoading ? (
-          <View style={styles.railPad}><SkeletonCard style={styles.skelBanner} /></View>
-        ) : promos.length ? (
-          <View style={styles.bannerWrap}>
-            <OffersBanner promos={promos} onOpen={(p) => go('Offers', { offerId: p.id })} />
-          </View>
-        ) : null}
-
-        {/* Primary actions */}
-        <QuickActions onPress={handleQuickAction} />
-
-        {/* What's on your mind */}
-        <Text style={[text.h2, styles.onNavy, styles.sectionHead]}>What&apos;s on your mind?</Text>
+        {/* What's on your mind — back on white */}
+        <Text style={[text.h2, styles.sectionHead]}>What&apos;s on your mind?</Text>
         <DiscoveryGrid onOpen={(params) => go('RestaurantList', { ...params, city })} />
 
         {/* Top rated / quick */}
         <View style={styles.togRow}>
-          <Text style={[text.h2, styles.onNavy]}>{section === 'quick' ? 'Table in 15 min' : 'Top rated near you'}</Text>
+          <Text style={text.h2}>{section === 'quick' ? 'Table in 15 min' : 'Top rated near you'}</Text>
           <View style={styles.toggle}>
             {[['top', 'Top rated'], ['quick', 'Quick']].map(([id, label]) => (
               <Pressable
@@ -210,7 +213,6 @@ export default function HomeScreen({ navigation }) {
           />
         ) : (
           <EmptyState
-            dark
             icon="restaurant-outline"
             title={city ? `No restaurants in ${city} yet` : 'No restaurants found'}
             message="Try changing your city or filters."
@@ -284,8 +286,15 @@ function cuisineList(featured = [], trending = []) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: COLOR.navy },
+  container: { flex: 1, backgroundColor: COLOR.surface },
   onNavy: { color: COLOR.onNavy },
+  navyZone: {
+    backgroundColor: COLOR.navy,
+    paddingBottom: SPACING.lg,
+    borderBottomLeftRadius: 32,
+    borderBottomRightRadius: 32,
+    overflow: 'hidden',
+  },
   topBar: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
     paddingHorizontal: SPACING.lg, paddingVertical: SPACING.xs,

@@ -9,31 +9,38 @@ const { width: WINDOW_WIDTH } = Dimensions.get('window');
 // ---------------------------------------------------------------------------
 
 export const COLOR = {
-  // Surfaces — light, faintly blue-washed so the app reads as one cool tone
-  bg: '#EDF2F8', // app background — light blue shade (from logo blue)
+  // Surfaces — blue-washed so the app reads as one cool tone; white cards
+  // lift clearly off the deeper blue ground.
+  bg: '#D8E5F4', // app background — blue shade (from logo blue)
   surface: '#FFFFFF', // cards, sheets — sit "above" the blue ground
-  surfaceAlt: '#E5EDF6', // subtly raised panels
-  sunken: '#E1EAF4', // inputs, wells, skeleton base
+  surfaceAlt: '#CEDEF0', // subtly raised panels
+  sunken: '#C8DAED', // inputs, wells, skeleton base
+
+  // Full logo blue — used as the Home screen ground, with light text on top
+  navy: '#0C2F4E',
+  onNavy: '#EEF4FB', // primary text / icons on navy
+  onNavySoft: '#9DB4CB', // secondary text on navy
+  onNavyFill: 'rgba(255,255,255,0.10)', // translucent chips / buttons on navy
 
   // Text — cool-tinted neutrals
   ink: '#12242F', // primary
-  inkSoft: '#5A6B78', // secondary
-  inkFaint: '#93A6B3', // tertiary / disabled / placeholder
+  inkSoft: '#566673', // secondary
+  inkFaint: '#8B9EAC', // tertiary / disabled / placeholder
   onColor: '#FFFFFF', // text/icon on accent fills
 
   // Lines
-  hairline: '#DAE4EF',
-  border: '#C7D6E3',
+  hairline: '#C9DAEB',
+  border: '#B4CADF',
 
   // Accents — primary is the logo blue (#0C2F4E). `terracotta*` names kept for
   // back-compat but now resolve to blue; `blue*` are the canonical names.
   blue: '#0C2F4E',
   bluePressed: '#081E33',
-  blueTint: '#E6ECF2', // light wash for selected chips / active rows
+  blueTint: '#DBE7F4', // light wash for selected chips / active rows
   blueSoft: '#1C4E70', // mid-blue for secondary emphasis
   terracotta: '#0C2F4E',
   terracottaPressed: '#081E33',
-  terracottaTint: '#E6ECF2',
+  terracottaTint: '#DBE7F4',
   wine: '#1C4E70',
   wineTint: '#E4EEF4',
   gold: '#C8952B', // logo gold — ratings / premium touches

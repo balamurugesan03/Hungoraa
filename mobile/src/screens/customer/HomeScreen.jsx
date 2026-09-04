@@ -3,8 +3,11 @@ import {
   View, Text, StyleSheet, ScrollView, Pressable, FlatList, RefreshControl,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
 
+import Brandmark from '../../components/Brandmark';
+import QuickActions from '../../components/home/QuickActions';
 import DiscoveryGrid from '../../components/home/DiscoveryGrid';
 import BottomNavigation from '../../components/home/BottomNavigation';
 import RateOrderCard from '../../components/home/RateOrderCard';
@@ -21,7 +24,7 @@ import {
 import { useAuthStore } from '../../store/authStore';
 import { COLOR, SPACING, RADII, text, FONT } from '../../theme';
 import {
-  Avatar, Chip, SectionHeader, RestaurantCard, SkeletonCard, EmptyState, Sheet, Divider,
+  Avatar, Chip, RestaurantCard, SkeletonCard, EmptyState, Sheet, Divider,
 } from '../../components/ui';
 
 const CITY_FALLBACK = ['Bengaluru', 'Mumbai', 'Delhi', 'Hyderabad', 'Chennai', 'Pune', 'Kolkata'];
@@ -55,10 +58,6 @@ export default function HomeScreen({ navigation }) {
 
   const offerMap = useMemo(() => offersByRestaurant(offersQ.data || []), [offersQ.data]);
   const promos = useMemo(() => (offersQ.data || []).slice(0, 6).map(toPromo), [offersQ.data]);
-  const featured = useMemo(
-    () => (featuredQ.data || []).map((r) => toRestaurantCard(r, offerMap)),
-    [featuredQ.data, offerMap],
-  );
   const trending = useMemo(
     () => (trendingQ.data || []).map((r) => toRestaurantCard(r, offerMap)),
     [trendingQ.data, offerMap],
@@ -82,6 +81,12 @@ export default function HomeScreen({ navigation }) {
     else if (mode === 'dinein') go('PayBill');
   };
 
+  const handleQuickAction = (id) => {
+    setDiningMode(id);
+    if (id === 'book') go('RestaurantList', { title: 'Book a table', city, mode: 'book' });
+    else go('PayBill');
+  };
+
   const refreshing = Boolean(offersQ.isRefetching || featuredQ.isRefetching || trendingQ.isRefetching);
   const onRefresh = useCallback(() => {
     offersQ.refetch(); featuredQ.refetch(); trendingQ.refetch(); unreadQ.refetch();
@@ -93,23 +98,27 @@ export default function HomeScreen({ navigation }) {
 
   return (
     <View style={styles.container}>
+      <StatusBar style="light" />
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingTop: insets.top + SPACING.xs, paddingBottom: 110 + insets.bottom }}
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={COLOR.terracotta} colors={[COLOR.terracotta]} />
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#FFFFFF" colors={['#FFFFFF']} />
         }
       >
+        {/* Brand */}
+        <Brandmark />
+
         {/* Top bar */}
         <View style={styles.topBar}>
           <Pressable style={styles.location} onPress={() => setLocOpen(true)}>
-            <Ionicons name="location" size={15} color={COLOR.terracotta} />
+            <Ionicons name="location" size={15} color="#F9A91B" />
             <Text style={styles.locText} numberOfLines={1}>{city || 'Select location'}</Text>
-            <Ionicons name="chevron-down" size={15} color={COLOR.inkSoft} />
+            <Ionicons name="chevron-down" size={15} color={COLOR.onNavySoft} />
           </Pressable>
           <View style={styles.topRight}>
             <Pressable hitSlop={8} style={styles.bell} onPress={() => go('Notifications')}>
-              <Ionicons name="notifications-outline" size={20} color={COLOR.ink} />
+              <Ionicons name="notifications-outline" size={20} color={COLOR.onNavy} />
               {unreadQ.data > 0 ? <View style={styles.badge} /> : null}
             </Pressable>
             <Pressable onPress={() => go('Profile')} hitSlop={6}>
@@ -120,7 +129,7 @@ export default function HomeScreen({ navigation }) {
 
         {/* Greeting */}
         <View style={styles.greet}>
-          <Text style={text.display}>{greetingForNow()}, {firstName}.</Text>
+          <Text style={[text.display, styles.onNavy]}>{greetingForNow()}, {firstName}.</Text>
           <Text style={[text.body, styles.greetSub]}>What are you dining on today?</Text>
         </View>
 
@@ -158,43 +167,16 @@ export default function HomeScreen({ navigation }) {
           </View>
         ) : null}
 
-        {/* Featured */}
-        <SectionHeader
-          title="Featured this week"
-          subtitle="Handpicked tables worth the trip"
-          onAction={() => go('RestaurantList', { title: 'Featured restaurants', city })}
-          style={styles.sectionHead}
-        />
-        {featuredQ.isLoading ? (
-          <View style={styles.railPad}><SkeletonCard style={styles.skelFeature} /></View>
-        ) : featured.length ? (
-          <FlatList
-            data={featured}
-            keyExtractor={(r) => r.id}
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.rail}
-            renderItem={({ item }) => (
-              <RestaurantCard
-                item={item}
-                layout="feature"
-                isFavorite={isFavorite(item.id)}
-                onToggleFavorite={toggleFavorite}
-                onPress={() => openRestaurant(item)}
-              />
-            )}
-          />
-        ) : (
-          <EmptyState icon="restaurant-outline" title="Nothing featured yet" message="Check back soon for editor picks." />
-        )}
+        {/* Primary actions */}
+        <QuickActions onPress={handleQuickAction} />
 
         {/* What's on your mind */}
-        <SectionHeader title="What's on your mind?" style={styles.sectionHead} />
+        <Text style={[text.h2, styles.onNavy, styles.sectionHead]}>What&apos;s on your mind?</Text>
         <DiscoveryGrid onOpen={(params) => go('RestaurantList', { ...params, city })} />
 
         {/* Top rated / quick */}
         <View style={styles.togRow}>
-          <Text style={text.h2}>{section === 'quick' ? 'Table in 15 min' : 'Top rated near you'}</Text>
+          <Text style={[text.h2, styles.onNavy]}>{section === 'quick' ? 'Table in 15 min' : 'Top rated near you'}</Text>
           <View style={styles.toggle}>
             {[['top', 'Top rated'], ['quick', 'Quick']].map(([id, label]) => (
               <Pressable
@@ -228,6 +210,7 @@ export default function HomeScreen({ navigation }) {
           />
         ) : (
           <EmptyState
+            dark
             icon="restaurant-outline"
             title={city ? `No restaurants in ${city} yet` : 'No restaurants found'}
             message="Try changing your city or filters."
@@ -301,7 +284,8 @@ function cuisineList(featured = [], trending = []) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: COLOR.bg },
+  container: { flex: 1, backgroundColor: COLOR.navy },
+  onNavy: { color: COLOR.onNavy },
   topBar: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
     paddingHorizontal: SPACING.lg, paddingVertical: SPACING.xs,
@@ -309,18 +293,19 @@ const styles = StyleSheet.create({
   location: {
     flexDirection: 'row', alignItems: 'center', gap: 5, flex: 1, paddingRight: SPACING.md,
   },
-  locText: { fontFamily: FONT.semiBold, fontSize: 15, color: COLOR.ink, flexShrink: 1 },
+  locText: { fontFamily: FONT.semiBold, fontSize: 15, color: COLOR.onNavy, flexShrink: 1 },
   topRight: { flexDirection: 'row', alignItems: 'center', gap: SPACING.sm },
   bell: {
-    width: 40, height: 40, borderRadius: 20, backgroundColor: COLOR.surface,
+    width: 40, height: 40, borderRadius: 20, backgroundColor: COLOR.onNavyFill,
     alignItems: 'center', justifyContent: 'center',
   },
   badge: {
     position: 'absolute', top: 9, right: 10,
-    width: 8, height: 8, borderRadius: 4, backgroundColor: COLOR.terracotta,
+    width: 8, height: 8, borderRadius: 4, backgroundColor: '#F9A91B',
+    borderWidth: 1.5, borderColor: COLOR.navy,
   },
   greet: { paddingHorizontal: SPACING.lg, marginTop: SPACING.sm, marginBottom: SPACING.md },
-  greetSub: { marginTop: 4 },
+  greetSub: { marginTop: 4, color: COLOR.onNavySoft },
   search: {
     flexDirection: 'row', alignItems: 'center', gap: SPACING.sm,
     marginHorizontal: SPACING.lg,
@@ -334,7 +319,7 @@ const styles = StyleSheet.create({
     alignItems: 'center', justifyContent: 'center',
   },
   chips: { paddingHorizontal: SPACING.lg, gap: SPACING.xs, paddingVertical: SPACING.md },
-  sectionHead: { marginTop: SPACING.sm, marginBottom: SPACING.sm },
+  sectionHead: { paddingHorizontal: SPACING.lg, marginTop: SPACING.sm, marginBottom: SPACING.sm },
   rail: { paddingHorizontal: SPACING.lg, gap: SPACING.md, paddingVertical: SPACING.xs },
   railPad: { paddingHorizontal: SPACING.lg },
   skelFeature: { width: 230, backgroundColor: COLOR.surface, borderRadius: RADII.lg, padding: SPACING.sm },

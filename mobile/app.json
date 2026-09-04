@@ -2,7 +2,7 @@
   "expo": {
     "name": "Hungora",
     "slug": "hungora",
-    "version": "1.0.5",
+    "version": "1.0.6",
     "sdkVersion": "54.0.0",
     "orientation": "portrait",
     "icon": "./assets/hungora_darkgreen_gold_logo.png",
@@ -10,7 +10,7 @@
     "splash": {
       "image": "./assets/splash.png",
       "resizeMode": "contain",
-      "backgroundColor": "#EDF2F8"
+      "backgroundColor": "#D8E5F4"
     },
     "assetBundlePatterns": [
       "**/*"

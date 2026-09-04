@@ -12,17 +12,20 @@ export default function EmptyState({
   actionLabel,
   onAction,
   tone = 'neutral',
+  dark = false,
   style,
 }) {
   const accent = tone === 'error' ? COLOR.error : COLOR.terracotta;
-  const badgeBg = tone === 'error' ? COLOR.errorTint : COLOR.terracottaTint;
+  const badgeBg = dark
+    ? COLOR.onNavyFill
+    : tone === 'error' ? COLOR.errorTint : COLOR.terracottaTint;
   return (
     <View style={[styles.wrap, style]}>
       <View style={[styles.badge, { backgroundColor: badgeBg }]}>
-        <Ionicons name={icon} size={26} color={accent} />
+        <Ionicons name={icon} size={26} color={dark ? COLOR.onNavy : accent} />
       </View>
-      {title ? <Text style={[text.h3, styles.title]}>{title}</Text> : null}
-      {message ? <Text style={[text.body, styles.msg]}>{message}</Text> : null}
+      {title ? <Text style={[text.h3, styles.title, dark && { color: COLOR.onNavy }]}>{title}</Text> : null}
+      {message ? <Text style={[text.body, styles.msg, dark && { color: COLOR.onNavySoft }]}>{message}</Text> : null}
       {actionLabel && onAction ? (
         <Button label={actionLabel} onPress={onAction} size="md" full={false} style={styles.cta} />
       ) : null}

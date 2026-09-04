@@ -143,10 +143,79 @@ const sendBookingConfirmationEmail = (user, booking) =>
     `,
   });
 
+// ─── Pay Bill: receipt to customer + notification to restaurant owner ────────
+const sendBillPaymentCustomerReceipt = (customer, billPayment, restaurant) =>
+  sendEmail({
+    to: customer.email,
+    subject: `DineSmart - Payment Receipt #${billPayment.billPaymentId}`,
+    html: `
+      <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:20px">
+        <div style="background:linear-gradient(135deg,#2d6a4f,#40916c);padding:30px;border-radius:10px 10px 0 0;text-align:center">
+          <h1 style="color:white;margin:0">✅ Payment Successful</h1>
+        </div>
+        <div style="background:#f8f9fa;padding:30px;border-radius:0 0 10px 10px">
+          <p style="color:#666">Hi ${customer.name}, your bill has been paid.</p>
+          <div style="background:white;border-radius:8px;padding:20px;border-left:4px solid #2d6a4f">
+            <p><strong>Receipt #:</strong> ${billPayment.billPaymentId}</p>
+            <p><strong>Restaurant:</strong> ${restaurant.name}</p>
+            <p><strong>Bill Amount:</strong> ₹${billPayment.billAmount}</p>
+            ${billPayment.discountBreakup?.total ? `<p><strong>Discount:</strong> -₹${billPayment.discountBreakup.total}</p>` : ''}
+            <p><strong>Amount Paid:</strong> ₹${billPayment.finalAmount}</p>
+            <p><strong>Payment Method:</strong> ${billPayment.paymentMethod.toUpperCase()}</p>
+            <p><strong>Reference:</strong> ${billPayment.paymentReference || billPayment.razorpayPaymentId || '-'}</p>
+            <p><strong>Paid At:</strong> ${new Date(billPayment.paidAt).toLocaleString('en-IN')}</p>
+          </div>
+          <p style="color:#999;font-size:12px;text-align:center;margin-top:20px">
+            © 2024 DineSmart. All rights reserved.
+          </p>
+        </div>
+      </div>
+    `,
+  });
+
+const sendBillPaymentOwnerNotification = (owner, billPayment, restaurant, customer) =>
+  sendEmail({
+    to: owner.email,
+    subject: `DineSmart - New Bill Payment Received #${billPayment.billPaymentId}`,
+    html: `
+      <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:20px">
+        <div style="background:linear-gradient(135deg,#e63946,#c1121f);padding:30px;border-radius:10px 10px 0 0;text-align:center">
+          <h1 style="color:white;margin:0">💰 Payment Received</h1>
+        </div>
+        <div style="background:#f8f9fa;padding:30px;border-radius:0 0 10px 10px">
+          <p style="color:#666">Hi ${owner.name}, a customer just paid their bill at <strong>${restaurant.name}</strong>.</p>
+          <div style="background:white;border-radius:8px;padding:20px;border-left:4px solid #e63946">
+            <p><strong>Receipt #:</strong> ${billPayment.billPaymentId}</p>
+            <p><strong>Customer:</strong> ${customer.name} (${customer.phone || customer.email})</p>
+            <p><strong>Bill Amount:</strong> ₹${billPayment.billAmount}</p>
+            <p><strong>Amount Paid:</strong> ₹${billPayment.finalAmount}</p>
+            <p><strong>Commission (${billPayment.commissionPercentage}%):</strong> -₹${billPayment.commissionAmount}</p>
+            <p><strong>You Receive:</strong> ₹${billPayment.restaurantReceivable}</p>
+            <p><strong>Payment Method:</strong> ${billPayment.paymentMethod.toUpperCase()}</p>
+            <p><strong>Paid At:</strong> ${new Date(billPayment.paidAt).toLocaleString('en-IN')}</p>
+          </div>
+        </div>
+      </div>
+    `,
+  });
+
+// Fire-and-forget: emails both parties, never throws (caller doesn't await failures)
+const sendBillPaymentEmails = async ({ billPayment, restaurant, customer, owner }) => {
+  const jobs = [];
+  if (customer?.email) jobs.push(sendBillPaymentCustomerReceipt(customer, billPayment, restaurant));
+  if (owner?.email)    jobs.push(sendBillPaymentOwnerNotification(owner, billPayment, restaurant, customer));
+
+  const results = await Promise.allSettled(jobs);
+  results.forEach((r) => {
+    if (r.status === 'rejected') logger.error(`Bill payment email failed: ${r.reason?.message}`);
+  });
+};
+
 module.exports = {
   sendEmail,
   sendWelcomeEmail,
   sendPasswordResetEmail,
   sendEmailVerification,
   sendBookingConfirmationEmail,
+  sendBillPaymentEmails,
 };

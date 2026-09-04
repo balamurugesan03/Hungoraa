@@ -10,6 +10,7 @@ const Notification = require('../models/Notification');
 const discountService = require('../services/discount.service');
 const commissionService = require('../services/commission.service');
 const loyaltyService = require('../services/loyalty.service');
+const emailService = require('../services/email.service');
 const { successResponse, errorResponse } = require('../utils/response');
 
 const getRazorpay = () => new Razorpay({
@@ -119,7 +120,8 @@ exports.createBillPayment = async (req, res, next) => {
       return errorResponse(res, 400, 'restaurantId and billAmount are required');
     }
 
-    const restaurant = await Restaurant.findOne({ _id: restaurantId, payBillEnabled: true, isActive: true });
+    const restaurant = await Restaurant.findOne({ _id: restaurantId, payBillEnabled: true, isActive: true })
+      .populate('owner', 'name email phone');
     if (!restaurant) return errorResponse(res, 404, 'Restaurant not found');
 
     // Apply offer
@@ -190,6 +192,10 @@ exports.createBillPayment = async (req, res, next) => {
         restaurantName: restaurant.name,
         billPaymentId: billPayment._id,
       });
+
+      emailService.sendBillPaymentEmails({
+        billPayment, restaurant, customer: req.user, owner: restaurant.owner,
+      }).catch(() => {});
 
       return successResponse(res, 201, 'Payment successful', {
         billPayment,
@@ -273,7 +279,7 @@ exports.completeBillPayment = async (req, res, next) => {
       }
     }
 
-    const restaurant = await Restaurant.findById(billPayment.restaurant);
+    const restaurant = await Restaurant.findById(billPayment.restaurant).populate('owner', 'name email phone');
     const inv = await _generateBillInvoice(billPayment, restaurant);
     billPayment.invoice = inv._id;
     await billPayment.save();
@@ -284,6 +290,10 @@ exports.completeBillPayment = async (req, res, next) => {
       restaurantName: restaurant?.name,
       billPaymentId: billPayment._id,
     });
+
+    emailService.sendBillPaymentEmails({
+      billPayment, restaurant, customer: req.user, owner: restaurant?.owner,
+    }).catch(() => {});
 
     await billPayment.populate('restaurant', 'name address');
     return successResponse(res, 200, 'Payment completed', {

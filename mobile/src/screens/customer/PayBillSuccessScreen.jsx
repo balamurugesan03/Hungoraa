@@ -70,6 +70,11 @@ export default function PayBillSuccessScreen({ route, navigation }) {
             <Text style={styles.receiptTitle}>Payment Receipt</Text>
           </View>
 
+          <View style={styles.emailNote}>
+            <Ionicons name="mail-outline" size={14} color={COLORS.gray} />
+            <Text style={styles.emailNoteText}>Receipt sent to your registered email</Text>
+          </View>
+
           {rows.map((row, i) => (
             <View key={i} style={[styles.row, i < rows.length - 1 && styles.rowBorder]}>
               <Text style={styles.rowLabel}>{row.label}</Text>
@@ -147,6 +152,11 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1, borderBottomColor: COLORS.border,
   },
   receiptTitle: { fontSize: SIZES.base, fontFamily: FONTS.bold, color: COLORS.dark },
+  emailNote: {
+    flexDirection: 'row', alignItems: 'center', gap: 6,
+    marginBottom: SPACING.md,
+  },
+  emailNoteText: { fontSize: SIZES.xs, fontFamily: FONTS.regular, color: COLORS.gray },
   row: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 10 },
   rowBorder: { borderBottomWidth: 1, borderBottomColor: COLORS.border },
   rowLabel: { fontSize: SIZES.sm, fontFamily: FONTS.regular, color: COLORS.gray },

@@ -1,42 +1,64 @@
-import React, { useEffect, useRef } from 'react';
-import { View, Text, StyleSheet, Animated, StatusBar } from 'react-native';
+import React, { useEffect, useRef, useState } from 'react';
+import { View, Text, StyleSheet, Animated, StatusBar, Image } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { COLORS, FONTS, SIZES } from '../../constants';
 
+const HERO_URI = 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=800&q=80';
+const LOGO = require('../../../assets/hungora_darkgreen_gold_logo.png');
+
 export default function SplashScreen({ navigation }) {
-  const scaleAnim = useRef(new Animated.Value(0.5)).current;
+  const scaleAnim = useRef(new Animated.Value(0.6)).current;
   const opacityAnim = useRef(new Animated.Value(0)).current;
-  const slideAnim = useRef(new Animated.Value(30)).current;
+  const slideAnim = useRef(new Animated.Value(28)).current;
+  const [heroFailed, setHeroFailed] = useState(false);
 
   useEffect(() => {
     Animated.sequence([
       Animated.parallel([
-        Animated.spring(scaleAnim, { toValue: 1, tension: 50, friction: 8, useNativeDriver: true }),
+        Animated.spring(scaleAnim, { toValue: 1, tension: 48, friction: 8, useNativeDriver: true }),
         Animated.timing(opacityAnim, { toValue: 1, duration: 600, useNativeDriver: true }),
       ]),
-      Animated.delay(200),
+      Animated.delay(180),
       Animated.timing(slideAnim, { toValue: 0, duration: 400, useNativeDriver: true }),
     ]).start();
 
-    const timer = setTimeout(() => {
-      navigation.replace('Onboarding');
-    }, 2500);
-
+    const timer = setTimeout(() => navigation.replace('Onboarding'), 2500);
     return () => clearTimeout(timer);
   }, []);
 
   return (
-    <LinearGradient colors={['#1B5E8F', '#0C2F4E', '#081E33']} style={styles.container} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}>
+    <LinearGradient
+      colors={['#1B5E8F', '#0C2F4E', '#081E33']}
+      style={styles.container}
+      start={{ x: 0, y: 0 }}
+      end={{ x: 1, y: 1 }}
+    >
       <StatusBar barStyle="light-content" />
-      <Animated.View style={{ transform: [{ scale: scaleAnim }], opacity: opacityAnim }}>
-        <Text style={styles.emoji}>🍽️</Text>
+
+      <Animated.View style={[styles.heroWrap, { transform: [{ scale: scaleAnim }], opacity: opacityAnim }]}>
+        <Image
+          source={heroFailed ? LOGO : { uri: HERO_URI }}
+          style={heroFailed ? styles.heroLogo : styles.hero}
+          resizeMode={heroFailed ? 'contain' : 'cover'}
+          onError={() => setHeroFailed(true)}
+        />
+        {!heroFailed ? (
+          <LinearGradient
+            colors={['transparent', 'rgba(8,15,25,0.55)']}
+            style={StyleSheet.absoluteFill}
+          />
+        ) : null}
       </Animated.View>
-      <Animated.View style={{ opacity: opacityAnim, transform: [{ translateY: slideAnim }] }}>
+
+      <Animated.View style={{ opacity: opacityAnim, transform: [{ translateY: slideAnim }], alignItems: 'center' }}>
         <Text style={styles.appName}>
-          <Text style={styles.appNameGold}>Hun</Text><Text style={styles.appNameRed}>go</Text><Text style={styles.appNameGold}>ra</Text>
+          <Text style={styles.appNameGold}>Hun</Text>
+          <Text style={styles.appNameRed}>go</Text>
+          <Text style={styles.appNameGold}>ra</Text>
         </Text>
         <Text style={styles.tagline}>Your Table, Your Way</Text>
       </Animated.View>
+
       <Animated.View style={[styles.dotsContainer, { opacity: opacityAnim }]}>
         <View style={[styles.dot, styles.dotActive]} />
         <View style={styles.dot} />
@@ -51,33 +73,48 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 16,
+    gap: 22,
   },
-  emoji: {
-    fontSize: 72,
-    textAlign: 'center',
-    marginBottom: 8,
+  heroWrap: {
+    width: 190,
+    height: 190,
+    borderRadius: 32,
+    overflow: 'hidden',
+    backgroundColor: 'rgba(255,255,255,0.08)',
+    borderWidth: 1,
+    borderColor: 'rgba(249,169,27,0.35)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  hero: {
+    width: '100%',
+    height: '100%',
+  },
+  heroLogo: {
+    width: 120,
+    height: 120,
   },
   appName: {
-    fontSize: 40,
+    fontSize: 54,
     fontFamily: FONTS.extraBold,
     color: COLORS.white,
     textAlign: 'center',
-    letterSpacing: -1,
+    letterSpacing: -1.5,
   },
   appNameGold: { color: '#F9A91B' },
   appNameRed: { color: '#CD302B' },
   tagline: {
     fontSize: SIZES.md,
     fontFamily: FONTS.regular,
-    color: 'rgba(255,255,255,0.7)',
+    color: 'rgba(255,255,255,0.72)',
     textAlign: 'center',
-    marginTop: 8,
+    marginTop: 10,
+    letterSpacing: 0.3,
   },
   dotsContainer: {
     flexDirection: 'row',
     gap: 8,
-    marginTop: 48,
+    marginTop: 40,
   },
   dot: {
     width: 8,

@@ -9,12 +9,20 @@ export const useAuthStore = create(
       accessToken: null,
       refreshToken: null,
       isAuthenticated: false,
-      city: null, // user-selected city for discovery (null = auto/all)
+      city: null, // user-selected/detected city for discovery (null = auto/all)
+      coords: null, // { latitude, longitude } from device GPS, for "near me"
+      locality: null, // human-readable area label, e.g. "Anna Nagar, Chennai"
 
       setAuth: (user, accessToken, refreshToken) =>
         set({ user, accessToken, refreshToken, isAuthenticated: true }),
 
       setCity: (city) => set({ city }),
+      setLocation: ({ city, coords, locality }) =>
+        set((s) => ({
+          city: city ?? s.city,
+          coords: coords ?? s.coords,
+          locality: locality ?? s.locality,
+        })),
 
       setAccessToken: (accessToken) => set({ accessToken }),
 
@@ -35,6 +43,8 @@ export const useAuthStore = create(
         refreshToken: state.refreshToken,
         isAuthenticated: state.isAuthenticated,
         city: state.city,
+        coords: state.coords,
+        locality: state.locality,
       }),
     }
   )

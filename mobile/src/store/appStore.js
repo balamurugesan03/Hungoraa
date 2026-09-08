@@ -13,6 +13,11 @@ export const useAppStore = create((set) => ({
   modeChooserShown: false,
   setDiningMode: (diningMode) => set({ diningMode, modeChooserShown: true }),
   markModeChooserShown: () => set({ modeChooserShown: true }),
+
+  // Location permission prompt — NOT persisted, so it re-asks each launch until a
+  // location is actually set (Swiggy-style).
+  locationPromptDone: false,
+  markLocationPrompt: () => set({ locationPromptDone: true }),
   selectedFilters: {
     cuisine: [],
     priceRange: [],

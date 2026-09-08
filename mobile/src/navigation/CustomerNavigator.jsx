@@ -83,7 +83,6 @@ function HomeStack() {
       <Stack.Screen name="RestaurantList" component={RestaurantListScreen} />
       <Stack.Screen name="RestaurantDetail" component={RestaurantDetailScreen} />
       <Stack.Screen name="MenuDetail" component={MenuDetailScreen} />
-      <Stack.Screen name="Booking" component={BookingScreen} />
       <Stack.Screen name="BookingConfirm" component={BookingConfirmScreen} />
       <Stack.Screen name="Payment" component={PaymentScreen} />
       <Stack.Screen name="BookingSuccess" component={BookingSuccessScreen} />

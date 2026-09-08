@@ -21,13 +21,20 @@ export default function PayBillSuccessScreen({ route, navigation }) {
     ]).start();
   }, []);
 
+  const tipAmount = billPayment?.tipAmount || 0;
+  const convenienceFee = billPayment?.convenienceFee || 0;
+  const gstAmount = billPayment?.gstAmount || 0;
+
   const rows = [
     { label: 'Restaurant', value: restaurantName || '—' },
     { label: 'Bill Amount', value: `₹${(billPayment?.billAmount || 0).toLocaleString()}` },
     { label: 'Discount', value: discountTotal > 0 ? `- ₹${discountTotal.toLocaleString()}` : '₹0', highlight: '#2d6a4f' },
+    ...(convenienceFee > 0 ? [{ label: 'Convenience fee', value: `+ ₹${convenienceFee.toLocaleString()}` }] : []),
+    ...(gstAmount > 0 ? [{ label: 'GST', value: `+ ₹${gstAmount.toLocaleString()}` }] : []),
+    ...(tipAmount > 0 ? [{ label: 'Tip', value: `+ ₹${tipAmount.toLocaleString()}` }] : []),
     { label: 'You Paid', value: `₹${(billPayment?.finalAmount || 0).toLocaleString()}`, bold: true },
     { label: 'Payment Method', value: (billPayment?.paymentMethod || 'razorpay').toUpperCase() },
-    { label: 'Reference', value: billPayment?._id || '—', mono: true },
+    { label: 'Reference', value: billPayment?.billPaymentId || billPayment?._id || '—', mono: true },
   ];
 
   return (

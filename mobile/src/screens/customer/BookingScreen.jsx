@@ -33,13 +33,35 @@ const getNext14Days = () => {
   return days;
 };
 
-export default function BookingScreen({ navigation, route }) {
-  const { restaurantId, restaurantName } = route.params || {};
-  const dates = getNext14Days();
+const periodOfSlot = (slot = '') => {
+  const [t, mer] = slot.split(' ');
+  let h = parseInt((t || '0').split(':')[0], 10) || 0;
+  if (mer === 'PM' && h !== 12) h += 12;
+  if (mer === 'AM' && h === 12) h = 0;
+  if (h < 12) return 'Breakfast';
+  if (h < 16) return 'Lunch';
+  if (h < 19) return 'Evening';
+  return 'Dinner';
+};
+const SLOT_PERIODS = ['Breakfast', 'Lunch', 'Evening', 'Dinner'];
 
-  const [selectedDate, setSelectedDate] = useState(dates[0].date);
-  const [selectedTime, setSelectedTime] = useState('');
-  const [guests, setGuests] = useState(2);
+const offerDealLabel = (o) => (o.type === 'percentage'
+  ? `${o.discountValue}% Off${o.maxDiscount ? ` up to ₹${o.maxDiscount}` : ''}`
+  : o.type === 'flat' ? `Flat ₹${o.discountValue} Off`
+    : o.type === 'bogo' ? 'Buy 1 Get 1 Free'
+      : (o.type?.replace(/_/g, ' ') || 'Special offer'));
+
+export default function BookingScreen({ navigation, route }) {
+  const {
+    restaurantId, restaurantName, restaurant: restaurantMeta, offers: passedOffers,
+    date: prefillDate, time: prefillTime, guests: prefillGuests,
+  } = route.params || {};
+  const dates = getNext14Days();
+  const bookingOffers = (passedOffers || []).filter((o) => !o.applicableTo?.length || o.applicableTo.includes('booking'));
+
+  const [selectedDate, setSelectedDate] = useState(prefillDate || dates[0].date);
+  const [selectedTime, setSelectedTime] = useState(prefillTime || '');
+  const [guests, setGuests] = useState(prefillGuests || 2);
   const [specialRequest, setSpecialRequest] = useState('');
   const [selectedTable, setSelectedTable] = useState(null);
   const [tableModalVisible, setTableModalVisible] = useState(false);
@@ -68,6 +90,8 @@ export default function BookingScreen({ navigation, route }) {
       navigation.navigate('BookingConfirm', {
         restaurantId,
         restaurantName,
+        restaurant: restaurantMeta,
+        offers: bookingOffers,
         date: selectedDate,
         time: selectedTime,
         guests,
@@ -75,6 +99,8 @@ export default function BookingScreen({ navigation, route }) {
         specialRequest,
         holdId: data.booking._id,
         holdExpiresAt: data.booking.holdExpiresAt,
+        requiresDeposit: data.requiresDeposit,
+        depositAmount: data.depositAmount,
       });
     },
     onError: (err) => {
@@ -166,29 +192,60 @@ export default function BookingScreen({ navigation, route }) {
           </View>
         </View>
 
-        {/* Time Slots */}
+        {/* Time Slots — grouped by period */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>
             <Ionicons name="time-outline" size={16} color={COLORS.primary} /> Select Time
           </Text>
-          <View style={styles.timeGrid}>
-            {availableSlots.map((slot) => {
-              const isBooked = availabilityData?.bookedSlots?.includes(slot);
-              return (
-                <TouchableOpacity
-                  key={slot}
-                  style={[styles.timeSlot, selectedTime === slot && styles.timeSlotActive, isBooked && styles.timeSlotBooked]}
-                  onPress={() => !isBooked && setSelectedTime(slot)}
-                  disabled={isBooked}
-                >
-                  <Text style={[styles.timeText, selectedTime === slot && styles.timeTextActive, isBooked && styles.timeTextBooked]}>
-                    {slot}
-                  </Text>
-                </TouchableOpacity>
-              );
-            })}
-          </View>
+          {SLOT_PERIODS.map((period) => {
+            const periodSlots = availableSlots.filter((s) => periodOfSlot(s) === period);
+            if (!periodSlots.length) return null;
+            return (
+              <View key={period} style={styles.periodGroup}>
+                <Text style={styles.periodTitle}>{period}</Text>
+                <View style={styles.timeGrid}>
+                  {periodSlots.map((slot) => {
+                    const isBooked = availabilityData?.bookedSlots?.includes(slot);
+                    return (
+                      <TouchableOpacity
+                        key={slot}
+                        style={[styles.timeSlot, selectedTime === slot && styles.timeSlotActive, isBooked && styles.timeSlotBooked]}
+                        onPress={() => !isBooked && setSelectedTime(slot)}
+                        disabled={isBooked}
+                      >
+                        <Text style={[styles.timeText, selectedTime === slot && styles.timeTextActive, isBooked && styles.timeTextBooked]}>
+                          {slot}
+                        </Text>
+                      </TouchableOpacity>
+                    );
+                  })}
+                </View>
+              </View>
+            );
+          })}
         </View>
+
+        {/* Deals for this booking */}
+        {bookingOffers.length ? (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>
+              <Ionicons name="pricetag-outline" size={16} color={COLORS.primary} /> Deals available
+            </Text>
+            {bookingOffers.map((o) => (
+              <View key={o._id} style={styles.dealRow}>
+                <View style={styles.dealIcon}>
+                  <Ionicons name="pricetag" size={14} color="#C8952B" />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.dealName}>{offerDealLabel(o)}</Text>
+                  <Text style={styles.dealSub} numberOfLines={1}>{o.title}</Text>
+                </View>
+                {o.code ? <Text style={styles.dealCode}>{o.code}</Text> : null}
+              </View>
+            ))}
+            <Text style={styles.dealHint}>Apply a code on the next step to redeem.</Text>
+          </View>
+        ) : null}
 
         {/* Table Selector — opens a centered popup; optional */}
         <View style={styles.section}>
@@ -429,6 +486,28 @@ const styles = StyleSheet.create({
   guestChipActive: { backgroundColor: COLORS.primary, borderColor: COLORS.primary },
   guestNum: { fontSize: SIZES.base, fontFamily: FONTS.bold, color: COLORS.gray },
   guestNumActive: { color: COLORS.white },
+  periodGroup: { marginTop: SPACING.sm },
+  periodTitle: {
+    fontSize: 11, fontFamily: FONTS.bold, color: COLORS.gray,
+    letterSpacing: 0.8, textTransform: 'uppercase', marginBottom: 8,
+  },
+  dealRow: {
+    flexDirection: 'row', alignItems: 'center', gap: SPACING.sm,
+    borderWidth: 1, borderColor: '#E8D9B5', backgroundColor: '#FBF4E4',
+    borderRadius: BORDER_RADIUS.md, padding: SPACING.sm, marginBottom: SPACING.sm,
+  },
+  dealIcon: {
+    width: 30, height: 30, borderRadius: 15, backgroundColor: '#F3E6C8',
+    alignItems: 'center', justifyContent: 'center',
+  },
+  dealName: { fontSize: SIZES.sm, fontFamily: FONTS.bold, color: '#0C2F4E' },
+  dealSub: { fontSize: SIZES.xs, fontFamily: FONTS.regular, color: COLORS.gray, marginTop: 1 },
+  dealCode: {
+    fontSize: 11, fontFamily: FONTS.bold, color: '#A9791D', letterSpacing: 0.5,
+    borderWidth: 1, borderColor: '#C8952B', borderStyle: 'dashed',
+    borderRadius: 6, paddingHorizontal: 6, paddingVertical: 2,
+  },
+  dealHint: { fontSize: SIZES.xs, fontFamily: FONTS.regular, color: COLORS.lightGray, marginTop: 2 },
   timeGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: SPACING.sm },
   timeSlot: {
     paddingHorizontal: 12,

@@ -1,28 +1,74 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput,
   ActivityIndicator, FlatList, Platform, StatusBar, KeyboardAvoidingView,
-  Alert,
+  Animated, Easing, Image,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import Toast from 'react-native-toast-message';
 import billPaymentApi from '../../api/billPayment.api';
+import restaurantApi from '../../api/restaurant.api';
+import offerApi from '../../api/offer.api';
+import {
+  isPayBillOffer, offerValueLabel, offerFunderLabel, computeDiscount, bestOffer,
+} from '../../utils/offers';
 import { COLORS, FONTS, SIZES, SPACING, BORDER_RADIUS, SHADOW } from '../../constants';
 
-const STEPS = ['Restaurant', 'Bill Amount', 'Preview', 'Pay'];
+const GOLD = '#C8952B';
+const GOLD_DEEP = '#A9791D';
+const NAVY = '#0C2F4E';
+const CREAM = '#F7EDD8';
+const QUICK_AMOUNTS = [500, 1000, 1500, 2000, 3000, 5000];
+const TIP_OPTIONS = [20, 30, 50, 100];
 
-// ─── Step 1: Restaurant Picker ────────────────────────────────────────────────
+// ── Count-up rupee value ─────────────────────────────────────────────────────
+function AnimatedRupee({ value, style, duration = 420 }) {
+  const av = useRef(new Animated.Value(value || 0)).current;
+  const [shown, setShown] = useState(Math.round(value || 0));
+
+  useEffect(() => {
+    const id = av.addListener(({ value: v }) => setShown(Math.round(v)));
+    Animated.timing(av, { toValue: value || 0, duration, easing: Easing.out(Easing.cubic), useNativeDriver: false }).start();
+    return () => av.removeListener(id);
+  }, [value]);
+
+  return <Text style={style}>₹{shown.toLocaleString('en-IN')}</Text>;
+}
+
+const topOfferBadge = (o) => {
+  if (!o) return null;
+  if (o.type === 'percentage') return `Up to ${o.discountValue}% OFF`;
+  if (o.type === 'flat') return `Flat ₹${o.discountValue} OFF`;
+  return 'Offer available';
+};
+
+// ── Restaurant picker (only when opened from the Pay Bill tab) ────────────────
 function RestaurantPicker({ onSelect }) {
   const [search, setSearch] = useState('');
 
-  const { data, isLoading } = useQuery({
-    queryKey: ['pay-bill-restaurants', search],
-    queryFn: () => billPaymentApi.getRestaurants({ search: search || undefined }).then((r) => r.data.data.restaurants),
+  // Try the Pay-Bill list first (it carries offer badges); if the server / that
+  // route isn't reachable, fall back to the same general restaurant list the rest
+  // of the app uses, so this screen is never mysteriously empty.
+  const { data, isLoading, isError, refetch, isFetching } = useQuery({
+    queryKey: ['pay-bill-restaurants'],
+    queryFn: async () => {
+      try {
+        const r = await billPaymentApi.getRestaurants({});
+        const list = r.data?.data?.restaurants || [];
+        if (list.length) return list;
+      } catch { /* fall through */ }
+      const r2 = await restaurantApi.getAll({ limit: 50, sortBy: 'rating' });
+      return r2.data?.data?.restaurants || [];
+    },
+    retry: 1,
   });
 
-  const restaurants = data || [];
+  const q = search.trim().toLowerCase();
+  const restaurants = (data || []).filter(
+    (x) => !q || x.name?.toLowerCase().includes(q) || x.address?.city?.toLowerCase().includes(q),
+  );
 
   return (
     <View style={{ flex: 1 }}>
@@ -30,11 +76,11 @@ function RestaurantPicker({ onSelect }) {
         <Ionicons name="search-outline" size={18} color={COLORS.gray} />
         <TextInput
           style={rp.searchInput}
-          placeholder="Search restaurant..."
+          placeholder="Search for a restaurant…"
           placeholderTextColor={COLORS.lightGray}
           value={search}
           onChangeText={setSearch}
-          autoFocus
+          returnKeyType="search"
         />
         {search.length > 0 && (
           <TouchableOpacity onPress={() => setSearch('')}>
@@ -44,612 +90,626 @@ function RestaurantPicker({ onSelect }) {
       </View>
 
       {isLoading ? (
+        <View style={rp.center}><ActivityIndicator color={NAVY} /></View>
+      ) : isError ? (
         <View style={rp.center}>
-          <ActivityIndicator color={COLORS.primary} />
+          <Ionicons name="cloud-offline-outline" size={40} color={COLORS.lightGray} />
+          <Text style={rp.emptyTitle}>Couldn’t load restaurants</Text>
+          <Text style={rp.emptySub}>Check your internet connection and try again.</Text>
+          <TouchableOpacity style={rp.retryBtn} onPress={() => refetch()}>
+            <Text style={rp.retryText}>Retry</Text>
+          </TouchableOpacity>
         </View>
       ) : restaurants.length === 0 ? (
         <View style={rp.center}>
           <Text style={rp.emptyIcon}>🍽️</Text>
-          <Text style={rp.emptyTitle}>No restaurants found</Text>
-          <Text style={rp.emptySub}>Try a different search or check back later</Text>
+          <Text style={rp.emptyTitle}>{search ? 'No matches' : 'No restaurants yet'}</Text>
+          <Text style={rp.emptySub}>
+            {search ? 'Try a different name.' : 'Restaurants will appear here once they’re live.'}
+          </Text>
         </View>
       ) : (
         <FlatList
           data={restaurants}
           keyExtractor={(item) => item._id}
-          contentContainerStyle={{ paddingBottom: 20 }}
-          renderItem={({ item }) => (
-            <TouchableOpacity style={rp.card} onPress={() => onSelect(item)} activeOpacity={0.8}>
-              <View style={rp.cardLeft}>
-                <View style={rp.avatar}>
-                  <Text style={rp.avatarText}>{item.name.charAt(0)}</Text>
-                </View>
+          contentContainerStyle={{ padding: SPACING.md, paddingBottom: 24 }}
+          ListHeaderComponent={<Text style={rp.listHead}>{search ? 'Results' : 'Pay your bill at'}</Text>}
+          refreshing={isFetching && !isLoading}
+          onRefresh={refetch}
+          renderItem={({ item }) => {
+            const img = item.images?.[0]?.url || item.logo?.url;
+            const badge = topOfferBadge(item.topOffer);
+            return (
+              <TouchableOpacity style={rp.card} onPress={() => onSelect(item)} activeOpacity={0.9}>
+                {img ? (
+                  <Image source={{ uri: img }} style={rp.thumb} />
+                ) : (
+                  <View style={[rp.thumb, rp.thumbFallback]}><Text style={rp.avatarText}>{item.name?.charAt(0)}</Text></View>
+                )}
                 <View style={{ flex: 1 }}>
-                  <Text style={rp.name} numberOfLines={1}>{item.name}</Text>
+                  <View style={rp.cardTopRow}>
+                    <Text style={rp.name} numberOfLines={1}>{item.name}</Text>
+                    {item.averageRating > 0 ? (
+                      <View style={rp.ratingChip}>
+                        <Ionicons name="star" size={10} color="#fff" />
+                        <Text style={rp.ratingText}>{item.averageRating.toFixed(1)}</Text>
+                      </View>
+                    ) : null}
+                  </View>
                   <Text style={rp.address} numberOfLines={1}>
-                    {item.address?.city} • {item.cuisine?.slice(0, 2).join(', ')}
+                    {[item.cuisine?.slice(0, 2).join(', '), item.address?.city].filter(Boolean).join(' · ')}
                   </Text>
-                  {item.averageRating > 0 && (
-                    <View style={rp.ratingRow}>
-                      <Ionicons name="star" size={12} color="#C8952B" />
-                      <Text style={rp.rating}>{item.averageRating.toFixed(1)}</Text>
+                  {badge ? (
+                    <View style={rp.offerBadge}>
+                      <Ionicons name="pricetag" size={10} color={GOLD_DEEP} />
+                      <Text style={rp.offerBadgeText}>{badge}</Text>
                     </View>
+                  ) : (
+                    <Text style={rp.payHint}>Pay bill · earn reward coins</Text>
                   )}
                 </View>
-              </View>
-              <View style={rp.payBillTag}>
-                <Text style={rp.payBillTagText}>Pay Bill</Text>
-              </View>
-            </TouchableOpacity>
-          )}
+              </TouchableOpacity>
+            );
+          }}
         />
       )}
     </View>
   );
 }
 
-// ─── Step 2: Bill Amount Entry ─────────────────────────────────────────────────
-function BillAmountEntry({ restaurant, onNext }) {
-  const [amount, setAmount] = useState('');
+// ── The bill form: amount → live discount → pay ──────────────────────────────
+function PayBillForm({ navigation, restaurant, initialAmount, initialOfferId }) {
+  const [amount, setAmount] = useState(initialAmount ? String(Math.round(initialAmount)) : '');
+  const [manualOfferId, setManualOfferId] = useState(initialOfferId || null);
+  const [couponCode, setCouponCode] = useState('');
+  const [couponOffer, setCouponOffer] = useState(null); // { _id?, code, title, discountAmount, fundedBy }
+  const [showCoupon, setShowCoupon] = useState(false);
+  const [tip, setTip] = useState(0);
+  const [showTip, setShowTip] = useState(false);
+  const [method, setMethod] = useState('razorpay');
 
-  const fetchMutation = useMutation({
-    mutationFn: (grossAmount) =>
-      billPaymentApi.fetchBill({ restaurantId: restaurant._id, billAmount: grossAmount }).then((r) => r.data.data),
-    onSuccess: (data, grossAmount) => {
-      onNext({ billPaymentId: data.billPayment._id, grossAmount });
+  const revealAnim = useRef(new Animated.Value(0)).current;
+
+  const { data: offersData } = useQuery({
+    queryKey: ['pay-bill-offers', restaurant._id],
+    queryFn: () => restaurantApi.getOffers(restaurant._id).then((r) => r.data.data.offers),
+    enabled: !!restaurant._id,
+  });
+  const offers = useMemo(() => (offersData || []).filter(isPayBillOffer), [offersData]);
+
+  const amt = parseFloat(amount) || 0;
+
+  // Which offer is applied: a validated coupon wins, else the user's manual pick,
+  // else the best auto offer for this amount.
+  const autoBest = useMemo(() => bestOffer(offers, amt)?.offer || null, [offers, amt]);
+  const manualOffer = manualOfferId ? offers.find((o) => o._id === manualOfferId) : null;
+  const activeOffer = couponOffer || manualOffer || autoBest;
+
+  const clientDiscount = couponOffer
+    ? Math.min(couponOffer.discountAmount || 0, amt)
+    : computeDiscount(activeOffer, amt);
+
+  // Server-computed quote is the source of truth for fee + GST + total.
+  const quoteOfferId = couponOffer ? undefined : activeOffer?._id;
+  const quoteCode = couponOffer?.code;
+  const { data: quote } = useQuery({
+    queryKey: ['bill-quote', restaurant._id, amt, quoteOfferId || quoteCode || 'none', tip],
+    queryFn: () => billPaymentApi.quote({
+      restaurantId: restaurant._id, billAmount: amt,
+      offerId: quoteOfferId, offerCode: quoteCode, tipAmount: tip,
+    }).then((r) => r.data.data),
+    enabled: amt > 0,
+    keepPreviousData: true,
+    staleTime: 15000,
+  });
+
+  const discount = quote?.discount ?? clientDiscount;
+  const convenienceFee = quote?.convenienceFee ?? 0;
+  const gstAmount = quote?.gstAmount ?? 0;
+  const gstPct = quote?.gstOnFeePercent ?? 0;
+  const net = Math.max(0, amt - discount);
+  const payable = Math.round(quote?.toPay ?? (net + convenienceFee + gstAmount + tip));
+
+  useEffect(() => {
+    Animated.timing(revealAnim, {
+      toValue: amt > 0 ? 1 : 0,
+      duration: 260,
+      easing: Easing.out(Easing.cubic),
+      useNativeDriver: true,
+    }).start();
+  }, [amt > 0]);
+
+  const validateCoupon = useMutation({
+    mutationFn: () => offerApi.validateCoupon({
+      code: couponCode.trim().toUpperCase(), restaurantId: restaurant._id, amount: amt, guests: 1,
+    }).then((r) => r.data.data),
+    onSuccess: (data) => {
+      setManualOfferId(null);
+      setCouponOffer({
+        _id: data.offer?._id,
+        code: couponCode.trim().toUpperCase(),
+        title: data.offer?.title || couponCode.trim().toUpperCase(),
+        fundedBy: data.offer?.fundedBy,
+        discountAmount: data.discountBreakup?.total ?? 0,
+      });
+      Toast.show({ type: 'success', text1: 'Coupon applied' });
     },
     onError: (err) => Toast.show({
-      type: 'error',
-      text1: 'Could not fetch bill',
-      text2: err.response?.data?.message || 'Please try again',
+      type: 'error', text1: 'Invalid coupon', text2: err.response?.data?.message || 'Not valid for this bill',
     }),
   });
 
-  const handleNext = () => {
-    const val = parseFloat(amount);
-    if (!val || val <= 0) {
-      Toast.show({ type: 'error', text1: 'Enter a valid bill amount' });
-      return;
-    }
-    fetchMutation.mutate(val);
-  };
+  const payMutation = useMutation({
+    mutationFn: () => billPaymentApi.pay({
+      restaurantId: restaurant._id,
+      billAmount: amt,
+      offerId: couponOffer ? undefined : activeOffer?._id,
+      offerCode: couponOffer?.code,
+      tipAmount: tip,
+      paymentMethod: method,
+    }).then((r) => r.data.data),
+    onSuccess: (data) => {
+      if (data.billPayment?.paymentStatus === 'paid') {
+        navigation.replace('PayBillSuccess', {
+          billPayment: data.billPayment,
+          coinsEarned: data.coinsEarned,
+          restaurantName: restaurant.name,
+        });
+      } else if (data.razorpay) {
+        // A live Razorpay order came back but this build has no checkout SDK.
+        Toast.show({
+          type: 'info',
+          text1: 'Use Hungora Wallet',
+          text2: 'Card / UPI checkout isn’t available in this build yet.',
+        });
+      } else {
+        Toast.show({ type: 'error', text1: 'Payment could not be completed' });
+      }
+    },
+    onError: (err) => Toast.show({
+      type: 'error', text1: 'Payment failed', text2: err.response?.data?.message || 'Please try again',
+    }),
+  });
 
-  const QUICK_AMOUNTS = [500, 1000, 1500, 2000, 3000, 5000];
+  const clearCoupon = () => { setCouponOffer(null); setCouponCode(''); };
 
   return (
-    <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1 }}>
-      <ScrollView contentContainerStyle={ba.scroll} keyboardShouldPersistTaps="handled">
-        <View style={ba.restaurantCard}>
-          <View style={ba.restaurantAvatar}>
-            <Text style={ba.restaurantAvatarText}>{restaurant.name.charAt(0)}</Text>
-          </View>
-          <View>
-            <Text style={ba.restaurantName}>{restaurant.name}</Text>
-            <Text style={ba.restaurantCity}>{restaurant.address?.city}</Text>
-          </View>
-        </View>
-
-        <Text style={ba.label}>Enter Bill Amount</Text>
-        <View style={ba.amountRow}>
-          <Text style={ba.rupee}>₹</Text>
+    <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1 }}>
+      <ScrollView contentContainerStyle={f.scroll} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
+        {/* Amount */}
+        <Text style={f.label}>Enter bill amount</Text>
+        <View style={f.amountRow}>
+          <Text style={f.rupee}>₹</Text>
           <TextInput
-            style={ba.amountInput}
+            style={f.amountInput}
             value={amount}
-            onChangeText={setAmount}
-            keyboardType="numeric"
+            onChangeText={(t) => { setAmount(t.replace(/[^0-9]/g, '')); clearCoupon(); }}
+            keyboardType="number-pad"
             placeholder="0"
             placeholderTextColor={COLORS.lightGray}
-            autoFocus
+            autoFocus={!initialAmount}
+            maxLength={7}
           />
         </View>
+        <View style={f.underline} />
 
-        <Text style={ba.quickLabel}>Quick Select</Text>
-        <View style={ba.quickGrid}>
+        <View style={f.quickRow}>
           {QUICK_AMOUNTS.map((a) => (
-            <TouchableOpacity
-              key={a}
-              style={[ba.quickChip, amount === String(a) && ba.quickChipActive]}
-              onPress={() => setAmount(String(a))}
-            >
-              <Text style={[ba.quickChipText, amount === String(a) && ba.quickChipTextActive]}>
-                ₹{a.toLocaleString()}
-              </Text>
+            <TouchableOpacity key={a} style={f.quickChip} onPress={() => { setAmount(String(a)); clearCoupon(); }}>
+              <Text style={f.quickChipText}>₹{a.toLocaleString('en-IN')}</Text>
             </TouchableOpacity>
           ))}
         </View>
 
-        <TouchableOpacity
-          style={[ba.nextBtn, (!amount || parseFloat(amount) <= 0 || fetchMutation.isPending) && ba.nextBtnDisabled]}
-          onPress={handleNext}
-          disabled={!amount || parseFloat(amount) <= 0 || fetchMutation.isPending}
-        >
-          <LinearGradient
-            colors={[COLORS.primary, COLORS.primaryDark || COLORS.primary]}
-            style={ba.nextBtnGrad}
+        {/* Live discount reveal */}
+        {amt > 0 ? (
+          <Animated.View
+            style={[
+              f.reveal,
+              {
+                opacity: revealAnim,
+                transform: [{ translateY: revealAnim.interpolate({ inputRange: [0, 1], outputRange: [12, 0] }) }],
+              },
+            ]}
           >
-            {fetchMutation.isPending
-              ? <ActivityIndicator color="#fff" />
-              : <Text style={ba.nextBtnText}>Get Offer & Preview →</Text>
-            }
+            {discount > 0 ? (
+              <>
+                <View style={f.revealTop}>
+                  <Ionicons name="pricetag" size={13} color={GOLD} />
+                  <Text style={f.revealOffer}>
+                    {activeOffer ? `${offerFunderLabel(activeOffer)} · ${offerValueLabel(activeOffer)}` : 'Offer applied'}
+                  </Text>
+                </View>
+                <Text style={f.revealPayLabel}>You pay</Text>
+                <View style={f.revealAmountRow}>
+                  <AnimatedRupee value={payable} style={f.revealPay} />
+                  <Text style={f.revealStrike}>₹{amt.toLocaleString('en-IN')}</Text>
+                </View>
+                <View style={f.savePill}>
+                  <Ionicons name="sparkles" size={13} color={GOLD_DEEP} />
+                  <Text style={f.savePillText}>You save </Text>
+                  <AnimatedRupee value={discount} style={f.savePillAmt} />
+                </View>
+              </>
+            ) : (
+              <>
+                <Text style={f.revealPayLabel}>You pay</Text>
+                <View style={f.revealAmountRow}>
+                  <AnimatedRupee value={payable} style={f.revealPay} />
+                </View>
+                <Text style={f.noOffer}>
+                  {offers.some((o) => amt < (o.minOrderAmount || 0))
+                    ? `Add ₹${Math.min(...offers.filter((o) => o.minOrderAmount > amt).map((o) => o.minOrderAmount - amt))} more to unlock an offer`
+                    : 'No offer for this amount — you still earn reward coins'}
+                </Text>
+              </>
+            )}
+            {(convenienceFee > 0 || gstAmount > 0) ? (
+              <Text style={f.revealFeeNote}>
+                incl. ₹{(convenienceFee + gstAmount).toLocaleString('en-IN')} convenience fee &amp; GST
+              </Text>
+            ) : null}
+          </Animated.View>
+        ) : null}
+
+        {/* Offer choices */}
+        {offers.length ? (
+          <View style={f.card}>
+            <Text style={f.cardTitle}>Offers for you</Text>
+            {offers.map((o) => {
+              const d = computeDiscount(o, amt);
+              const active = !couponOffer && activeOffer?._id === o._id;
+              const locked = amt > 0 && amt < (o.minOrderAmount || 0);
+              return (
+                <TouchableOpacity
+                  key={o._id}
+                  style={[f.offerLine, active && f.offerLineActive]}
+                  activeOpacity={0.85}
+                  disabled={locked}
+                  onPress={() => { clearCoupon(); setManualOfferId(o._id); }}
+                >
+                  <View style={f.offerIcon}><Ionicons name="pricetag" size={14} color={GOLD} /></View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={f.offerTitle}>{o.title}</Text>
+                    <Text style={f.offerSub}>
+                      {offerFunderLabel(o)} · {offerValueLabel(o)}
+                      {locked ? ` · min ₹${o.minOrderAmount}` : d > 0 ? ` · saves ₹${d}` : ''}
+                    </Text>
+                  </View>
+                  <Ionicons
+                    name={active ? 'radio-button-on' : 'radio-button-off'}
+                    size={18}
+                    color={active ? GOLD : COLORS.lightGray}
+                  />
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+        ) : null}
+
+        {/* Coupon */}
+        <View style={f.card}>
+          <TouchableOpacity style={f.couponHead} onPress={() => setShowCoupon((s) => !s)}>
+            <View style={f.offerIcon}><Ionicons name="ticket-outline" size={14} color={GOLD} /></View>
+            <Text style={f.couponHeadText}>{couponOffer ? `Coupon ${couponOffer.code} applied` : 'Have a coupon code?'}</Text>
+            {couponOffer ? (
+              <TouchableOpacity onPress={clearCoupon}><Ionicons name="close-circle" size={18} color={COLORS.error} /></TouchableOpacity>
+            ) : (
+              <Ionicons name={showCoupon ? 'chevron-up' : 'chevron-forward'} size={16} color={COLORS.lightGray} />
+            )}
+          </TouchableOpacity>
+          {showCoupon && !couponOffer ? (
+            <View style={f.couponRow}>
+              <TextInput
+                style={f.couponInput}
+                value={couponCode}
+                onChangeText={setCouponCode}
+                placeholder="Enter code"
+                placeholderTextColor={COLORS.lightGray}
+                autoCapitalize="characters"
+              />
+              <TouchableOpacity
+                style={[f.couponBtn, (!couponCode || amt <= 0 || validateCoupon.isPending) && f.dim]}
+                disabled={!couponCode || amt <= 0 || validateCoupon.isPending}
+                onPress={() => validateCoupon.mutate()}
+              >
+                {validateCoupon.isPending ? <ActivityIndicator size="small" color={NAVY} /> : <Text style={f.couponBtnText}>Apply</Text>}
+              </TouchableOpacity>
+            </View>
+          ) : null}
+        </View>
+
+        {/* Summary */}
+        <View style={f.card}>
+          <Text style={f.cardTitle}>Payment summary</Text>
+          <Row label="Bill amount" value={`₹${amt.toLocaleString('en-IN')}`} />
+          {discount > 0 ? (
+            <Row
+              label={activeOffer?.fundedBy === 'bank' ? 'Bank discount' : 'Discount'}
+              value={`− ₹${discount.toLocaleString('en-IN')}`}
+              accent
+            />
+          ) : null}
+          {convenienceFee > 0 ? (
+            <Row label="Convenience fee" value={`₹${convenienceFee.toLocaleString('en-IN')}`} />
+          ) : null}
+          {gstAmount > 0 ? (
+            <Row label={`GST${gstPct ? ` (${gstPct}%)` : ''}`} value={`₹${gstAmount.toLocaleString('en-IN')}`} />
+          ) : null}
+
+          <View style={f.tipRow}>
+            <TouchableOpacity
+              style={f.tipToggle}
+              onPress={() => { if (tip) { setTip(0); setShowTip(false); } else setShowTip((s) => !s); }}
+            >
+              <Ionicons name={tip ? 'close-circle' : 'add-circle-outline'} size={16} color={tip ? COLORS.gray : GOLD_DEEP} />
+              <Text style={f.tipToggleText}>{tip ? 'Remove tip' : 'Add a tip for the staff'}</Text>
+            </TouchableOpacity>
+            {tip ? <Text style={f.rowValue}>+ ₹{tip}</Text> : null}
+          </View>
+          {showTip && !tip ? (
+            <View style={f.tipChips}>
+              {TIP_OPTIONS.map((t) => (
+                <TouchableOpacity key={t} style={f.tipChip} onPress={() => { setTip(t); setShowTip(false); }}>
+                  <Text style={f.tipChipText}>₹{t}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          ) : null}
+
+          <View style={f.divider} />
+          <View style={f.totalRow}>
+            <Text style={f.totalLabel}>To pay</Text>
+            <Text style={f.totalValue}>₹{payable.toLocaleString('en-IN')}</Text>
+          </View>
+        </View>
+
+        {/* Payment method */}
+        <View style={f.card}>
+          <Text style={f.cardTitle}>Pay using</Text>
+          {[
+            { id: 'razorpay', label: 'UPI / Card / Net Banking', icon: 'card-outline', sub: 'Powered by Razorpay' },
+            { id: 'wallet', label: 'Hungora Wallet', icon: 'wallet-outline', sub: 'Instant · earn coins back' },
+          ].map((m) => (
+            <TouchableOpacity key={m.id} style={[f.method, method === m.id && f.methodActive]} onPress={() => setMethod(m.id)}>
+              <View style={[f.methodIcon, method === m.id && f.methodIconActive]}>
+                <Ionicons name={m.icon} size={18} color={method === m.id ? '#fff' : COLORS.gray} />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={[f.methodLabel, method === m.id && f.methodLabelActive]}>{m.label}</Text>
+                <Text style={f.methodSub}>{m.sub}</Text>
+              </View>
+              <View style={[f.radio, method === m.id && f.radioOn]}>{method === m.id ? <View style={f.radioDot} /> : null}</View>
+            </TouchableOpacity>
+          ))}
+        </View>
+
+        <View style={{ height: 110 }} />
+      </ScrollView>
+
+      <View style={f.footer}>
+        <TouchableOpacity
+          style={[f.payBtnWrap, (amt <= 0 || payMutation.isPending) && f.dim]}
+          disabled={amt <= 0 || payMutation.isPending}
+          onPress={() => payMutation.mutate()}
+          activeOpacity={0.9}
+        >
+          <LinearGradient colors={[GOLD, GOLD_DEEP]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={f.payBtn}>
+            {payMutation.isPending ? (
+              <ActivityIndicator color={NAVY} />
+            ) : (
+              <>
+                <Text style={f.payBtnText}>
+                  {amt > 0 ? `Pay ₹${payable.toLocaleString('en-IN')}` : 'Enter an amount'}
+                </Text>
+                {discount > 0 ? <Text style={f.payBtnSub}>You save ₹{discount.toLocaleString('en-IN')}</Text> : null}
+              </>
+            )}
           </LinearGradient>
         </TouchableOpacity>
-      </ScrollView>
+      </View>
     </KeyboardAvoidingView>
   );
 }
 
-// ─── Step 3: Preview + Offer ───────────────────────────────────────────────────
-function BillPreview({ restaurant, billPaymentId, grossAmount, onPay, onBack }) {
-  const [couponCode, setCouponCode] = useState('');
-  const [discountBreakup, setDiscountBreakup] = useState(null);
-  const [netPaid, setNetPaid] = useState(grossAmount);
-  const [appliedOffer, setAppliedOffer] = useState(null);
-
-  const applyMutation = useMutation({
-    mutationFn: () =>
-      billPaymentApi.applyOffer(billPaymentId, { offerCode: couponCode }).then((r) => r.data.data),
-    onSuccess: (data) => {
-      setDiscountBreakup(data.billPayment.discountBreakup);
-      setNetPaid(data.billPayment.finalAmount);
-      setAppliedOffer(data.billPayment.offer);
-      Toast.show({ type: 'success', text1: 'Offer applied!' });
-    },
-    onError: (err) => Toast.show({
-      type: 'error',
-      text1: 'Invalid coupon',
-      text2: err.response?.data?.message || 'Coupon not valid for this bill',
-    }),
-  });
-
-  const totalDiscount = discountBreakup?.total || 0;
-
+function Row({ label, value, accent }) {
   return (
-    <ScrollView contentContainerStyle={pv.scroll}>
-      {/* Restaurant */}
-      <View style={pv.restaurantRow}>
-        <View style={pv.restaurantDot}>
-          <Text style={pv.restaurantDotText}>{restaurant.name.charAt(0)}</Text>
-        </View>
-        <Text style={pv.restaurantName}>{restaurant.name}</Text>
-      </View>
-
-      {/* Coupon Input */}
-      <View style={pv.couponCard}>
-        <Text style={pv.couponLabel}>Have a coupon?</Text>
-        <View style={pv.couponRow}>
-          <TextInput
-            style={pv.couponInput}
-            value={couponCode}
-            onChangeText={setCouponCode}
-            placeholder="Enter coupon code"
-            placeholderTextColor={COLORS.lightGray}
-            autoCapitalize="characters"
-          />
-          <TouchableOpacity
-            style={[pv.couponBtn, (!couponCode || applyMutation.isPending) && pv.couponBtnDisabled]}
-            onPress={() => applyMutation.mutate()}
-            disabled={!couponCode || applyMutation.isPending}
-          >
-            {applyMutation.isPending
-              ? <ActivityIndicator color="#fff" size="small" />
-              : <Text style={pv.couponBtnText}>Apply</Text>
-            }
-          </TouchableOpacity>
-        </View>
-      </View>
-
-      {/* Applied offer badge */}
-      {appliedOffer && (
-        <View style={pv.offerBadge}>
-          <Ionicons name="pricetag" size={16} color="#2d6a4f" />
-          <Text style={pv.offerBadgeText}>
-            {appliedOffer.type === 'percentage'
-              ? `${appliedOffer.discountValue}% OFF`
-              : `Flat ₹${appliedOffer.discountValue} OFF`}
-          </Text>
-          <Text style={pv.offerTitle}>{appliedOffer.title}</Text>
-        </View>
-      )}
-
-      {/* Bill Breakdown */}
-      <View style={pv.breakdownCard}>
-        <Text style={pv.breakdownTitle}>Bill Breakdown</Text>
-
-        <View style={pv.row}>
-          <Text style={pv.rowLabel}>Restaurant Bill</Text>
-          <Text style={pv.rowValue}>₹{grossAmount.toLocaleString()}</Text>
-        </View>
-
-        {totalDiscount > 0 && (
-          <>
-            <View style={pv.row}>
-              <Text style={[pv.rowLabel, { color: '#2d6a4f' }]}>Total Discount</Text>
-              <Text style={[pv.rowValue, { color: '#2d6a4f' }]}>- ₹{totalDiscount.toLocaleString()}</Text>
-            </View>
-            {discountBreakup.restaurantFunded > 0 && (
-              <View style={pv.row}>
-                <Text style={pv.subLabel}>  • Restaurant</Text>
-                <Text style={pv.subValue}>₹{discountBreakup.restaurantFunded.toLocaleString()}</Text>
-              </View>
-            )}
-            {discountBreakup.platformFunded > 0 && (
-              <View style={pv.row}>
-                <Text style={pv.subLabel}>  • DineSmart</Text>
-                <Text style={pv.subValue}>₹{discountBreakup.platformFunded.toLocaleString()}</Text>
-              </View>
-            )}
-            {discountBreakup.bankFunded > 0 && (
-              <View style={pv.row}>
-                <Text style={pv.subLabel}>  • Bank Offer</Text>
-                <Text style={pv.subValue}>₹{discountBreakup.bankFunded.toLocaleString()}</Text>
-              </View>
-            )}
-          </>
-        )}
-
-        <View style={pv.divider} />
-
-        <View style={pv.totalRow}>
-          <Text style={pv.totalLabel}>You Pay</Text>
-          <Text style={pv.totalValue}>₹{netPaid.toLocaleString()}</Text>
-        </View>
-
-        {totalDiscount > 0 && (
-          <View style={pv.savingsBadge}>
-            <Ionicons name="checkmark-circle" size={14} color="#2d6a4f" />
-            <Text style={pv.savingsText}>You save ₹{totalDiscount.toLocaleString()}!</Text>
-          </View>
-        )}
-      </View>
-
-      <TouchableOpacity
-        style={pv.payBtn}
-        onPress={() => onPay({ billPaymentId, grossAmount, netPaid, discountBreakup, offer: appliedOffer })}
-        activeOpacity={0.88}
-      >
-        <LinearGradient colors={['#e63946', '#c1121f']} style={pv.payBtnGrad}>
-          <Text style={pv.payBtnText}>Pay ₹{netPaid.toLocaleString()} →</Text>
-        </LinearGradient>
-      </TouchableOpacity>
-
-      <TouchableOpacity style={pv.backBtn} onPress={onBack}>
-        <Text style={pv.backBtnText}>← Change Amount</Text>
-      </TouchableOpacity>
-    </ScrollView>
-  );
-}
-
-// ─── Step 4: Payment Method ───────────────────────────────────────────────────
-function PaymentStep({ restaurant, previewData, onSuccess, onBack }) {
-  const [method, setMethod] = useState('razorpay');
-
-  const completeMutation = useMutation({
-    mutationFn: () =>
-      billPaymentApi.pay({
-        restaurantId: restaurant._id,
-        billAmount: previewData.grossAmount,
-        offerId: previewData.offer?._id,
-        paymentMethod: method,
-      }).then((r) => r.data.data),
-    onSuccess: (data) => {
-      if (method === 'wallet') {
-        onSuccess(data.billPayment, data.coinsEarned);
-      } else {
-        Alert.alert(
-          'Razorpay Payment',
-          `Amount: ₹${previewData.netPaid}\n\n(Integrate Razorpay SDK here)`,
-          [{ text: 'Simulate Success', onPress: () => onSuccess(data.billPayment) }]
-        );
-      }
-    },
-    onError: (err) => Toast.show({
-      type: 'error',
-      text1: 'Payment Failed',
-      text2: err.response?.data?.message || 'Please try again',
-    }),
-  });
-
-  const METHODS = [
-    { id: 'razorpay', label: 'UPI / Card / Net Banking', icon: 'card-outline', sub: 'Powered by Razorpay' },
-    { id: 'wallet', label: 'Hungora Wallet', icon: 'wallet-outline', sub: 'Instant payment' },
-  ];
-
-  return (
-    <ScrollView contentContainerStyle={ps.scroll}>
-      <View style={ps.amountCard}>
-        <Text style={ps.amountLabel}>Amount to Pay</Text>
-        <Text style={ps.amountValue}>₹{previewData.netPaid.toLocaleString()}</Text>
-        {(previewData.discountBreakup?.total || 0) > 0 && (
-          <Text style={ps.savingNote}>
-            Saving ₹{previewData.discountBreakup.total.toLocaleString()}
-          </Text>
-        )}
-      </View>
-
-      <Text style={ps.sectionLabel}>SELECT PAYMENT METHOD</Text>
-
-      {METHODS.map((m) => (
-        <TouchableOpacity
-          key={m.id}
-          style={[ps.method, method === m.id && ps.methodActive]}
-          onPress={() => setMethod(m.id)}
-        >
-          <View style={[ps.methodIcon, method === m.id && ps.methodIconActive]}>
-            <Ionicons name={m.icon} size={20} color={method === m.id ? COLORS.white : COLORS.gray} />
-          </View>
-          <View style={{ flex: 1 }}>
-            <Text style={[ps.methodLabel, method === m.id && ps.methodLabelActive]}>{m.label}</Text>
-            <Text style={ps.methodSub}>{m.sub}</Text>
-          </View>
-          <View style={[ps.radio, method === m.id && ps.radioActive]}>
-            {method === m.id && <View style={ps.radioDot} />}
-          </View>
-        </TouchableOpacity>
-      ))}
-
-      <TouchableOpacity
-        style={ps.payBtn}
-        onPress={() => completeMutation.mutate()}
-        disabled={completeMutation.isPending}
-        activeOpacity={0.88}
-      >
-        <LinearGradient colors={['#e63946', '#c1121f']} style={ps.payBtnGrad}>
-          {completeMutation.isPending
-            ? <ActivityIndicator color="#fff" />
-            : <Text style={ps.payBtnText}>Pay ₹{previewData.netPaid.toLocaleString()}</Text>
-          }
-        </LinearGradient>
-      </TouchableOpacity>
-
-      <TouchableOpacity style={ps.backBtn} onPress={onBack}>
-        <Text style={ps.backBtnText}>← Back</Text>
-      </TouchableOpacity>
-    </ScrollView>
-  );
-}
-
-// ─── Main Screen ──────────────────────────────────────────────────────────────
-export default function PayBillScreen({ navigation }) {
-  const [step, setStep] = useState(0);
-  const [restaurant, setRestaurant] = useState(null);
-  // billDraft: { billPaymentId, grossAmount }
-  const [billDraft, setBillDraft] = useState(null);
-  // previewData: { billPaymentId, grossAmount, netPaid, discountBreakup, offer }
-  const [previewData, setPreviewData] = useState(null);
-
-  const handleSelectRestaurant = (r) => { setRestaurant(r); setStep(1); };
-  const handleBillFetched = (draft) => { setBillDraft(draft); setStep(2); };
-  const handlePreviewNext = (data) => { setPreviewData(data); setStep(3); };
-  const handleSuccess = (billPayment, coinsEarned) => {
-    navigation.replace('PayBillSuccess', { billPayment, coinsEarned, restaurantName: restaurant?.name });
-  };
-
-  const goBack = () => {
-    if (step === 0) navigation.goBack();
-    else setStep((s) => s - 1);
-  };
-
-  const STEP_TITLES = ['Select Restaurant', 'Enter Bill Amount', 'Offer Preview', 'Payment'];
-
-  return (
-    <View style={styles.container}>
-      <StatusBar barStyle="light-content" />
-
-      {/* Header */}
-      <LinearGradient colors={['#1B5E8F', '#0C2F4E']} style={styles.header}>
-        <TouchableOpacity onPress={goBack} style={styles.backBtn}>
-          <Ionicons name="arrow-back" size={22} color="#fff" />
-        </TouchableOpacity>
-        <View style={{ flex: 1 }}>
-          <Text style={styles.headerTitle}>Pay Bill</Text>
-          <Text style={styles.headerSub}>{STEP_TITLES[step]}</Text>
-        </View>
-        <View style={styles.stepDots}>
-          {STEPS.map((_, i) => (
-            <View key={i} style={[styles.dot, i <= step && styles.dotActive]} />
-          ))}
-        </View>
-      </LinearGradient>
-
-      <View style={{ flex: 1 }}>
-        {step === 0 && <RestaurantPicker onSelect={handleSelectRestaurant} />}
-        {step === 1 && restaurant && (
-          <BillAmountEntry restaurant={restaurant} onNext={handleBillFetched} />
-        )}
-        {step === 2 && restaurant && billDraft && (
-          <BillPreview
-            restaurant={restaurant}
-            billPaymentId={billDraft.billPaymentId}
-            grossAmount={billDraft.grossAmount}
-            onPay={handlePreviewNext}
-            onBack={() => setStep(1)}
-          />
-        )}
-        {step === 3 && previewData && (
-          <PaymentStep
-            restaurant={restaurant}
-            previewData={previewData}
-            onSuccess={handleSuccess}
-            onBack={() => setStep(2)}
-          />
-        )}
-      </View>
+    <View style={f.row}>
+      <Text style={[f.rowLabel, accent && { color: GOLD_DEEP }]}>{label}</Text>
+      <Text style={[f.rowValue, accent && { color: GOLD_DEEP }]}>{value}</Text>
     </View>
   );
 }
 
-// ─── Styles ───────────────────────────────────────────────────────────────────
+// ── Screen shell ────────────────────────────────────────────────────────────
+export default function PayBillScreen({ navigation, route }) {
+  const preRestaurant = route.params?.restaurant || null;
+  const preAmount = route.params?.billAmount || null;
+  const preOfferId = route.params?.offerId || null;
+
+  const [restaurant, setRestaurant] = useState(preRestaurant);
+
+  return (
+    <View style={styles.container}>
+      <StatusBar barStyle="light-content" />
+      <LinearGradient colors={['#1B5E8F', NAVY]} style={styles.header}>
+        <TouchableOpacity
+          onPress={() => (restaurant && !preRestaurant ? setRestaurant(null) : navigation.goBack())}
+          style={styles.backBtn}
+        >
+          <Ionicons name="arrow-back" size={22} color="#fff" />
+        </TouchableOpacity>
+        <View style={{ flex: 1 }}>
+          <Text style={styles.headerTitle}>Pay Bill</Text>
+          <Text style={styles.headerSub} numberOfLines={1}>
+            {restaurant ? [restaurant.name, restaurant.address?.city].filter(Boolean).join(' · ') : 'Choose a restaurant'}
+          </Text>
+        </View>
+      </LinearGradient>
+
+      {restaurant ? (
+        <PayBillForm
+          navigation={navigation}
+          restaurant={restaurant}
+          initialAmount={preAmount}
+          initialOfferId={preOfferId}
+        />
+      ) : (
+        <RestaurantPicker onSelect={setRestaurant} />
+      )}
+    </View>
+  );
+}
+
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: COLORS.background },
   header: {
     flexDirection: 'row', alignItems: 'center', gap: SPACING.md,
-    paddingTop: Platform.OS === 'ios' ? 56 : 36,
-    paddingBottom: SPACING.md,
-    paddingHorizontal: SPACING.lg,
+    paddingTop: Platform.OS === 'ios' ? 56 : 36, paddingBottom: SPACING.md, paddingHorizontal: SPACING.lg,
   },
   backBtn: { padding: 4 },
   headerTitle: { fontSize: SIZES.lg, fontFamily: FONTS.bold, color: '#fff' },
-  headerSub: { fontSize: SIZES.xs, color: 'rgba(255,255,255,0.6)', fontFamily: FONTS.regular },
-  stepDots: { flexDirection: 'row', gap: 6 },
-  dot: { width: 6, height: 6, borderRadius: 3, backgroundColor: 'rgba(255,255,255,0.3)' },
-  dotActive: { backgroundColor: '#FFFFFF', width: 18 },
+  headerSub: { fontSize: SIZES.xs, color: 'rgba(255,255,255,0.7)', fontFamily: FONTS.regular, marginTop: 1 },
 });
 
 const rp = StyleSheet.create({
   searchRow: {
-    flexDirection: 'row', alignItems: 'center', gap: SPACING.sm,
-    backgroundColor: COLORS.card, margin: SPACING.md,
-    paddingHorizontal: SPACING.md, paddingVertical: 10,
+    flexDirection: 'row', alignItems: 'center', gap: SPACING.sm, backgroundColor: COLORS.card,
+    margin: SPACING.md, paddingHorizontal: SPACING.md, paddingVertical: 10,
     borderRadius: BORDER_RADIUS.md, borderWidth: 1.5, borderColor: COLORS.border,
   },
   searchInput: { flex: 1, fontSize: SIZES.base, fontFamily: FONTS.regular, color: COLORS.dark },
-  center: { flex: 1, justifyContent: 'center', alignItems: 'center', gap: 8 },
+  center: { flex: 1, justifyContent: 'center', alignItems: 'center', gap: 8, padding: SPACING.xl },
   emptyIcon: { fontSize: 40 },
-  emptyTitle: { fontSize: SIZES.base, fontFamily: FONTS.bold, color: COLORS.dark },
-  emptySub: { fontSize: SIZES.sm, fontFamily: FONTS.regular, color: COLORS.gray, textAlign: 'center', paddingHorizontal: 40 },
+  emptyTitle: { fontSize: SIZES.base, fontFamily: FONTS.bold, color: COLORS.dark, marginTop: 4 },
+  emptySub: { fontSize: SIZES.sm, fontFamily: FONTS.regular, color: COLORS.gray, textAlign: 'center', lineHeight: 19 },
+  retryBtn: {
+    marginTop: SPACING.md, backgroundColor: NAVY, borderRadius: BORDER_RADIUS.full,
+    paddingHorizontal: SPACING.xl, paddingVertical: 10,
+  },
+  retryText: { fontSize: SIZES.sm, fontFamily: FONTS.bold, color: '#fff' },
+  listHead: {
+    fontSize: SIZES.xs, fontFamily: FONTS.bold, color: COLORS.gray,
+    textTransform: 'uppercase', letterSpacing: 1, marginBottom: SPACING.sm, marginLeft: 4,
+  },
   card: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    backgroundColor: COLORS.card, marginHorizontal: SPACING.md,
-    marginBottom: SPACING.sm, borderRadius: BORDER_RADIUS.md,
-    padding: SPACING.md, ...SHADOW.sm,
+    flexDirection: 'row', alignItems: 'center', gap: SPACING.md, backgroundColor: COLORS.card,
+    marginBottom: SPACING.sm, borderRadius: BORDER_RADIUS.md, padding: SPACING.sm, ...SHADOW.sm,
   },
-  cardLeft: { flexDirection: 'row', alignItems: 'center', gap: SPACING.md, flex: 1 },
-  avatar: {
-    width: 48, height: 48, borderRadius: 24,
-    backgroundColor: '#e63946', alignItems: 'center', justifyContent: 'center',
-  },
-  avatarText: { fontSize: SIZES.xl, fontFamily: FONTS.bold, color: '#fff' },
-  name: { fontSize: SIZES.base, fontFamily: FONTS.bold, color: COLORS.dark },
+  thumb: { width: 60, height: 60, borderRadius: BORDER_RADIUS.sm, backgroundColor: COLORS.background },
+  thumbFallback: { alignItems: 'center', justifyContent: 'center', backgroundColor: NAVY },
+  avatarText: { fontSize: SIZES.lg, fontFamily: FONTS.bold, color: '#fff' },
+  cardTopRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  name: { flex: 1, fontSize: SIZES.base, fontFamily: FONTS.bold, color: COLORS.dark },
   address: { fontSize: SIZES.xs, fontFamily: FONTS.regular, color: COLORS.gray, marginTop: 2 },
-  ratingRow: { flexDirection: 'row', alignItems: 'center', gap: 3, marginTop: 3 },
-  rating: { fontSize: SIZES.xs, fontFamily: FONTS.medium, color: COLORS.dark },
-  payBillTag: {
-    backgroundColor: '#e8f5e9', paddingHorizontal: 10, paddingVertical: 4,
-    borderRadius: 12,
+  ratingChip: {
+    flexDirection: 'row', alignItems: 'center', gap: 3, backgroundColor: COLORS.success,
+    paddingHorizontal: 6, paddingVertical: 3, borderRadius: 6,
   },
-  payBillTagText: { fontSize: 11, fontFamily: FONTS.bold, color: '#2d6a4f' },
+  ratingText: { fontSize: 11, fontFamily: FONTS.bold, color: '#fff' },
+  offerBadge: {
+    flexDirection: 'row', alignItems: 'center', gap: 4, alignSelf: 'flex-start', marginTop: 5,
+    backgroundColor: CREAM, borderRadius: 4, paddingHorizontal: 6, paddingVertical: 2,
+  },
+  offerBadgeText: { fontSize: 10, fontFamily: FONTS.bold, color: GOLD_DEEP, letterSpacing: 0.3 },
+  payHint: { fontSize: 11, fontFamily: FONTS.regular, color: COLORS.lightGray, marginTop: 5 },
 });
 
-const ba = StyleSheet.create({
-  scroll: { padding: SPACING.lg },
-  restaurantCard: {
-    flexDirection: 'row', alignItems: 'center', gap: SPACING.md,
-    backgroundColor: COLORS.card, borderRadius: BORDER_RADIUS.md,
-    padding: SPACING.md, marginBottom: SPACING.xl, ...SHADOW.sm,
+const f = StyleSheet.create({
+  scroll: { padding: SPACING.lg, paddingBottom: 40 },
+  label: {
+    fontSize: SIZES.sm, fontFamily: FONTS.bold, color: COLORS.gray,
+    textTransform: 'uppercase', letterSpacing: 1.2, textAlign: 'center',
   },
-  restaurantAvatar: {
-    width: 44, height: 44, borderRadius: 22,
-    backgroundColor: '#e63946', alignItems: 'center', justifyContent: 'center',
-  },
-  restaurantAvatarText: { fontSize: SIZES.lg, fontFamily: FONTS.bold, color: '#fff' },
-  restaurantName: { fontSize: SIZES.base, fontFamily: FONTS.bold, color: COLORS.dark },
-  restaurantCity: { fontSize: SIZES.xs, fontFamily: FONTS.regular, color: COLORS.gray },
-  label: { fontSize: SIZES.sm, fontFamily: FONTS.bold, color: COLORS.gray, marginBottom: SPACING.sm, textTransform: 'uppercase', letterSpacing: 1 },
-  amountRow: {
-    flexDirection: 'row', alignItems: 'center',
-    backgroundColor: COLORS.card, borderRadius: BORDER_RADIUS.lg,
-    borderWidth: 2, borderColor: COLORS.primary,
-    paddingHorizontal: SPACING.lg, marginBottom: SPACING.xl, ...SHADOW.md,
-  },
-  rupee: { fontSize: 32, fontFamily: FONTS.bold, color: COLORS.primary, marginRight: 4 },
-  amountInput: { flex: 1, fontSize: 40, fontFamily: FONTS.bold, color: COLORS.dark, paddingVertical: SPACING.lg },
-  quickLabel: { fontSize: SIZES.xs, fontFamily: FONTS.medium, color: COLORS.gray, marginBottom: SPACING.sm },
-  quickGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: SPACING.sm, marginBottom: SPACING.xl },
+  amountRow: { flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'center', marginTop: SPACING.md },
+  rupee: { fontSize: 30, fontFamily: FONTS.bold, color: NAVY, marginRight: 4, marginBottom: 8 },
+  amountInput: { fontSize: 52, fontFamily: FONTS.bold, color: NAVY, textAlign: 'center', minWidth: 90, padding: 0 },
+  underline: { height: 3, width: 150, borderRadius: 2, backgroundColor: GOLD, alignSelf: 'center', marginTop: 6 },
+  quickRow: { flexDirection: 'row', flexWrap: 'wrap', gap: SPACING.sm, justifyContent: 'center', marginTop: SPACING.lg },
   quickChip: {
-    paddingHorizontal: 16, paddingVertical: 10, borderRadius: BORDER_RADIUS.md,
+    paddingHorizontal: 14, paddingVertical: 8, borderRadius: BORDER_RADIUS.full,
     borderWidth: 1.5, borderColor: COLORS.border, backgroundColor: COLORS.card,
   },
-  quickChipActive: { backgroundColor: COLORS.primary, borderColor: COLORS.primary },
-  quickChipText: { fontSize: SIZES.sm, fontFamily: FONTS.medium, color: COLORS.dark },
-  quickChipTextActive: { color: '#fff' },
-  nextBtn: { borderRadius: BORDER_RADIUS.md, overflow: 'hidden', marginTop: SPACING.md },
-  nextBtnDisabled: { opacity: 0.5 },
-  nextBtnGrad: { padding: 16, alignItems: 'center' },
-  nextBtnText: { fontSize: SIZES.base, fontFamily: FONTS.bold, color: '#fff' },
-});
+  quickChipText: { fontSize: SIZES.xs, fontFamily: FONTS.semiBold, color: COLORS.dark },
 
-const pv = StyleSheet.create({
-  scroll: { padding: SPACING.lg, paddingBottom: 40 },
-  restaurantRow: { flexDirection: 'row', alignItems: 'center', gap: SPACING.md, marginBottom: SPACING.lg },
-  restaurantDot: { width: 48, height: 48, borderRadius: 24, backgroundColor: '#e63946', alignItems: 'center', justifyContent: 'center' },
-  restaurantDotText: { fontSize: SIZES.xl, fontFamily: FONTS.bold, color: '#fff' },
-  restaurantName: { fontSize: SIZES.lg, fontFamily: FONTS.bold, color: COLORS.dark },
-  couponCard: {
-    backgroundColor: COLORS.card, borderRadius: BORDER_RADIUS.md,
-    padding: SPACING.md, marginBottom: SPACING.md, ...SHADOW.sm,
+  reveal: {
+    marginTop: SPACING.xl, backgroundColor: CREAM, borderRadius: BORDER_RADIUS.lg,
+    borderWidth: 1, borderColor: '#EAD4A3', padding: SPACING.lg, alignItems: 'center',
+    shadowColor: GOLD_DEEP, shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.18, shadowRadius: 16, elevation: 4,
   },
-  couponLabel: { fontSize: SIZES.xs, fontFamily: FONTS.medium, color: COLORS.gray, marginBottom: 8 },
-  couponRow: { flexDirection: 'row', gap: SPACING.sm },
+  revealTop: { flexDirection: 'row', alignItems: 'center', gap: 5, marginBottom: 8 },
+  revealOffer: { fontSize: SIZES.xs, fontFamily: FONTS.bold, color: NAVY },
+  revealPayLabel: { fontSize: 10, fontFamily: FONTS.semiBold, color: GOLD_DEEP, letterSpacing: 1, textTransform: 'uppercase' },
+  revealAmountRow: { flexDirection: 'row', alignItems: 'baseline', gap: 10, marginTop: 2 },
+  revealPay: { fontSize: 36, fontFamily: FONTS.bold, color: NAVY },
+  revealStrike: { fontSize: SIZES.base, fontFamily: FONTS.medium, color: GOLD_DEEP, textDecorationLine: 'line-through' },
+  revealFeeNote: { fontSize: 10, fontFamily: FONTS.regular, color: COLORS.gray, marginTop: 8, textAlign: 'center' },
+  savePill: {
+    flexDirection: 'row', alignItems: 'center', gap: 3, marginTop: SPACING.sm,
+    backgroundColor: '#fff', borderRadius: BORDER_RADIUS.full, paddingHorizontal: 12, paddingVertical: 6,
+  },
+  savePillText: { fontSize: SIZES.xs, fontFamily: FONTS.medium, color: NAVY },
+  savePillAmt: { fontSize: SIZES.sm, fontFamily: FONTS.bold, color: GOLD_DEEP },
+  noOffer: { fontSize: SIZES.xs, fontFamily: FONTS.regular, color: COLORS.gray, marginTop: 6, textAlign: 'center' },
+
+  card: { backgroundColor: COLORS.card, borderRadius: BORDER_RADIUS.lg, padding: SPACING.md, marginTop: SPACING.md, ...SHADOW.sm },
+  cardTitle: { fontSize: SIZES.base, fontFamily: FONTS.bold, color: NAVY, marginBottom: SPACING.sm },
+
+  offerLine: {
+    flexDirection: 'row', alignItems: 'center', gap: SPACING.sm, paddingVertical: SPACING.sm,
+    paddingHorizontal: SPACING.sm, borderRadius: BORDER_RADIUS.md, borderWidth: 1, borderColor: COLORS.border, marginTop: 6,
+  },
+  offerLineActive: { borderColor: GOLD, backgroundColor: CREAM },
+  offerIcon: { width: 30, height: 30, borderRadius: 15, backgroundColor: CREAM, alignItems: 'center', justifyContent: 'center' },
+  offerTitle: { fontSize: SIZES.sm, fontFamily: FONTS.bold, color: COLORS.dark },
+  offerSub: { fontSize: SIZES.xs, fontFamily: FONTS.regular, color: COLORS.gray, marginTop: 2 },
+
+  couponHead: { flexDirection: 'row', alignItems: 'center', gap: SPACING.sm },
+  couponHeadText: { flex: 1, fontSize: SIZES.sm, fontFamily: FONTS.bold, color: COLORS.dark },
+  couponRow: { flexDirection: 'row', gap: SPACING.sm, marginTop: SPACING.sm },
   couponInput: {
     flex: 1, borderWidth: 1.5, borderColor: COLORS.border, borderRadius: BORDER_RADIUS.sm,
-    paddingHorizontal: SPACING.md, paddingVertical: 10,
-    fontSize: SIZES.sm, fontFamily: FONTS.medium, color: COLORS.dark,
+    paddingHorizontal: SPACING.md, paddingVertical: 10, fontSize: SIZES.sm, fontFamily: FONTS.bold, color: COLORS.dark,
   },
-  couponBtn: {
-    backgroundColor: COLORS.primary, paddingHorizontal: SPACING.lg,
-    borderRadius: BORDER_RADIUS.sm, alignItems: 'center', justifyContent: 'center',
-  },
-  couponBtnDisabled: { opacity: 0.5 },
-  couponBtnText: { fontSize: SIZES.sm, fontFamily: FONTS.bold, color: '#fff' },
-  offerBadge: {
-    flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: 6,
-    backgroundColor: '#d8f3dc', borderRadius: BORDER_RADIUS.md,
-    padding: SPACING.md, marginBottom: SPACING.lg, borderWidth: 1, borderColor: '#52b788',
-  },
-  offerBadgeText: { fontSize: SIZES.base, fontFamily: FONTS.bold, color: '#2d6a4f' },
-  offerTitle: { fontSize: SIZES.xs, fontFamily: FONTS.regular, color: '#40916c' },
-  breakdownCard: {
-    backgroundColor: COLORS.card, borderRadius: BORDER_RADIUS.lg,
-    padding: SPACING.lg, ...SHADOW.md, marginBottom: SPACING.xl,
-  },
-  breakdownTitle: { fontSize: SIZES.base, fontFamily: FONTS.bold, color: COLORS.dark, marginBottom: SPACING.md },
-  row: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 5 },
+  couponBtn: { backgroundColor: GOLD, paddingHorizontal: SPACING.lg, borderRadius: BORDER_RADIUS.sm, alignItems: 'center', justifyContent: 'center' },
+  couponBtnText: { fontSize: SIZES.sm, fontFamily: FONTS.bold, color: NAVY },
+
+  row: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 5 },
   rowLabel: { fontSize: SIZES.sm, fontFamily: FONTS.regular, color: COLORS.gray },
   rowValue: { fontSize: SIZES.sm, fontFamily: FONTS.medium, color: COLORS.dark },
-  subLabel: { fontSize: SIZES.xs, fontFamily: FONTS.regular, color: COLORS.gray },
-  subValue: { fontSize: SIZES.xs, fontFamily: FONTS.regular, color: '#2d6a4f' },
-  divider: { height: 1.5, backgroundColor: COLORS.dark, marginVertical: SPACING.sm },
-  totalRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 4 },
-  totalLabel: { fontSize: SIZES.base, fontFamily: FONTS.bold, color: COLORS.dark },
-  totalValue: { fontSize: SIZES.xl, fontFamily: FONTS.bold, color: '#e63946' },
-  savingsBadge: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: SPACING.sm },
-  savingsText: { fontSize: SIZES.sm, fontFamily: FONTS.medium, color: '#2d6a4f' },
-  payBtn: { borderRadius: BORDER_RADIUS.md, overflow: 'hidden', marginBottom: SPACING.md },
-  payBtnGrad: { padding: 16, alignItems: 'center' },
-  payBtnText: { fontSize: SIZES.base, fontFamily: FONTS.bold, color: '#fff' },
-  backBtn: { alignItems: 'center', padding: SPACING.md },
-  backBtnText: { fontSize: SIZES.sm, fontFamily: FONTS.medium, color: COLORS.gray },
-});
+  tipRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 5 },
+  tipToggle: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  tipToggleText: { fontSize: SIZES.sm, fontFamily: FONTS.medium, color: COLORS.dark },
+  tipChips: { flexDirection: 'row', gap: SPACING.sm, marginTop: 6, flexWrap: 'wrap' },
+  tipChip: { paddingHorizontal: 16, paddingVertical: 7, borderRadius: BORDER_RADIUS.full, borderWidth: 1.5, borderColor: GOLD, backgroundColor: CREAM },
+  tipChipText: { fontSize: SIZES.sm, fontFamily: FONTS.bold, color: NAVY },
+  divider: { height: 1, backgroundColor: COLORS.border, marginVertical: SPACING.sm },
+  totalRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  totalLabel: { fontSize: SIZES.base, fontFamily: FONTS.bold, color: NAVY },
+  totalValue: { fontSize: SIZES.xl, fontFamily: FONTS.bold, color: NAVY },
 
-const ps = StyleSheet.create({
-  scroll: { padding: SPACING.lg, paddingBottom: 40 },
-  amountCard: {
-    backgroundColor: '#F7E3E0', borderRadius: BORDER_RADIUS.lg,
-    padding: SPACING.xl, alignItems: 'center', marginBottom: SPACING.xl,
-    borderWidth: 1.5, borderColor: '#F2C9C4',
-  },
-  amountLabel: { fontSize: SIZES.sm, fontFamily: FONTS.regular, color: COLORS.gray, marginBottom: 4 },
-  amountValue: { fontSize: 40, fontFamily: FONTS.bold, color: '#e63946' },
-  savingNote: { fontSize: SIZES.xs, fontFamily: FONTS.medium, color: '#2d6a4f', marginTop: 6 },
-  sectionLabel: { fontSize: 10, fontFamily: FONTS.bold, color: COLORS.gray, letterSpacing: 1.2, marginBottom: SPACING.md },
   method: {
-    flexDirection: 'row', alignItems: 'center', gap: SPACING.md,
-    backgroundColor: COLORS.card, borderRadius: BORDER_RADIUS.md,
-    padding: SPACING.md, marginBottom: SPACING.sm,
-    borderWidth: 1.5, borderColor: COLORS.border,
+    flexDirection: 'row', alignItems: 'center', gap: SPACING.md, paddingVertical: 12,
+    borderBottomWidth: 1, borderBottomColor: COLORS.border,
   },
-  methodActive: { borderColor: '#e63946', backgroundColor: '#F7E3E0' },
-  methodIcon: { width: 44, height: 44, borderRadius: 22, backgroundColor: COLORS.background, alignItems: 'center', justifyContent: 'center' },
-  methodIconActive: { backgroundColor: '#e63946' },
+  methodActive: { borderBottomColor: 'transparent' },
+  methodIcon: { width: 38, height: 38, borderRadius: 19, backgroundColor: COLORS.background, alignItems: 'center', justifyContent: 'center' },
+  methodIconActive: { backgroundColor: NAVY },
   methodLabel: { fontSize: SIZES.sm, fontFamily: FONTS.bold, color: COLORS.dark },
-  methodLabelActive: { color: '#e63946' },
+  methodLabelActive: { color: NAVY },
   methodSub: { fontSize: SIZES.xs, fontFamily: FONTS.regular, color: COLORS.gray, marginTop: 2 },
   radio: { width: 20, height: 20, borderRadius: 10, borderWidth: 2, borderColor: COLORS.border, alignItems: 'center', justifyContent: 'center' },
-  radioActive: { borderColor: '#e63946' },
-  radioDot: { width: 10, height: 10, borderRadius: 5, backgroundColor: '#e63946' },
-  payBtn: { borderRadius: BORDER_RADIUS.md, overflow: 'hidden', marginTop: SPACING.xl, marginBottom: SPACING.sm },
-  payBtnGrad: { padding: 16, alignItems: 'center' },
-  payBtnText: { fontSize: SIZES.base, fontFamily: FONTS.bold, color: '#fff' },
-  backBtn: { alignItems: 'center', padding: SPACING.md },
-  backBtnText: { fontSize: SIZES.sm, fontFamily: FONTS.medium, color: COLORS.gray },
+  radioOn: { borderColor: GOLD },
+  radioDot: { width: 10, height: 10, borderRadius: 5, backgroundColor: GOLD },
+
+  footer: {
+    position: 'absolute', left: 0, right: 0, bottom: 0, padding: SPACING.lg,
+    paddingBottom: Platform.OS === 'ios' ? 30 : SPACING.lg, backgroundColor: COLORS.card,
+    borderTopWidth: 1, borderTopColor: COLORS.border, ...SHADOW.lg,
+  },
+  payBtnWrap: { borderRadius: BORDER_RADIUS.full, overflow: 'hidden' },
+  payBtn: { paddingVertical: 15, alignItems: 'center', justifyContent: 'center' },
+  payBtnText: { fontSize: SIZES.base, fontFamily: FONTS.bold, color: NAVY },
+  payBtnSub: { fontSize: 11, fontFamily: FONTS.semiBold, color: 'rgba(12,47,78,0.7)', marginTop: 1 },
+  dim: { opacity: 0.45 },
 });

@@ -60,7 +60,7 @@ export default function SavedRestaurantsScreen({ navigation }) {
           <PriceRange value={item.priceRange} />
           <TouchableOpacity
             style={styles.bookBtn}
-            onPress={() => navigation.navigate('Booking', { restaurantId: item._id, restaurantName: item.name })}
+            onPress={() => navigation.navigate('RestaurantDetail', { restaurantId: item._id })}
           >
             <Text style={styles.bookBtnText}>Book Table</Text>
           </TouchableOpacity>

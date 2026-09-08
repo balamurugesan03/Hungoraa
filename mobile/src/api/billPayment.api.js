@@ -3,6 +3,10 @@ import api from './axios';
 const billPaymentApi = {
   getRestaurants: (params) => api.get('/bill-payments/restaurants', { params }),
 
+  // Server-computed breakdown: bill − discount + convenience fee + GST + tip.
+  // params: { restaurantId, billAmount, offerId?, offerCode?, tipAmount? }
+  quote: (params) => api.get('/bill-payments/quote', { params }),
+
   // Step 1: create a BillPayment draft (billStatus = 'open')
   fetchBill: (data) => api.post('/bill-payments/fetch', data),
 

@@ -5,6 +5,7 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
+import * as Location from 'expo-location';
 
 import Brandmark from '../../components/Brandmark';
 import QuickActions from '../../components/home/QuickActions';
@@ -12,6 +13,7 @@ import DiscoveryGrid from '../../components/home/DiscoveryGrid';
 import BottomNavigation from '../../components/home/BottomNavigation';
 import RateOrderCard from '../../components/home/RateOrderCard';
 import DiningModeModal from '../../components/home/DiningModeModal';
+import LocationGate from '../../components/home/LocationGate';
 import OffersBanner from '../../components/home/OffersBanner';
 import { useAppStore } from '../../store/appStore';
 import {
@@ -33,18 +35,24 @@ export default function HomeScreen({ navigation }) {
   const insets = useSafeAreaInsets();
   const user = useAuthStore((s) => s.user);
   const city = useAuthStore((s) => s.city);
+  const locality = useAuthStore((s) => s.locality);
   const setCity = useAuthStore((s) => s.setCity);
+  const setLocation = useAuthStore((s) => s.setLocation);
 
   const [category, setCategory] = useState({ id: 'all', label: 'All' });
   const [section, setSection] = useState('top');
   const [showRate, setShowRate] = useState(true);
   const [locOpen, setLocOpen] = useState(false);
 
-  // Post-login dining-intent popup — shows once per app launch.
+  // Post-login popups. Neither flag is persisted, so both re-evaluate each launch.
   const modeChooserShown = useAppStore((s) => s.modeChooserShown);
   const setDiningMode = useAppStore((s) => s.setDiningMode);
   const markModeChooserShown = useAppStore((s) => s.markModeChooserShown);
+  const locationPromptDone = useAppStore((s) => s.locationPromptDone);
+  const markLocationPrompt = useAppStore((s) => s.markLocationPrompt);
   const [modeOpen, setModeOpen] = useState(false);
+  const [locGateOpen, setLocGateOpen] = useState(false);
+  const [locChecked, setLocChecked] = useState(false);
 
   const offersQ = useActiveOffers(city);
   const featuredQ = useFeaturedRestaurants();
@@ -67,12 +75,49 @@ export default function HomeScreen({ navigation }) {
   const go = (screen, params) => navigation?.navigate?.(screen, params);
   const openRestaurant = (r) => go('RestaurantDetail', { restaurantId: r.id, slug: r.slug });
 
+  // Swiggy-style: right after login, figure out where the guest is. If location
+  // is already granted, detect silently; otherwise show the permission prompt.
   useEffect(() => {
-    if (!modeChooserShown) {
-      const t = setTimeout(() => setModeOpen(true), 350);
-      return () => clearTimeout(t);
-    }
-  }, [modeChooserShown]);
+    let cancelled = false;
+    (async () => {
+      if (city || locationPromptDone) { setLocChecked(true); return; }
+      markLocationPrompt();
+      try {
+        const perm = await Location.getForegroundPermissionsAsync();
+        if (cancelled) return;
+        if (perm.status === 'granted') {
+          try {
+            const pos = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced });
+            const coords = { latitude: pos.coords.latitude, longitude: pos.coords.longitude };
+            let dCity = null;
+            let dLoc = null;
+            try {
+              const [p] = await Location.reverseGeocodeAsync(coords);
+              if (p) {
+                dCity = p.city || p.subregion || p.region || null;
+                dLoc = [p.district || p.name, dCity].filter(Boolean).join(', ') || dCity;
+              }
+            } catch { /* geocode best-effort */ }
+            if (!cancelled) setLocation({ city: dCity, coords, locality: dLoc });
+          } catch { /* GPS fix failed — leave it, user can pick a city */ }
+          if (!cancelled) setLocChecked(true);
+        } else if (!cancelled) {
+          setLocGateOpen(true);
+          setLocChecked(true);
+        }
+      } catch {
+        if (!cancelled) { setLocGateOpen(true); setLocChecked(true); }
+      }
+    })();
+    return () => { cancelled = true; };
+  }, []);
+
+  // Dining-intent popup — only after the location step is out of the way.
+  useEffect(() => {
+    if (modeChooserShown || !locChecked || locGateOpen) return;
+    const t = setTimeout(() => setModeOpen(true), 300);
+    return () => clearTimeout(t);
+  }, [modeChooserShown, locChecked, locGateOpen]);
 
   const handlePickMode = (mode) => {
     setDiningMode(mode);
@@ -80,6 +125,13 @@ export default function HomeScreen({ navigation }) {
     if (mode === 'book') go('RestaurantList', { title: 'Book a table', city });
     else if (mode === 'dinein') go('PayBill');
   };
+
+  const handleLocationResolved = ({ city: c, coords, locality: loc }) => {
+    setLocation({ city: c, coords, locality: loc });
+    setLocGateOpen(false);
+    if (!c) setLocOpen(true); // couldn't geocode — let them pick a city
+  };
+  const handleLocationManual = () => { setLocGateOpen(false); setLocOpen(true); };
 
   const handleQuickAction = (id) => {
     setDiningMode(id);
@@ -115,7 +167,7 @@ export default function HomeScreen({ navigation }) {
           <View style={styles.topBar}>
             <Pressable style={styles.location} onPress={() => setLocOpen(true)}>
               <Ionicons name="location" size={15} color="#F9A91B" />
-              <Text style={styles.locText} numberOfLines={1}>{city || 'Select location'}</Text>
+              <Text style={styles.locText} numberOfLines={1}>{locality || city || 'Set location'}</Text>
               <Ionicons name="chevron-down" size={15} color={COLOR.onNavySoft} />
             </Pressable>
             <View style={styles.topRight}>
@@ -145,28 +197,21 @@ export default function HomeScreen({ navigation }) {
           </Pressable>
 
           {/* Cuisine chips */}
-          <FlatList
-            data={[{ id: 'all', label: 'All' }, ...cuisines]}
-            keyExtractor={(c) => c.id}
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.chips}
-            renderItem={({ item }) => (
-              <Chip
-                label={item.label}
-                selected={category.id === item.id}
-                onPress={() => setCategory(item)}
-              />
-            )}
-          />
-
-          {/* Offers banner — live, auto-sliding (EasyDiner style) */}
-          {offersQ.isLoading ? (
-            <View style={styles.railPad}><SkeletonCard style={styles.skelBanner} /></View>
-          ) : promos.length ? (
-            <View style={styles.bannerWrap}>
-              <OffersBanner promos={promos} onOpen={(p) => go('Offers', { offerId: p.id })} />
-            </View>
+          {cuisines.length ? (
+            <FlatList
+              data={cuisines}
+              keyExtractor={(c) => c.id}
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.chips}
+              renderItem={({ item }) => (
+                <Chip
+                  label={item.label}
+                  selected={category.id === item.id}
+                  onPress={() => setCategory(category.id === item.id ? { id: 'all', label: 'All' } : item)}
+                />
+              )}
+            />
           ) : null}
 
           {/* Primary actions */}
@@ -219,6 +264,16 @@ export default function HomeScreen({ navigation }) {
           />
         )}
 
+        {/* Offers — live, auto-sliding (EasyDiner style), below the restaurants */}
+        {offersQ.isLoading ? (
+          <View style={styles.railPad}><SkeletonCard style={styles.skelBanner} /></View>
+        ) : promos.length ? (
+          <View style={styles.bannerWrap}>
+            <Text style={[text.h2, styles.sectionHead]}>Offers for you</Text>
+            <OffersBanner promos={promos} onOpen={(p) => go('Offers', { offerId: p.id })} />
+          </View>
+        ) : null}
+
         {showRate ? (
           <View style={styles.rateWrap}>
             <RateOrderCard
@@ -240,6 +295,13 @@ export default function HomeScreen({ navigation }) {
           else if (id === 'paybill') go('PayBill');
         }}
         bottomInset={insets.bottom}
+      />
+
+      <LocationGate
+        visible={locGateOpen}
+        onResolved={handleLocationResolved}
+        onManual={handleLocationManual}
+        onClose={() => setLocGateOpen(false)}
       />
 
       <DiningModeModal

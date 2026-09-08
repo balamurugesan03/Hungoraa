@@ -27,11 +27,16 @@ export const userApi = {
   resetPassword: (id, newPassword) => api.patch(`/admin/users/${id}/reset-password`, { newPassword }),
 };
 
+const maybeMultipart = (data) =>
+  (typeof FormData !== 'undefined' && data instanceof FormData
+    ? { headers: { 'Content-Type': 'multipart/form-data' } }
+    : undefined);
+
 export const restaurantApi = {
-  create: (data) => api.post('/admin/restaurants/create', data),
+  create: (data) => api.post('/admin/restaurants/create', data, maybeMultipart(data)),
   getAll: (params) => api.get('/admin/restaurants', { params }),
   getById: (id) => api.get(`/admin/restaurants/${id}`),
-  update: (id, data) => api.put(`/admin/restaurants/${id}`, data),
+  update: (id, data) => api.put(`/admin/restaurants/${id}`, data, maybeMultipart(data)),
   approve: (id) => api.patch(`/admin/restaurants/${id}/approve`),
   reject: (id, reason) => api.patch(`/admin/restaurants/${id}/reject`, { reason }),
   updateCommission: (id, commission) => api.patch(`/admin/restaurants/${id}/commission`, { commission }),
@@ -61,7 +66,7 @@ export const offerApi = {
   uploadImage: (file) => {
     const fd = new FormData();
     fd.append('image', file);
-    return api.post('/offers/upload-image', fd);
+    return api.post('/offers/upload-image', fd, { headers: { 'Content-Type': 'multipart/form-data' } });
   },
   toggleActive: (id, isActive) => api.put(`/offers/${id}`, { isActive }),
   approve: (id) => api.patch(`/offers/${id}/approve`),

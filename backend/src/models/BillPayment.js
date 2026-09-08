@@ -34,7 +34,18 @@ const billPaymentSchema = new mongoose.Schema(
     offer:           { type: mongoose.Schema.Types.ObjectId, ref: 'Offer' },
     offerCode:       String,
     discountBreakup: { type: discountBreakupSchema, default: () => ({}) },
-    finalAmount:     { type: Number, required: true }, // billAmount − discountBreakup.total
+
+    // Voluntary tip — added by the customer at checkout. Paid on top of the
+    // bill, passed through 100% to the restaurant: NOT part of the commission
+    // base and NOT reduced by any discount.
+    tipAmount:       { type: Number, default: 0, min: 0 },
+
+    // Platform charges added on top of (bill − discount). Platform revenue —
+    // they do NOT change the restaurant's receivable or the commission base.
+    convenienceFee:  { type: Number, default: 0, min: 0 },
+    gstAmount:       { type: Number, default: 0, min: 0 }, // GST charged on the convenience fee
+
+    finalAmount:     { type: Number, required: true }, // (bill − discount) + convenienceFee + gstAmount + tip
 
     // Commission (same EasyDiner formula as Invoice)
     commissionPercentage:  { type: Number, default: 10 },
@@ -79,8 +90,9 @@ billPaymentSchema.pre('save', function (next) {
   this.commissionAmount = parseFloat(
     ((this.commissionBase * this.commissionPercentage) / 100).toFixed(2)
   );
+  // Tip is added back in full — the platform takes no commission on it.
   this.restaurantReceivable = parseFloat(
-    (this.commissionBase - this.commissionAmount).toFixed(2)
+    (this.commissionBase - this.commissionAmount + (this.tipAmount || 0)).toFixed(2)
   );
 
   next();

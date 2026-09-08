@@ -118,7 +118,8 @@ const restaurantSchema = new mongoose.Schema(
     metaDescription: String,
 
     // Pay Bill feature
-    payBillEnabled: { type: Boolean, default: false },
+    // Pay Bill is on by default — an owner can explicitly turn it off.
+    payBillEnabled: { type: Boolean, default: true },
 
     // Booking settings
     bookingSettings: {

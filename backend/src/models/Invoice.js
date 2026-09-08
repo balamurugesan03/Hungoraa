@@ -44,7 +44,14 @@ const invoiceSchema = new mongoose.Schema(
     discountBreakup:   { type: discountBreakupSchema, default: () => ({}) },
     taxPercentage:     { type: Number, default: 5 },
     taxAmount:         { type: Number, default: 0 },
-    netPaid:           { type: Number, required: true },  // customer's actual payment
+    netPaid:           { type: Number, required: true },  // customer's actual payment (incl. tip)
+
+    // Voluntary tip — passed through 100% to the restaurant, not commissionable
+    tipAmount:         { type: Number, default: 0 },
+    // Platform charges collected from the customer (Pay Bill) — platform revenue,
+    // not part of restaurantReceivable
+    convenienceFee:    { type: Number, default: 0 },
+    gstAmount:         { type: Number, default: 0 },
 
     // Offer ref
     offer:             { type: mongoose.Schema.Types.ObjectId, ref: 'Offer' },
@@ -102,7 +109,7 @@ invoiceSchema.pre('save', function (next) {
     ((this.commissionBase * this.commissionPercentage) / 100).toFixed(2)
   );
   this.restaurantReceivable = parseFloat(
-    (this.commissionBase - this.commissionAmount).toFixed(2)
+    (this.commissionBase - this.commissionAmount + (this.tipAmount || 0)).toFixed(2)
   );
 
   next();

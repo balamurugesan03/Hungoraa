@@ -9,6 +9,8 @@ const Settlement = require('../models/Settlement');
 const Invoice = require('../models/Invoice');
 const Offer = require('../models/Offer');
 const DiscountLedger = require('../models/DiscountLedger');
+const PlatformSettings = require('../models/PlatformSettings');
+const billingService = require('../services/billing.service');
 const { sendPushNotification, sendMulticastNotification } = require('../config/firebase');
 const { successResponse, errorResponse } = require('../utils/response');
 
@@ -681,25 +683,17 @@ exports.getNotificationHistory = async (req, res) => {
   }
 };
 
-// Platform Settings (simple key-value store in memory for now)
-let platformSettings = {
-  defaultCommission: 10,
-  otpExpiry: 5,
-  maxOtpAttempts: 5,
-  accessTokenExpiry: '7d',
-  maxRefreshDevices: 5,
-  bookingCancellationHours: 2,
-  enableWallet: true,
-  enableGoogleLogin: true,
-  enableRazorpay: true,
-  enableSmsOtp: true,
-  enableEmailVerification: true,
-  maintenanceMode: false,
+// Platform Settings — persisted singleton (models/PlatformSettings)
+const cleanSettings = (doc) => {
+  const o = doc.toObject();
+  delete o._id; delete o.__v; delete o.key; delete o.createdAt; delete o.updatedAt;
+  return o;
 };
 
 exports.getSettings = async (req, res) => {
   try {
-    successResponse(res, 200, 'Settings fetched', { settings: platformSettings });
+    const doc = await PlatformSettings.getSingleton();
+    successResponse(res, 200, 'Settings fetched', { settings: cleanSettings(doc) });
   } catch (err) {
     errorResponse(res, 500, err.message);
   }
@@ -707,8 +701,13 @@ exports.getSettings = async (req, res) => {
 
 exports.updateSettings = async (req, res) => {
   try {
-    platformSettings = { ...platformSettings, ...req.body };
-    successResponse(res, 200, 'Settings updated', { settings: platformSettings });
+    const doc = await PlatformSettings.getSingleton();
+    for (const key of PlatformSettings.WRITABLE) {
+      if (Object.prototype.hasOwnProperty.call(req.body, key)) doc[key] = req.body[key];
+    }
+    await doc.save();
+    billingService.invalidate(); // pick up new fee/GST values immediately
+    successResponse(res, 200, 'Settings updated', { settings: cleanSettings(doc) });
   } catch (err) {
     errorResponse(res, 500, err.message);
   }

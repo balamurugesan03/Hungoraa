@@ -9,6 +9,7 @@ const Wallet = require('../models/Wallet');
 const Notification = require('../models/Notification');
 const discountService = require('../services/discount.service');
 const commissionService = require('../services/commission.service');
+const billingService = require('../services/billing.service');
 const loyaltyService = require('../services/loyalty.service');
 const emailService = require('../services/email.service');
 const { successResponse, errorResponse } = require('../utils/response');
@@ -18,20 +19,60 @@ const getRazorpay = () => new Razorpay({
   key_secret: process.env.RAZORPAY_KEY_SECRET,
 });
 
-// ─── Public: Restaurants with Pay Bill enabled ─────────────────────────────────
+// ─── Public: Restaurants you can pay a bill at ────────────────────────────────
 exports.getPayBillRestaurants = async (req, res, next) => {
   try {
     const { city, search } = req.query;
-    const filter = { payBillEnabled: true, status: { $in: ['approved', 'active'] }, isActive: true };
+    // Pay Bill is available everywhere unless an owner has explicitly turned it off.
+    const filter = {
+      payBillEnabled: { $ne: false },
+      status: { $in: ['approved', 'active'] },
+      isActive: true,
+    };
     if (city)   filter['address.city'] = new RegExp(city, 'i');
     if (search) filter.name = new RegExp(search, 'i');
 
     const restaurants = await Restaurant.find(filter)
-      .select('name address cuisine images logo averageRating costForTwo')
+      .select('name address cuisine images logo averageRating totalReviews costForTwo priceRange')
       .sort({ averageRating: -1 })
-      .limit(50);
+      .limit(60)
+      .lean();
 
-    return successResponse(res, 200, 'Pay Bill restaurants', { restaurants });
+    // Attach the best active pay-bill offer per restaurant, for the deal badge.
+    const ids = restaurants.map((r) => r._id);
+    const offers = await Offer.find({
+      restaurant: { $in: ids },
+      isActive: true,
+      approvalStatus: 'approved',
+      $and: [
+        { $or: [{ applicableTo: { $exists: false } }, { applicableTo: { $size: 0 } }, { applicableTo: 'pay_bill' }] },
+        { $or: [{ validFrom: { $exists: false } }, { validFrom: { $lte: new Date() } }] },
+        { $or: [{ validTo: { $exists: false } }, { validTo: { $gte: new Date() } }] },
+      ],
+    }).select('restaurant title type discountValue maxDiscount minOrderAmount fundedBy code').lean();
+
+    const byRestaurant = {};
+    for (const o of offers) {
+      const key = o.restaurant.toString();
+      const score = o.type === 'percentage' ? o.discountValue : (o.discountValue || 0) / 100;
+      if (!byRestaurant[key] || score > byRestaurant[key]._score) {
+        byRestaurant[key] = { ...o, _score: score };
+      }
+    }
+
+    const withOffers = restaurants.map((r) => {
+      const o = byRestaurant[r._id.toString()];
+      return {
+        ...r,
+        topOffer: o ? {
+          title: o.title, type: o.type, discountValue: o.discountValue,
+          maxDiscount: o.maxDiscount, minOrderAmount: o.minOrderAmount,
+          fundedBy: o.fundedBy, code: o.code,
+        } : null,
+      };
+    });
+
+    return successResponse(res, 200, 'Pay Bill restaurants', { restaurants: withOffers });
   } catch (err) {
     next(err);
   }
@@ -49,7 +90,7 @@ exports.fetchBill = async (req, res, next) => {
 
     const restaurant = await Restaurant.findOne({
       _id: restaurantId,
-      payBillEnabled: true,
+      payBillEnabled: { $ne: false },
       isActive: true,
     });
     if (!restaurant) return errorResponse(res, 404, 'Restaurant not found or Pay Bill not enabled');
@@ -67,6 +108,68 @@ exports.fetchBill = async (req, res, next) => {
     return successResponse(res, 201, 'Bill fetched', {
       billPayment,
       restaurant: { _id: restaurant._id, name: restaurant.name },
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// ─── Customer: Quote — full breakdown before paying (EasyDiner-style) ─────────
+// GET /bill-payments/quote?restaurantId=&billAmount=&offerId=&offerCode=&tipAmount=
+// The single source of truth for "You Pay": bill − discount + convenience fee
+// + GST-on-fee + tip. The pay endpoint recomputes the same numbers server-side.
+exports.quoteBill = async (req, res, next) => {
+  try {
+    const { restaurantId, offerId, offerCode } = req.query;
+    const amount = parseFloat(req.query.billAmount);
+    if (!restaurantId || !amount || amount <= 0) {
+      return errorResponse(res, 400, 'restaurantId and billAmount are required');
+    }
+    const tip = Math.max(0, parseFloat(req.query.tipAmount) || 0);
+
+    const restaurant = await Restaurant.findOne({
+      _id: restaurantId, payBillEnabled: { $ne: false }, isActive: true,
+    }).select('name');
+    if (!restaurant) return errorResponse(res, 404, 'Restaurant not found or Pay Bill not available');
+
+    let discountBreakup = { restaurantFunded: 0, platformFunded: 0, bankFunded: 0, total: 0 };
+    let offer = null;
+    let offerError = null;
+    if (offerId || offerCode) {
+      const r = await discountService.applyOffer({
+        offerId, code: offerCode, restaurantId, userId: req.user._id, amount, guests: 1,
+      });
+      if (r.error) offerError = r.error;
+      else if (r.discountResult) {
+        offer = r.offer;
+        discountBreakup = {
+          restaurantFunded: r.discountResult.restaurantFunded,
+          platformFunded:   r.discountResult.platformFunded,
+          bankFunded:       r.discountResult.bankFunded,
+          total:            r.discountResult.totalDiscount,
+        };
+      }
+    }
+
+    const base = Math.max(0, billingService.r2(amount - discountBreakup.total));
+    const { convenienceFee, gstAmount, gstOnFeePercent, toPay } =
+      await billingService.computeCharges(base, tip);
+
+    return successResponse(res, 200, 'Bill quote', {
+      restaurant: { _id: restaurant._id, name: restaurant.name },
+      billAmount: amount,
+      discount: discountBreakup.total,
+      discountBreakup,
+      offer: offer ? {
+        _id: offer._id, title: offer.title, type: offer.type,
+        discountValue: offer.discountValue, fundedBy: offer.fundedBy, code: offer.code,
+      } : null,
+      offerError,
+      convenienceFee,
+      gstAmount,
+      gstOnFeePercent,
+      tip,
+      toPay,
     });
   } catch (err) {
     next(err);
@@ -111,7 +214,59 @@ exports.applyOffer = async (req, res, next) => {
   }
 };
 
-// ─── Customer: Pay bill (Razorpay order OR Wallet) ────────────────────────────
+// ─── Internal: finalise a paid bill (offer usage + invoice + cashback + email) ─
+async function _settlePaidBill({
+  req, restaurant, amount, tip, discountBreakup, appliedOffer,
+  convenienceFee, gstAmount, finalAmount, method, reference,
+}) {
+  const billPayment = await BillPayment.create({
+    customer:      req.user._id,
+    restaurant:    restaurant._id,
+    billAmount:    amount,
+    offer:         appliedOffer?._id,
+    offerCode:     appliedOffer?.code,
+    discountBreakup,
+    tipAmount:     tip,
+    convenienceFee,
+    gstAmount,
+    finalAmount,
+    commissionPercentage: restaurant.commission || 10,
+    paymentMethod: method,
+    paymentStatus: 'paid',
+    billStatus:    'paid',
+    paymentReference: reference,
+    paidAt:        new Date(),
+  });
+
+  if (appliedOffer) {
+    discountService.recordOfferUsage({
+      offer: appliedOffer, userId: req.user._id, restaurantId: restaurant._id,
+      grossAmount: amount,
+      discountResult: { totalDiscount: discountBreakup.total, ...discountBreakup },
+      sourceType: 'bill_payment', sourceId: billPayment._id,
+    }).catch(() => {});
+  }
+
+  const inv = await _generateBillInvoice(billPayment, restaurant);
+  billPayment.invoice = inv._id;
+  await billPayment.save();
+
+  const cashback = await loyaltyService.awardBillPaymentCashback({
+    userId: req.user._id,
+    // Cashback on the food bill only — not the tip, fee or GST.
+    amount: billingService.r2(finalAmount - tip - convenienceFee - gstAmount),
+    restaurantName: restaurant.name,
+    billPaymentId: billPayment._id,
+  });
+
+  emailService.sendBillPaymentEmails({
+    billPayment, restaurant, customer: req.user, owner: restaurant.owner,
+  }).catch(() => {});
+
+  return { billPayment, cashback };
+}
+
+// ─── Customer: Pay bill (Razorpay order · Wallet · direct) ────────────────────
 exports.createBillPayment = async (req, res, next) => {
   try {
     const { restaurantId, billAmount, offerId, offerCode, paymentMethod } = req.body;
@@ -120,7 +275,11 @@ exports.createBillPayment = async (req, res, next) => {
       return errorResponse(res, 400, 'restaurantId and billAmount are required');
     }
 
-    const restaurant = await Restaurant.findOne({ _id: restaurantId, payBillEnabled: true, isActive: true })
+    // Voluntary tip — optional, non-negative, sanity-capped.
+    const tip = Math.round((Math.max(0, parseFloat(req.body.tipAmount) || 0)) * 100) / 100;
+    if (tip > 100000) return errorResponse(res, 400, 'Tip amount is too large');
+
+    const restaurant = await Restaurant.findOne({ _id: restaurantId, payBillEnabled: { $ne: false }, isActive: true })
       .populate('owner', 'name email phone');
     if (!restaurant) return errorResponse(res, 404, 'Restaurant not found');
 
@@ -145,18 +304,43 @@ exports.createBillPayment = async (req, res, next) => {
       }
     }
 
-    const finalAmount    = parseFloat((amount - discountBreakup.total).toFixed(2));
-    const commissionRate = restaurant.commission || 10;
+    // EasyDiner-style total: (bill − discount) + convenience fee + GST-on-fee + tip.
+    const base = Math.max(0, billingService.r2(amount - discountBreakup.total));
+    const { convenienceFee, gstAmount, toPay } = await billingService.computeCharges(base, tip);
+    const finalAmount = toPay;
 
-    // Wallet — complete immediately
+    const settle = (method, reference) => _settlePaidBill({
+      req, restaurant, amount, tip, discountBreakup, appliedOffer,
+      convenienceFee, gstAmount, finalAmount, method, reference,
+    });
+
+    // ── Wallet — debit + settle immediately ──────────────────────────────────
     if (paymentMethod === 'wallet') {
       const wallet = await Wallet.findOne({ user: req.user._id });
       if (!wallet) return errorResponse(res, 404, 'Wallet not found');
       if (wallet.balance < finalAmount) {
         return errorResponse(res, 400, `Insufficient balance. Available: ₹${wallet.balance}`);
       }
-
       await wallet.debit(finalAmount, `Pay Bill at ${restaurant.name}`);
+
+      const { billPayment, cashback } = await settle('wallet', 'WALLET');
+      return successResponse(res, 201, 'Payment successful', {
+        billPayment,
+        coinsEarned: cashback?.coins || 0,
+        walletBalance: cashback?.walletBalance,
+      });
+    }
+
+    // ── Razorpay — only when a live gateway is actually configured ───────────
+    const settings = await billingService.getSettings();
+    const razorpayLive = Boolean(process.env.RAZORPAY_KEY_ID) && settings.enableRazorpay !== false;
+
+    if (razorpayLive) {
+      const order = await getRazorpay().orders.create({
+        amount:   Math.round(finalAmount * 100),
+        currency: 'INR',
+        receipt:  `bp_${Date.now()}`,
+      });
 
       const billPayment = await BillPayment.create({
         customer:      req.user._id,
@@ -165,72 +349,30 @@ exports.createBillPayment = async (req, res, next) => {
         offer:         appliedOffer?._id,
         offerCode:     appliedOffer?.code,
         discountBreakup,
+        tipAmount:     tip,
+        convenienceFee,
+        gstAmount,
         finalAmount,
-        commissionPercentage: commissionRate,
-        paymentMethod: 'wallet',
-        paymentStatus: 'paid',
-        billStatus:    'paid',
-        paidAt:        new Date(),
+        commissionPercentage: restaurant.commission || 10,
+        paymentMethod: paymentMethod || 'razorpay',
+        paymentStatus: 'pending',
+        billStatus:    'preview',
+        razorpayOrderId: order.id,
       });
 
-      if (appliedOffer) {
-        discountService.recordOfferUsage({
-          offer: appliedOffer, userId: req.user._id, restaurantId,
-          grossAmount: amount,
-          discountResult: { totalDiscount: discountBreakup.total, ...discountBreakup },
-          sourceType: 'bill_payment', sourceId: billPayment._id,
-        }).catch(() => {});
-      }
-
-      const inv = await _generateBillInvoice(billPayment, restaurant);
-      billPayment.invoice = inv._id;
-      await billPayment.save();
-
-      const cashback = await loyaltyService.awardBillPaymentCashback({
-        userId: req.user._id,
-        amount: finalAmount,
-        restaurantName: restaurant.name,
-        billPaymentId: billPayment._id,
-      });
-
-      emailService.sendBillPaymentEmails({
-        billPayment, restaurant, customer: req.user, owner: restaurant.owner,
-      }).catch(() => {});
-
-      return successResponse(res, 201, 'Payment successful', {
+      return successResponse(res, 201, 'Order created', {
         billPayment,
-        coinsEarned: cashback?.coins || 0,
-        walletBalance: cashback?.walletBalance,
+        razorpay: { orderId: order.id, amount: order.amount, currency: order.currency, key: process.env.RAZORPAY_KEY_ID },
       });
     }
 
-    // Razorpay — create order
-    if (!process.env.RAZORPAY_KEY_ID) return errorResponse(res, 500, 'Razorpay not configured');
-
-    const order = await getRazorpay().orders.create({
-      amount:   Math.round(finalAmount * 100),
-      currency: 'INR',
-      receipt:  `bp_${Date.now()}`,
-    });
-
-    const billPayment = await BillPayment.create({
-      customer:      req.user._id,
-      restaurant:    restaurantId,
-      billAmount:    amount,
-      offer:         appliedOffer?._id,
-      offerCode:     appliedOffer?.code,
-      discountBreakup,
-      finalAmount,
-      commissionPercentage: commissionRate,
-      paymentMethod: paymentMethod || 'razorpay',
-      paymentStatus: 'pending',
-      billStatus:    'preview',
-      razorpayOrderId: order.id,
-    });
-
-    return successResponse(res, 201, 'Order created', {
+    // ── No live gateway — settle the bill directly (test / demo) ────────────
+    const { billPayment, cashback } = await settle(paymentMethod || 'razorpay', 'DIRECT');
+    return successResponse(res, 201, 'Payment successful', {
       billPayment,
-      razorpay: { orderId: order.id, amount: order.amount, currency: order.currency, key: process.env.RAZORPAY_KEY_ID },
+      coinsEarned: cashback?.coins || 0,
+      walletBalance: cashback?.walletBalance,
+      simulated: true,
     });
   } catch (err) {
     next(err);
@@ -286,7 +428,10 @@ exports.completeBillPayment = async (req, res, next) => {
 
     const cashback = await loyaltyService.awardBillPaymentCashback({
       userId: billPayment.customer,
-      amount: billPayment.finalAmount,
+      amount: billingService.r2(
+        billPayment.finalAmount - (billPayment.tipAmount || 0)
+        - (billPayment.convenienceFee || 0) - (billPayment.gstAmount || 0),
+      ),
       restaurantName: restaurant?.name,
       billPaymentId: billPayment._id,
     });
@@ -350,6 +495,7 @@ exports.getRestaurantBillPayments = async (req, res, next) => {
         $group: {
           _id: null,
           totalRevenue:         { $sum: '$finalAmount' },
+          totalTips:            { $sum: '$tipAmount' },
           totalRestaurantDiscount: { $sum: '$discountBreakup.restaurantFunded' },
           totalPlatformDiscount:   { $sum: '$discountBreakup.platformFunded' },
           count: { $sum: 1 },
@@ -359,7 +505,7 @@ exports.getRestaurantBillPayments = async (req, res, next) => {
 
     return successResponse(res, 200, 'Restaurant bill payments', {
       payments,
-      stats: stats[0] || { totalRevenue: 0, totalRestaurantDiscount: 0, totalPlatformDiscount: 0, count: 0 },
+      stats: stats[0] || { totalRevenue: 0, totalTips: 0, totalRestaurantDiscount: 0, totalPlatformDiscount: 0, count: 0 },
       pagination: { total, page: Number(page), pages: Math.ceil(total / limit) },
     });
   } catch (err) {
@@ -386,6 +532,9 @@ exports.togglePayBill = async (req, res, next) => {
 async function _generateBillInvoice(billPayment, restaurant) {
   const commissionRate = restaurant?.commission || billPayment.commissionPercentage || 10;
   const ownerDiscount  = billPayment.discountBreakup?.restaurantFunded ?? 0;
+  const tipAmount      = billPayment.tipAmount || 0;
+  const convenienceFee = billPayment.convenienceFee || 0;
+  const gstAmount      = billPayment.gstAmount || 0;
   const commissionBase = Math.max(0, billPayment.billAmount - ownerDiscount);
   const commissionAmount = parseFloat(((commissionBase * commissionRate) / 100).toFixed(2));
 
@@ -398,13 +547,16 @@ async function _generateBillInvoice(billPayment, restaurant) {
     discountBreakup:     billPayment.discountBreakup ?? {},
     taxPercentage:       0,
     taxAmount:           0,
+    tipAmount,
+    convenienceFee,
+    gstAmount,
     netPaid:             billPayment.finalAmount,
     offer:               billPayment.offer,
     offerCode:           billPayment.offerCode,
     commissionPercentage: commissionRate,
     commissionBase,
     commissionAmount,
-    restaurantReceivable: parseFloat((commissionBase - commissionAmount).toFixed(2)),
+    restaurantReceivable: parseFloat((commissionBase - commissionAmount + tipAmount).toFixed(2)),
     paymentMethod:        billPayment.paymentMethod,
     paymentStatus:        'paid',
     status:               'paid',

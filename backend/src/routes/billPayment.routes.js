@@ -3,6 +3,7 @@ const router = express.Router();
 const { protect, authorize } = require('../middleware/auth.middleware');
 const {
   getPayBillRestaurants,
+  quoteBill,
   fetchBill,
   applyOffer,
   createBillPayment,
@@ -17,7 +18,8 @@ router.get('/restaurants', getPayBillRestaurants);
 
 router.use(protect);
 
-// Customer — bill flow: fetch → apply offer (optional) → pay → complete
+// Customer — bill flow: quote → pay → complete
+router.get('/quote', authorize('customer'), quoteBill);
 router.post('/fetch', authorize('customer'), fetchBill);
 router.patch('/:id/apply-offer', authorize('customer'), applyOffer);
 router.post('/', authorize('customer'), createBillPayment);

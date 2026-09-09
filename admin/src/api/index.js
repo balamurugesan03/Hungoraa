@@ -11,6 +11,11 @@ export const adminApi = {
   getStats: (period) => api.get('/admin/stats', { params: { period } }),
   getSettings: () => api.get('/admin/settings'),
   updateSettings: (data) => api.put('/admin/settings', data),
+  uploadAsset: (file) => {
+    const fd = new FormData();
+    fd.append('image', file);
+    return api.post('/admin/upload', fd, { headers: { 'Content-Type': 'multipart/form-data' } });
+  },
   // New analytics dashboards
   getCommissionDashboard: (params) => api.get('/admin/commissions', { params }),
   getSettlementDashboard: (params) => api.get('/admin/settlements', { params }),

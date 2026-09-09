@@ -1,3 +1,4 @@
+const mongoose = require('mongoose');
 const Restaurant = require('../models/Restaurant');
 const Branch = require('../models/Branch');
 const User = require('../models/User');
@@ -163,10 +164,16 @@ const getAllRestaurants = async (req, res, next) => {
   }
 };
 
-// ─── Public: Get Restaurant by ID ────────────────────────────────────────────
+// ─── Public: Get Restaurant by ID (or slug) ──────────────────────────────────
+// Accepts a Mongo ObjectId or a slug. A malformed value returns a clean 404
+// instead of a Mongoose CastError → 400.
 const getRestaurantById = async (req, res, next) => {
   try {
-    const restaurant = await Restaurant.findById(req.params.id).populate('owner', 'name email');
+    const key = String(req.params.id || '').trim();
+    if (!key) return errorResponse(res, 404, 'Restaurant not found');
+
+    const query = mongoose.isValidObjectId(key) ? { _id: key } : { slug: key };
+    const restaurant = await Restaurant.findOne(query).populate('owner', 'name email');
     if (!restaurant) return errorResponse(res, 404, 'Restaurant not found');
     return successResponse(res, 200, 'Restaurant fetched', { restaurant });
   } catch (error) {

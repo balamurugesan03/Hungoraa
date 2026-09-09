@@ -100,12 +100,14 @@ export default function RestaurantDetailScreen({ navigation, route }) {
   const [bookTime, setBookTime] = useState('');
   const [bookGuests, setBookGuests] = useState(2);
 
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ['restaurant', rid],
     queryFn: () => restaurantApi.getById(rid).then((r) => r.data.data),
     enabled: !!rid,
+    retry: 1,
   });
   const restaurant = data?.restaurant || {};
+  const notFound = !isLoading && (isError || (data && !restaurant._id));
 
   const { data: menuData } = useQuery({
     queryKey: ['restaurant-menu', rid],
@@ -231,6 +233,25 @@ export default function RestaurantDetailScreen({ navigation, route }) {
   };
 
   const selectedDate = dates.find((d) => d.iso === bookDate);
+
+  if (notFound) {
+    return (
+      <View style={[styles.container, { paddingTop: insets.top }]}>
+        <View style={[styles.floating, { top: insets.top + 6 }]}>
+          <IconButton icon="chevron-back" variant="surface" onPress={() => navigation.goBack()} />
+        </View>
+        <View style={{ flex: 1, justifyContent: 'center' }}>
+          <EmptyState
+            icon="storefront-outline"
+            title="Restaurant unavailable"
+            message="This place couldn’t be loaded. It may have been removed or the link is out of date."
+            actionLabel="Try again"
+            onAction={refetch}
+          />
+        </View>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>

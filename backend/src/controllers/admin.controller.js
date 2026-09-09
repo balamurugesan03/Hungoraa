@@ -706,8 +706,30 @@ exports.updateSettings = async (req, res) => {
       if (Object.prototype.hasOwnProperty.call(req.body, key)) doc[key] = req.body[key];
     }
     await doc.save();
-    billingService.invalidate(); // pick up new fee/GST values immediately
+    billingService.invalidate(); // pick up new fee/GST/hero values immediately
     successResponse(res, 200, 'Settings updated', { settings: cleanSettings(doc) });
+  } catch (err) {
+    errorResponse(res, 500, err.message);
+  }
+};
+
+// Generic image upload — returns the public URL for the caller to store in settings
+exports.uploadAsset = async (req, res) => {
+  try {
+    if (!req.file) return errorResponse(res, 400, 'No image file received');
+    successResponse(res, 200, 'Uploaded', { url: req.file.path, publicId: req.file.filename });
+  } catch (err) {
+    errorResponse(res, 500, err.message);
+  }
+};
+
+// Public — the safe subset mobile clients can read without auth
+exports.getPublicSettings = async (req, res) => {
+  try {
+    const doc = await PlatformSettings.getSingleton();
+    const out = {};
+    for (const k of PlatformSettings.PUBLIC) out[k] = doc[k];
+    successResponse(res, 200, 'Public settings', { settings: out });
   } catch (err) {
     errorResponse(res, 500, err.message);
   }

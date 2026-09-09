@@ -32,6 +32,11 @@ const platformSettingsSchema = new mongoose.Schema(
     convenienceFeeCap: { type: Number, default: 25 },       // max ₹ when percent (0 = no cap)
     convenienceFeeMinBill: { type: Number, default: 0 },    // waive the fee below this bill
     gstOnFeePercent: { type: Number, default: 18 },         // GST on the convenience fee
+
+    // ── Mobile home screen — hero background (Swiggy-style) ─────────────────
+    homeHeroEnabled: { type: Boolean, default: false },
+    homeHeroImageUrl: { type: String, default: '' },
+    homeHeroVideoUrl: { type: String, default: '' },        // optional looping video (mp4)
   },
   { timestamps: true, minimize: false },
 );
@@ -50,6 +55,13 @@ platformSettingsSchema.statics.WRITABLE = [
   'enableEmailVerification', 'maintenanceMode',
   'convenienceFeeEnabled', 'convenienceFeeType', 'convenienceFeeValue',
   'convenienceFeeCap', 'convenienceFeeMinBill', 'gstOnFeePercent',
+  'homeHeroEnabled', 'homeHeroImageUrl', 'homeHeroVideoUrl',
+];
+
+// Fields safe to expose to unauthenticated mobile clients.
+platformSettingsSchema.statics.PUBLIC = [
+  'homeHeroEnabled', 'homeHeroImageUrl', 'homeHeroVideoUrl',
+  'convenienceFeeEnabled', 'maintenanceMode',
 ];
 
 module.exports = mongoose.model('PlatformSettings', platformSettingsSchema);

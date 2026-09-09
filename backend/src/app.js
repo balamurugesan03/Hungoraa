@@ -130,6 +130,7 @@ app.use('/api/invoices', invoiceRoutes);
 app.use('/api/commissions', commissionRoutes);
 app.use('/api/settlements', settlementRoutes);
 app.use('/api/bill-payments', require('./routes/billPayment.routes'));
+app.use('/api/settings', require('./routes/settings.routes'));
 
 // ─── Error Handling ───────────────────────────────────────────────────────────
 app.use(notFound);

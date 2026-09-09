@@ -1,9 +1,10 @@
 const express = require('express');
 const router = express.Router();
 const { protect, authorize } = require('../middleware/auth.middleware');
-const { uploadFields } = require('../config/upload');
+const { uploadFields, uploadSingle } = require('../config/upload');
 const {
   getDashboard, getStats,
+  uploadAsset,
   getAllUsers, getUserById, toggleBlockUser, deleteUser, resetUserPassword,
   createRestaurantWithOwner,
   getAllRestaurantsAdmin, getRestaurantByIdAdmin, approveRestaurant, rejectRestaurant,
@@ -86,5 +87,8 @@ router.get('/notifications', getNotificationHistory);
 // ── Settings ───────────────────────────────────────────────────────────────────
 router.get('/settings', getSettings);
 router.put('/settings', updateSettings);
+
+// Generic image upload for platform assets (e.g. the home hero background)
+router.post('/upload', uploadSingle('platform', 'image'), uploadAsset);
 
 module.exports = router;

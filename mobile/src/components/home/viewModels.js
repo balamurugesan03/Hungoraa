@@ -104,6 +104,9 @@ export function toPromo(offer) {
     promoCode: offer.code || null,
     restaurantId: offer.restaurant?._id || offer.restaurant || null,
     restaurantName: offer.restaurant?.name || null,
+    // The banner uploaded for this offer (show it edge-to-edge). Falls back to a
+    // logo / stock photo only for the muted gradient-card treatment.
+    bannerImage: offer.image?.url || null,
     image: offer.image?.url || offer.restaurant?.logo?.url || restaurantImage(offer.restaurant) || null,
     featured: !!offer.isFeatured,
     minOrder: offer.minOrderAmount || 0,

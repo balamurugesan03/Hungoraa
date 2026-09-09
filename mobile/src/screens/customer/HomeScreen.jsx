@@ -2,6 +2,9 @@ import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, Pressable, FlatList, RefreshControl,
 } from 'react-native';
+import { Image as ExpoImage } from 'expo-image';
+import { LinearGradient } from 'expo-linear-gradient';
+import { useQuery } from '@tanstack/react-query';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
@@ -14,6 +17,7 @@ import BottomNavigation from '../../components/home/BottomNavigation';
 import RateOrderCard from '../../components/home/RateOrderCard';
 import DiningModeModal from '../../components/home/DiningModeModal';
 import LocationGate from '../../components/home/LocationGate';
+import HomeHeroVideo from '../../components/home/HomeHeroVideo';
 import OffersBanner from '../../components/home/OffersBanner';
 import { useAppStore } from '../../store/appStore';
 import {
@@ -24,6 +28,7 @@ import {
   useFavorites, useCities,
 } from '../../hooks/useHome';
 import { useAuthStore } from '../../store/authStore';
+import settingsApi from '../../api/settings.api';
 import { COLOR, SPACING, RADII, text, FONT } from '../../theme';
 import {
   Avatar, Chip, RestaurantCard, SkeletonCard, EmptyState, Sheet, Divider,
@@ -53,6 +58,15 @@ export default function HomeScreen({ navigation }) {
   const [modeOpen, setModeOpen] = useState(false);
   const [locGateOpen, setLocGateOpen] = useState(false);
   const [locChecked, setLocChecked] = useState(false);
+
+  const platformQ = useQuery({
+    queryKey: ['platform-settings'],
+    queryFn: () => settingsApi.getPublic().then((r) => r.data.data.settings),
+    staleTime: 5 * 60 * 1000,
+  });
+  const hero = platformQ.data?.homeHeroEnabled ? platformQ.data : null;
+  const heroImage = hero?.homeHeroImageUrl || null;
+  const heroVideo = hero?.homeHeroVideoUrl || null;
 
   const offersQ = useActiveOffers(city);
   const featuredQ = useFeaturedRestaurants();
@@ -160,6 +174,19 @@ export default function HomeScreen({ navigation }) {
       >
         {/* Navy zone — brand through "What's on your mind?", ends in a curved shape */}
         <View style={[styles.navyZone, { paddingTop: insets.top + SPACING.xs }]}>
+          {/* Admin-set hero background (Swiggy-style) — image or looping video */}
+          {heroVideo ? (
+            <HomeHeroVideo uri={heroVideo} poster={heroImage} />
+          ) : heroImage ? (
+            <ExpoImage source={{ uri: heroImage }} style={StyleSheet.absoluteFill} contentFit="cover" transition={250} />
+          ) : null}
+          {(heroVideo || heroImage) ? (
+            <LinearGradient
+              colors={['rgba(12,47,78,0.58)', 'rgba(12,47,78,0.82)', 'rgba(12,47,78,0.95)']}
+              style={StyleSheet.absoluteFill}
+            />
+          ) : null}
+
           {/* Brand */}
           <Brandmark />
 

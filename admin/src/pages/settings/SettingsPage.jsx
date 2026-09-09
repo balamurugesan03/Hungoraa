@@ -1,12 +1,13 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import {
   Stack, Title, Card, Text, NumberInput, Switch, Button, Grid,
   TextInput, Divider, Group, Skeleton, SegmentedControl, Alert,
+  FileInput, Image,
 } from '@mantine/core';
 import { useForm } from '@mantine/form';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { notifications } from '@mantine/notifications';
-import { IconDeviceFloppy } from '@tabler/icons-react';
+import { IconDeviceFloppy, IconUpload } from '@tabler/icons-react';
 import { adminApi } from '../../api';
 
 
@@ -51,6 +52,33 @@ export default function SettingsPage() {
     },
   });
 
+  const heroForm = useForm({
+    initialValues: {
+      homeHeroEnabled: false,
+      homeHeroImageUrl: '',
+      homeHeroVideoUrl: '',
+    },
+  });
+  const [heroUploading, setHeroUploading] = useState(false);
+
+  const uploadHeroImage = async (file) => {
+    if (!file) return;
+    setHeroUploading(true);
+    try {
+      const { data } = await adminApi.uploadAsset(file);
+      heroForm.setFieldValue('homeHeroImageUrl', data.data.url);
+      notifications.show({ title: 'Image uploaded', color: 'green' });
+    } catch (err) {
+      notifications.show({
+        title: 'Upload failed',
+        message: err.response?.data?.message || 'Use a JPG / PNG / WebP under 5 MB',
+        color: 'red',
+      });
+    } finally {
+      setHeroUploading(false);
+    }
+  };
+
   useEffect(() => {
     if (!settingsData) return;
     platformForm.setValues({
@@ -76,6 +104,11 @@ export default function SettingsPage() {
       convenienceFeeCap: settingsData.convenienceFeeCap ?? 25,
       convenienceFeeMinBill: settingsData.convenienceFeeMinBill ?? 0,
       gstOnFeePercent: settingsData.gstOnFeePercent ?? 18,
+    });
+    heroForm.setValues({
+      homeHeroEnabled: settingsData.homeHeroEnabled ?? false,
+      homeHeroImageUrl: settingsData.homeHeroImageUrl ?? '',
+      homeHeroVideoUrl: settingsData.homeHeroVideoUrl ?? '',
     });
   }, [settingsData]);
 
@@ -274,6 +307,70 @@ export default function SettingsPage() {
                 <Button type="submit" color="gold" leftSection={<IconDeviceFloppy size={16} />}
                   loading={updateMutation.isPending}>
                   Save Fee Settings
+                </Button>
+              </Stack>
+            </form>
+          </Card>
+        </Grid.Col>
+
+        {/* Mobile Home — hero background (Swiggy-style) */}
+        <Grid.Col span={{ base: 12, md: 6 }}>
+          <Card withBorder radius="md" p="lg">
+            <Text fw={700} mb={4} size="lg">Mobile Home — Background</Text>
+            <Text size="xs" c="dimmed" mb="lg">
+              Shows behind the location bar, greeting and search on the app home
+              screen, under a dark overlay so text stays readable.
+            </Text>
+            <form onSubmit={heroForm.onSubmit((v) => updateMutation.mutate(v))}>
+              <Stack gap="md">
+                <Group justify="space-between">
+                  <Stack gap={2}>
+                    <Text size="sm" fw={600}>Use a background image</Text>
+                    <Text size="xs" c="dimmed">Off = plain logo-blue background</Text>
+                  </Stack>
+                  <Switch
+                    checked={heroForm.values.homeHeroEnabled}
+                    onChange={(e) => heroForm.setFieldValue('homeHeroEnabled', e.target.checked)}
+                    color="brand"
+                  />
+                </Group>
+
+                <FileInput
+                  label="Background image"
+                  description="Wide / landscape works best · JPG, PNG or WebP, under 5 MB"
+                  placeholder="Upload an image"
+                  accept="image/png,image/jpeg,image/webp"
+                  leftSection={<IconUpload size={16} />}
+                  disabled={heroUploading}
+                  onChange={uploadHeroImage}
+                />
+
+                {heroForm.values.homeHeroImageUrl ? (
+                  <Image
+                    src={heroForm.values.homeHeroImageUrl}
+                    radius="md"
+                    h={130}
+                    fit="cover"
+                    alt="Home background preview"
+                  />
+                ) : null}
+
+                <TextInput
+                  label="…or paste an image URL"
+                  placeholder="https://…"
+                  {...heroForm.getInputProps('homeHeroImageUrl')}
+                />
+
+                <TextInput
+                  label="Looping video URL (optional)"
+                  description="An .mp4 plays instead of the image when set"
+                  placeholder="https://…/hero.mp4"
+                  {...heroForm.getInputProps('homeHeroVideoUrl')}
+                />
+
+                <Button type="submit" color="gold" leftSection={<IconDeviceFloppy size={16} />}
+                  loading={updateMutation.isPending || heroUploading}>
+                  Save Background
                 </Button>
               </Stack>
             </form>

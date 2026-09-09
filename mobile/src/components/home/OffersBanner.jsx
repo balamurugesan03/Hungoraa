@@ -69,22 +69,37 @@ export default function OffersBanner({ promos = [], onOpen }) {
         contentContainerStyle={{ paddingHorizontal: H_PAD }}
         renderItem={({ item }) => (
           <Pressable style={styles.slide} onPress={() => onOpen?.(item)}>
-            <LinearGradient
-              colors={item.gradient || GRADIENT.blue}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-              style={styles.card}
-            >
-              {item.image ? (
-                <Image
-                  source={{ uri: item.image }}
-                  style={styles.photo}
-                  contentFit="cover"
-                  transition={200}
-                />
-              ) : null}
-              <View style={styles.shade} />
-              <View style={styles.blob} />
+            <View style={[styles.card, styles.cardBase]}>
+              {item.bannerImage ? (
+                <>
+                  {/* Uploaded banner — full clarity, edge to edge */}
+                  <Image
+                    source={{ uri: item.bannerImage }}
+                    style={StyleSheet.absoluteFill}
+                    contentFit="cover"
+                    transition={220}
+                  />
+                  <LinearGradient
+                    colors={['transparent', 'rgba(6,14,24,0.12)', 'rgba(4,10,18,0.92)']}
+                    locations={[0, 0.42, 1]}
+                    style={StyleSheet.absoluteFill}
+                  />
+                </>
+              ) : (
+                <>
+                  <LinearGradient
+                    colors={item.gradient || GRADIENT.blue}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
+                    style={StyleSheet.absoluteFill}
+                  />
+                  {item.image ? (
+                    <Image source={{ uri: item.image }} style={styles.photo} contentFit="cover" transition={200} />
+                  ) : null}
+                  <View style={styles.shade} />
+                  <View style={styles.blob} />
+                </>
+              )}
 
               <View style={styles.content}>
                 <View style={styles.kickerRow}>
@@ -114,7 +129,7 @@ export default function OffersBanner({ promos = [], onOpen }) {
                   ) : null}
                 </View>
               </View>
-            </LinearGradient>
+            </View>
           </Pressable>
         )}
       />
@@ -133,13 +148,14 @@ export default function OffersBanner({ promos = [], onOpen }) {
 const styles = StyleSheet.create({
   slide: { width: CARD_W, marginRight: SPACING.md },
   card: {
-    height: 150,
+    height: 156,
     borderRadius: RADII.lg,
     overflow: 'hidden',
     justifyContent: 'flex-end',
     ...ELEVATION.md,
   },
-  photo: { ...StyleSheet.absoluteFillObject, opacity: 0.55 },
+  cardBase: { backgroundColor: '#0C2F4E' },
+  photo: { ...StyleSheet.absoluteFillObject, opacity: 0.5 },
   shade: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(8,20,33,0.32)' },
   blob: {
     position: 'absolute',

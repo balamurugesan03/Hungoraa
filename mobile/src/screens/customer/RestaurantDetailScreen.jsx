@@ -459,8 +459,8 @@ export default function RestaurantDetailScreen({ navigation, route }) {
           </View>
         ) : null}
 
-        {/* Walk-in Pay Bill */}
-        {restaurant.payBillEnabled ? (
+        {/* Walk-in Pay Bill — available at every restaurant */}
+        {restaurant._id ? (
           <View style={styles.block}>
             <WalkInPayBill
               offers={payBillOffers}

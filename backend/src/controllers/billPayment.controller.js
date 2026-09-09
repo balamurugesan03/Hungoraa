@@ -1,3 +1,4 @@
+const mongoose = require('mongoose');
 const Razorpay = require('razorpay');
 const crypto = require('crypto');
 const BillPayment = require('../models/BillPayment');
@@ -19,13 +20,26 @@ const getRazorpay = () => new Razorpay({
   key_secret: process.env.RAZORPAY_KEY_SECRET,
 });
 
+// A restaurant you can pay a bill at: any active restaurant, looked up by
+// ObjectId OR slug. `payBillEnabled` is no longer a hard gate — legacy docs were
+// stored `false` by the old schema default, which broke Pay Bill everywhere.
+async function findPayableRestaurant(idOrSlug, { populate } = {}) {
+  const key = String(idOrSlug || '').trim();
+  if (!key) return null;
+  const q = mongoose.isValidObjectId(key)
+    ? { _id: key, isActive: true }
+    : { slug: key, isActive: true };
+  let query = Restaurant.findOne(q);
+  if (populate) query = query.populate(populate.path, populate.select);
+  return query;
+}
+
 // ─── Public: Restaurants you can pay a bill at ────────────────────────────────
 exports.getPayBillRestaurants = async (req, res, next) => {
   try {
     const { city, search } = req.query;
-    // Pay Bill is available everywhere unless an owner has explicitly turned it off.
+    // Pay Bill works at any live restaurant.
     const filter = {
-      payBillEnabled: { $ne: false },
       status: { $in: ['approved', 'active'] },
       isActive: true,
     };
@@ -88,16 +102,12 @@ exports.fetchBill = async (req, res, next) => {
       return errorResponse(res, 400, 'restaurantId and billAmount are required');
     }
 
-    const restaurant = await Restaurant.findOne({
-      _id: restaurantId,
-      payBillEnabled: { $ne: false },
-      isActive: true,
-    });
-    if (!restaurant) return errorResponse(res, 404, 'Restaurant not found or Pay Bill not enabled');
+    const restaurant = await findPayableRestaurant(restaurantId);
+    if (!restaurant) return errorResponse(res, 404, 'Restaurant not found');
 
     const billPayment = await BillPayment.create({
       customer:      req.user._id,
-      restaurant:    restaurantId,
+      restaurant:    restaurant._id,
       billAmount:    amount,
       finalAmount:   amount,         // no discount yet
       paymentMethod: 'razorpay',     // will be updated before payment
@@ -127,17 +137,16 @@ exports.quoteBill = async (req, res, next) => {
     }
     const tip = Math.max(0, parseFloat(req.query.tipAmount) || 0);
 
-    const restaurant = await Restaurant.findOne({
-      _id: restaurantId, payBillEnabled: { $ne: false }, isActive: true,
-    }).select('name');
-    if (!restaurant) return errorResponse(res, 404, 'Restaurant not found or Pay Bill not available');
+    const restaurant = await findPayableRestaurant(restaurantId);
+    if (!restaurant) return errorResponse(res, 404, 'Restaurant not found');
+    const rid = restaurant._id;
 
     let discountBreakup = { restaurantFunded: 0, platformFunded: 0, bankFunded: 0, total: 0 };
     let offer = null;
     let offerError = null;
     if (offerId || offerCode) {
       const r = await discountService.applyOffer({
-        offerId, code: offerCode, restaurantId, userId: req.user._id, amount, guests: 1,
+        offerId, code: offerCode, restaurantId: rid, userId: req.user._id, amount, guests: 1,
       });
       if (r.error) offerError = r.error;
       else if (r.discountResult) {
@@ -279,9 +288,12 @@ exports.createBillPayment = async (req, res, next) => {
     const tip = Math.round((Math.max(0, parseFloat(req.body.tipAmount) || 0)) * 100) / 100;
     if (tip > 100000) return errorResponse(res, 400, 'Tip amount is too large');
 
-    const restaurant = await Restaurant.findOne({ _id: restaurantId, payBillEnabled: { $ne: false }, isActive: true })
-      .populate('owner', 'name email phone');
+    const restaurant = await findPayableRestaurant(restaurantId, {
+      populate: { path: 'owner', select: 'name email phone' },
+    });
     if (!restaurant) return errorResponse(res, 404, 'Restaurant not found');
+
+    const rid = restaurant._id; // normalise: the body may carry a slug
 
     // Apply offer
     let discountBreakup = { restaurantFunded: 0, platformFunded: 0, bankFunded: 0, total: 0 };
@@ -290,7 +302,7 @@ exports.createBillPayment = async (req, res, next) => {
     if (offerId || offerCode) {
       const { offer, discountResult, error } = await discountService.applyOffer({
         offerId, code: offerCode,
-        restaurantId, userId: req.user._id,
+        restaurantId: rid, userId: req.user._id,
         amount, guests: 1,
       });
       if (!error && discountResult) {
@@ -344,7 +356,7 @@ exports.createBillPayment = async (req, res, next) => {
 
       const billPayment = await BillPayment.create({
         customer:      req.user._id,
-        restaurant:    restaurantId,
+        restaurant:    rid,
         billAmount:    amount,
         offer:         appliedOffer?._id,
         offerCode:     appliedOffer?.code,

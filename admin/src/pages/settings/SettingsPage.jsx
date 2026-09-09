@@ -67,7 +67,8 @@ export default function SettingsPage() {
     try {
       const { data } = await adminApi.uploadAsset(file);
       heroForm.setFieldValue('homeHeroImageUrl', data.data.url);
-      notifications.show({ title: 'Image uploaded', color: 'green' });
+      heroForm.setFieldValue('homeHeroEnabled', true);
+      notifications.show({ title: 'Image uploaded — click Save Background', color: 'green' });
     } catch (err) {
       notifications.show({
         title: 'Upload failed',
@@ -321,7 +322,11 @@ export default function SettingsPage() {
               Shows behind the location bar, greeting and search on the app home
               screen, under a dark overlay so text stays readable.
             </Text>
-            <form onSubmit={heroForm.onSubmit((v) => updateMutation.mutate(v))}>
+            <form onSubmit={heroForm.onSubmit((v) => updateMutation.mutate({
+              ...v,
+              // an image is set but the toggle is off → the intent is "on"
+              homeHeroEnabled: v.homeHeroEnabled || !!(v.homeHeroImageUrl || v.homeHeroVideoUrl),
+            }))}>
               <Stack gap="md">
                 <Group justify="space-between">
                   <Stack gap={2}>
@@ -346,13 +351,21 @@ export default function SettingsPage() {
                 />
 
                 {heroForm.values.homeHeroImageUrl ? (
-                  <Image
-                    src={heroForm.values.homeHeroImageUrl}
-                    radius="md"
-                    h={130}
-                    fit="cover"
-                    alt="Home background preview"
-                  />
+                  <>
+                    <Image
+                      src={heroForm.values.homeHeroImageUrl}
+                      radius="md"
+                      h={130}
+                      fit="cover"
+                      alt="Home background preview"
+                    />
+                    <Text size="xs" c="dimmed" style={{ wordBreak: 'break-all' }}>
+                      URL: <a href={heroForm.values.homeHeroImageUrl} target="_blank" rel="noreferrer">
+                        {heroForm.values.homeHeroImageUrl}
+                      </a>
+                      {' '}— this must open in the browser for the app to show it.
+                    </Text>
+                  </>
                 ) : null}
 
                 <TextInput

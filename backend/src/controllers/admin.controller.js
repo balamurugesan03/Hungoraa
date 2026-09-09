@@ -699,11 +699,30 @@ exports.getSettings = async (req, res) => {
   }
 };
 
+// Rewrite an upload URL so it points at the host that actually served the
+// request — local-disk uploads get stored with whatever BACKEND_PUBLIC_URL was
+// (often localhost), which a phone can't reach.
+const absolutiseUrl = (u, req) => {
+  if (!u) return u;
+  const host = `${req.protocol}://${req.get('host')}`.replace(/\/+$/, '');
+  if (/^https?:\/\//i.test(u)) {
+    if (/localhost|127\.0\.0\.1|0\.0\.0\.0/i.test(u)) {
+      return host + u.replace(/^https?:\/\/[^/]+/i, '');
+    }
+    return u; // already an external absolute URL
+  }
+  return `${host}${u.startsWith('/') ? '' : '/'}${u}`; // relative path
+};
+
 exports.updateSettings = async (req, res) => {
   try {
     const doc = await PlatformSettings.getSingleton();
     for (const key of PlatformSettings.WRITABLE) {
       if (Object.prototype.hasOwnProperty.call(req.body, key)) doc[key] = req.body[key];
+    }
+    // Setting an image without a flag? Turn it on — that's the obvious intent.
+    if (req.body.homeHeroImageUrl && req.body.homeHeroEnabled === undefined) {
+      doc.homeHeroEnabled = true;
     }
     await doc.save();
     billingService.invalidate(); // pick up new fee/GST/hero values immediately
@@ -717,7 +736,10 @@ exports.updateSettings = async (req, res) => {
 exports.uploadAsset = async (req, res) => {
   try {
     if (!req.file) return errorResponse(res, 400, 'No image file received');
-    successResponse(res, 200, 'Uploaded', { url: req.file.path, publicId: req.file.filename });
+    successResponse(res, 200, 'Uploaded', {
+      url: absolutiseUrl(req.file.path, req),
+      publicId: req.file.filename,
+    });
   } catch (err) {
     errorResponse(res, 500, err.message);
   }
@@ -729,6 +751,8 @@ exports.getPublicSettings = async (req, res) => {
     const doc = await PlatformSettings.getSingleton();
     const out = {};
     for (const k of PlatformSettings.PUBLIC) out[k] = doc[k];
+    out.homeHeroImageUrl = absolutiseUrl(out.homeHeroImageUrl, req);
+    out.homeHeroVideoUrl = absolutiseUrl(out.homeHeroVideoUrl, req);
     successResponse(res, 200, 'Public settings', { settings: out });
   } catch (err) {
     errorResponse(res, 500, err.message);

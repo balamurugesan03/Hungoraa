@@ -62,11 +62,15 @@ export default function HomeScreen({ navigation }) {
   const platformQ = useQuery({
     queryKey: ['platform-settings'],
     queryFn: () => settingsApi.getPublic().then((r) => r.data.data.settings),
-    staleTime: 5 * 60 * 1000,
+    staleTime: 60 * 1000,
+    refetchOnMount: 'always',
   });
-  const hero = platformQ.data?.homeHeroEnabled ? platformQ.data : null;
-  const heroImage = hero?.homeHeroImageUrl || null;
-  const heroVideo = hero?.homeHeroVideoUrl || null;
+  // Show the admin-set home background whenever a URL is set (unless explicitly
+  // switched off).
+  const p = platformQ.data;
+  const heroOn = !!p && p.homeHeroEnabled !== false;
+  const heroImage = heroOn ? (p.homeHeroImageUrl || null) : null;
+  const heroVideo = heroOn ? (p.homeHeroVideoUrl || null) : null;
 
   const offersQ = useActiveOffers(city);
   const featuredQ = useFeaturedRestaurants();
@@ -182,7 +186,8 @@ export default function HomeScreen({ navigation }) {
           ) : null}
           {(heroVideo || heroImage) ? (
             <LinearGradient
-              colors={['rgba(12,47,78,0.58)', 'rgba(12,47,78,0.82)', 'rgba(12,47,78,0.95)']}
+              colors={['rgba(12,47,78,0.30)', 'rgba(12,47,78,0.62)', 'rgba(12,47,78,0.92)']}
+              locations={[0, 0.55, 1]}
               style={StyleSheet.absoluteFill}
             />
           ) : null}

@@ -23,7 +23,7 @@ const theme = createTheme({
     dark: ['#f6f4ee','#c7ceda','#a9b1c4','#8892a8','#3a5975','#123f66','#0c2f4e','#071c30','#05141f','#030d16'],
   },
   fontFamily: 'Inter, -apple-system, sans-serif',
-  defaultRadius: 'md',
+  defaultRadius: 'lg',
 });
 
 const queryClient = new QueryClient({

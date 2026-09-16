@@ -1,15 +1,10 @@
-import { StyleSheet, Text } from 'react-native';
+import { Image, StyleSheet } from 'react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { LinearGradient } from 'expo-linear-gradient';
-import { FONT } from '../theme';
-
-const GOLD = '#F9A91B';
-const RED = '#CD302B';
 
 /**
- * Centred "Hungora" masthead — serif wordmark in the logo's two-tone palette
- * ("go" red, the rest gold), each half with its own soft glow, flanked by
- * fading gold hairlines. Eases in once on mount.
+ * Centred Hungora masthead — the background-removed wordmark logo, flanked
+ * by fading gold hairlines. Eases in once on mount.
  */
 export default function Brandmark({ style }) {
   return (
@@ -24,11 +19,13 @@ export default function Brandmark({ style }) {
         style={styles.rule}
       />
 
-      <Text style={styles.word} accessibilityRole="header" accessibilityLabel="Hungora">
-        <Text style={styles.gold}>Hun</Text>
-        <Text style={styles.red}>go</Text>
-        <Text style={styles.gold}>ra</Text>
-      </Text>
+      <Image
+        source={require('../../assets/bg-remove -logo.png')}
+        style={styles.logo}
+        resizeMode="contain"
+        accessibilityRole="image"
+        accessibilityLabel="Hungora"
+      />
 
       <LinearGradient
         colors={['rgba(249,169,27,0.6)', 'transparent']}
@@ -54,21 +51,8 @@ const styles = StyleSheet.create({
     width: 30,
     borderRadius: 1,
   },
-  word: {
-    fontFamily: FONT.displayBold,
-    fontSize: 25,
-    letterSpacing: 0.4,
-  },
-  gold: {
-    color: GOLD,
-    textShadowColor: 'rgba(249,169,27,0.5)',
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 12,
-  },
-  red: {
-    color: RED,
-    textShadowColor: 'rgba(205,48,43,0.42)',
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 11,
+  logo: {
+    width: 150,
+    height: 26,
   },
 });

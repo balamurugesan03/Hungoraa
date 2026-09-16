@@ -1,16 +1,14 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { View, Text, StyleSheet, Animated, StatusBar, Image } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { COLORS, FONTS, SIZES } from '../../constants';
 
-const HERO_URI = 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=800&q=80';
 const LOGO = require('../../../assets/hungora_darkgreen_gold_logo.png');
 
 export default function SplashScreen({ navigation }) {
   const scaleAnim = useRef(new Animated.Value(0.6)).current;
   const opacityAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(28)).current;
-  const [heroFailed, setHeroFailed] = useState(false);
 
   useEffect(() => {
     Animated.sequence([
@@ -20,9 +18,16 @@ export default function SplashScreen({ navigation }) {
       ]),
       Animated.delay(180),
       Animated.timing(slideAnim, { toValue: 0, duration: 400, useNativeDriver: true }),
-    ]).start();
+    ]).start(() => {
+      Animated.loop(
+        Animated.sequence([
+          Animated.timing(scaleAnim, { toValue: 1.14, duration: 650, useNativeDriver: true }),
+          Animated.timing(scaleAnim, { toValue: 1, duration: 650, useNativeDriver: true }),
+        ]),
+      ).start();
+    });
 
-    const timer = setTimeout(() => navigation.replace('Onboarding'), 2500);
+    const timer = setTimeout(() => navigation.replace('Onboarding'), 3400);
     return () => clearTimeout(timer);
   }, []);
 
@@ -36,26 +41,10 @@ export default function SplashScreen({ navigation }) {
       <StatusBar barStyle="light-content" />
 
       <Animated.View style={[styles.heroWrap, { transform: [{ scale: scaleAnim }], opacity: opacityAnim }]}>
-        <Image
-          source={heroFailed ? LOGO : { uri: HERO_URI }}
-          style={heroFailed ? styles.heroLogo : styles.hero}
-          resizeMode={heroFailed ? 'contain' : 'cover'}
-          onError={() => setHeroFailed(true)}
-        />
-        {!heroFailed ? (
-          <LinearGradient
-            colors={['transparent', 'rgba(8,15,25,0.55)']}
-            style={StyleSheet.absoluteFill}
-          />
-        ) : null}
+        <Image source={LOGO} style={styles.logoImage} resizeMode="contain" />
       </Animated.View>
 
       <Animated.View style={{ opacity: opacityAnim, transform: [{ translateY: slideAnim }], alignItems: 'center' }}>
-        <Text style={styles.appName}>
-          <Text style={styles.appNameGold}>Hun</Text>
-          <Text style={styles.appNameRed}>go</Text>
-          <Text style={styles.appNameGold}>ra</Text>
-        </Text>
         <Text style={styles.tagline}>Your Table, Your Way</Text>
       </Animated.View>
 
@@ -76,33 +65,17 @@ const styles = StyleSheet.create({
     gap: 22,
   },
   heroWrap: {
-    width: 190,
-    height: 190,
+    width: 230,
+    height: 230,
     borderRadius: 32,
     overflow: 'hidden',
-    backgroundColor: 'rgba(255,255,255,0.08)',
-    borderWidth: 1,
-    borderColor: 'rgba(249,169,27,0.35)',
     alignItems: 'center',
     justifyContent: 'center',
   },
-  hero: {
+  logoImage: {
     width: '100%',
     height: '100%',
   },
-  heroLogo: {
-    width: 120,
-    height: 120,
-  },
-  appName: {
-    fontSize: 54,
-    fontFamily: FONTS.extraBold,
-    color: COLORS.white,
-    textAlign: 'center',
-    letterSpacing: -1.5,
-  },
-  appNameGold: { color: '#F9A91B' },
-  appNameRed: { color: '#CD302B' },
   tagline: {
     fontSize: SIZES.md,
     fontFamily: FONTS.regular,

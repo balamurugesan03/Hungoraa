@@ -13,7 +13,7 @@ import {
 } from '@tabler/icons-react';
 import { useAuthStore } from '../../store/authStore';
 import { authApi } from '../../api';
-import logo from '../../assets/logo.svg';
+import logo from '../../assets/hungora-logo.png';
 
 const NAV_ITEMS = [
   { path: '/dashboard', icon: IconLayoutDashboard, label: 'Dashboard' },
@@ -50,8 +50,10 @@ export default function AdminShellLayout() {
         <UnstyledButton
           style={{
             display: 'flex', alignItems: 'center', gap: 12,
-            padding: '10px 14px', borderRadius: 8,
-            backgroundColor: isActive ? 'rgba(249, 169, 27, 0.12)' : 'transparent',
+            padding: '10px 14px', borderRadius: 10,
+            backgroundColor: isActive ? 'rgba(249, 169, 27, 0.14)' : 'transparent',
+            border: `1px solid ${isActive ? 'rgba(249, 169, 27, 0.32)' : 'transparent'}`,
+            backdropFilter: isActive ? 'blur(8px)' : 'none',
             color: isActive ? '#f9a91b' : '#a9b1c4',
             fontWeight: isActive ? 600 : 400,
             width: '100%', transition: 'all 0.15s',
@@ -75,9 +77,8 @@ export default function AdminShellLayout() {
         <Group h="100%" px="md" justify="space-between">
           <Group>
             <Burger opened={opened} onClick={toggle} hiddenFrom="sm" size="sm" />
-            <Group gap={8}>
-              <img src={logo} alt="Hungora" style={{ width: 30, height: 30, borderRadius: 8 }} />
-              <Text fw={700} size="lg" c="white">Hungora</Text>
+            <Group gap={10}>
+              <img src={logo} alt="Hungora" style={{ height: 34, width: 'auto' }} />
               <Badge variant="light" color="gold" size="sm">Admin</Badge>
             </Group>
           </Group>

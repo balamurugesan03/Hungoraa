@@ -31,7 +31,7 @@ function PrivateRoute({ children }) {
 
 export default function App() {
   return (
-    <BrowserRouter basename="/admin-panel">
+    <BrowserRouter basename={import.meta.env.PROD ? '/admin-panel' : undefined}>
       <Routes>
         <Route path="/login" element={<LoginPage />} />
         <Route

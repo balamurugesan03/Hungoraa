@@ -1,9 +1,8 @@
 import { useEffect, useRef } from 'react'
 import gsap from 'gsap'
-import { IconArrowRight, IconClock, IconStar } from './Icons'
+import { IconArrowRight } from './Icons'
+import banner from '../assets/banner.png'
 import './Hero.css'
-
-const U = (id: string) => `https://images.unsplash.com/${id}?w=760&q=74&auto=format&fit=crop`
 
 const stats = [
   { v: '12,400+', l: 'Partner restaurants' },
@@ -22,8 +21,7 @@ export default function Hero() {
         .from('.hero__subtitle', { opacity: 0, y: 16 }, '-=0.55')
         .from('.hero__actions > *', { opacity: 0, y: 16, stagger: 0.08 }, '-=0.5')
         .from('.hero__stats > *', { opacity: 0, y: 14, stagger: 0.08 }, '-=0.45')
-        .from('.hero__frame', { opacity: 0, y: 30, scale: 0.96, stagger: 0.12, duration: 1 }, '-=0.9')
-        .from('.hero__chip', { opacity: 0, y: 12, stagger: 0.12 }, '-=0.5')
+        .from('.hero__banner', { opacity: 0, y: 30, scale: 0.96, duration: 1 }, '-=0.9')
     }, rootRef)
 
     return () => ctx.revert()
@@ -68,29 +66,7 @@ export default function Hero() {
         </div>
 
         <div className="hero__art">
-          <figure className="hero__frame hero__frame--main">
-            <img src={U('photo-1589302168068-964664d93dc0')} alt="Hyderabadi biryani" loading="eager" />
-          </figure>
-          <figure className="hero__frame hero__frame--sub">
-            <img src={U('photo-1565299624946-b28f40a0ae38')} alt="Wood-fired pizza" loading="eager" />
-          </figure>
-
-          <div className="hero__chip hero__chip--hold">
-            <IconClock size={14} />
-            <div>
-              <strong className="mono">Table held · 4:52</strong>
-              <span>Ember &amp; Oak, tonight 8:30</span>
-            </div>
-          </div>
-
-          <div className="hero__chip hero__chip--rating">
-            <span className="hero__stars">
-              {Array.from({ length: 5 }).map((_, i) => (
-                <IconStar key={i} size={11} />
-              ))}
-            </span>
-            <span className="mono">4.9 · 2.4M bills settled</span>
-          </div>
+          <img className="hero__banner" src={banner} alt="Hungora — table reserved, bill split and paid instantly" loading="eager" />
         </div>
       </div>
     </section>

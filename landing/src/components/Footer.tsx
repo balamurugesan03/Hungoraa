@@ -1,34 +1,24 @@
 import logo from '../assets/logo.svg'
 import { IconArrowRight } from './Icons'
-import Wordmark from './Wordmark'
+import { pageHref } from '../lib/links'
 import './Footer.css'
 
 const columns = [
   {
-    title: 'Product',
-    links: [
-      { label: 'How it works', href: '#how-it-works' },
-      { label: 'Features', href: '#features' },
-      { label: 'Restaurants', href: '#restaurants' },
-      { label: 'Pricing', href: '#' },
-    ],
-  },
-  {
     title: 'Company',
     links: [
       { label: 'About us', href: '#about' },
-      { label: 'Careers', href: '#' },
-      { label: 'Press', href: '#' },
-      { label: 'Contact', href: '#' },
+      { label: 'Contact', href: '#contact' },
+      { label: 'How it works', href: '/how-it-works' },
+      { label: 'Features', href: '/features' },
     ],
   },
   {
     title: 'Partners',
     links: [
-      { label: 'Partner with us', href: '#restaurants' },
+      { label: 'Partner with us', href: '/partner' },
       { label: 'Owner dashboard', href: '#' },
-      { label: 'Settlements', href: '#' },
-      { label: 'Support', href: '#' },
+      { label: 'Help & support', href: '#' },
     ],
   },
   {
@@ -36,14 +26,14 @@ const columns = [
     links: [
       { label: 'Terms of service', href: '#' },
       { label: 'Privacy policy', href: '#' },
-      { label: 'Refund policy', href: '#' },
+      { label: 'Cookie policy', href: '#' },
     ],
   },
 ]
 
-export default function Footer() {
+export default function Footer({ onHome = true }: { onHome?: boolean }) {
   return (
-    <footer className="footer">
+    <footer id="contact" className="footer">
       <div className="footer__cta section">
         <h2>
           Ready to skip the wait? <span className="accent">Download Hungora.</span>
@@ -56,11 +46,10 @@ export default function Footer() {
       <div className="footer__main">
         <div className="footer__inner">
           <div className="footer__brand">
-            <a href="#top" className="footer__logo">
+            <a href={pageHref('#top', onHome)} className="footer__logo">
               <img src={logo} alt="Hungora" />
-              <Wordmark />
             </a>
-            <p>Reserve. Dine. Settle. All from one app.</p>
+            <p className="footer__tagline">The smartest way to dine</p>
           </div>
 
           <div className="footer__columns">
@@ -70,7 +59,7 @@ export default function Footer() {
                 <ul>
                   {c.links.map((l) => (
                     <li key={l.label}>
-                      <a href={l.href}>{l.label}</a>
+                      <a href={pageHref(l.href, onHome)}>{l.label}</a>
                     </li>
                   ))}
                 </ul>
@@ -82,8 +71,14 @@ export default function Footer() {
 
       <div className="footer__bottom">
         <div className="footer__inner">
-          <span className="mono">© {new Date().getFullYear()} Hungora — a DineSmart platform</span>
-          <span className="mono">Made for the table</span>
+          <p className="footer__legal">
+            By accessing or continuing to use this platform, you agree to abide by our Terms of Service, Cookie
+            Policy, Privacy Policy, and Content Guidelines. All third-party trademarks, logos, and brand assets
+            displayed are the property of their respective owners.
+          </p>
+          <span className="mono">
+            © 2025–{new Date().getFullYear()} Hungora™ (Hungora Technologies Private Ltd.). All rights reserved.
+          </span>
         </div>
       </div>
     </footer>

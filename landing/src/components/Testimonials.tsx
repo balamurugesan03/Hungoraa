@@ -2,13 +2,6 @@ import { useStaggerReveal } from '../hooks/useReveal'
 import { IconStar } from './Icons'
 import './Testimonials.css'
 
-const stats = [
-  { v: '4.9', l: 'Average diner rating' },
-  { v: '38s', l: 'Median time to settle a bill' },
-  { v: '12,400+', l: 'Partner restaurants live' },
-  { v: '2.4M', l: 'Bills settled to date' },
-]
-
 const testimonials = [
   {
     quote: 'We used to wait 15 minutes just to get the check split right. Now the whole table pays in under a minute.',
@@ -31,25 +24,17 @@ const initials = (name: string) =>
   name.split(' ').map((n) => n[0]).join('').slice(0, 2).toUpperCase()
 
 export default function Testimonials() {
-  const statsRef = useStaggerReveal<HTMLDivElement>({ stagger: 0.08 })
   const grid = useStaggerReveal<HTMLDivElement>({ stagger: 0.1 })
 
   return (
     <section className="section band testimonials">
-      <div className="tstats" ref={statsRef}>
-        {stats.map((s) => (
-          <div className="tstats__item" key={s.l}>
-            <strong className="mono">{s.v}</strong>
-            <span>{s.l}</span>
-          </div>
-        ))}
-      </div>
-
-      <div className="section-head" style={{ maxWidth: 620, margin: '96px 0 56px' }}>
-        <span className="eyebrow">Loved by diners</span>
-        <h2>
-          Real tables. <span className="accent">Real speed.</span>
+      <div className="display-head">
+        <span className="display-tag">Loved by diners</span>
+        <h2 className="display-title">
+          Real tables.
+          <span className="display-title-accent">Real speed.</span>
         </h2>
+        <span className="display-rule" aria-hidden="true" />
       </div>
 
       <div className="testimonials__grid" ref={grid}>

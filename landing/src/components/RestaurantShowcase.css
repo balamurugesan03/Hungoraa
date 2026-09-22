@@ -6,6 +6,11 @@
   margin-bottom: 48px;
 }
 
+/* restaurant-name ticker, full-bleed between the heading and the cards */
+.restaurants__marquee {
+  margin: 0 calc(50% - 50vw) 48px;
+}
+
 .restaurants__arrows {
   display: flex;
   gap: 8px;

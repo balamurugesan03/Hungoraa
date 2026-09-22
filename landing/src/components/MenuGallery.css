@@ -10,43 +10,31 @@
   position: relative;
   display: flex;
   flex-direction: column;
-  gap: 14px;
   margin: 0 calc(var(--pad-x) * -1);
-  padding: 4px 0;
+  padding: 44px 0 52px; /* room for the zoomed-in centre card */
   overflow: hidden;
 }
 
+/* position + per-card zoom are driven by JS — see useZoomMarquee */
 .menu__track {
   display: flex;
   width: max-content;
-  animation: menu-scroll 64s linear infinite;
-}
-
-.menu__track--rev {
-  animation-duration: 78s;
-  animation-direction: reverse;
-}
-
-.menu__marquee:hover .menu__track {
-  animation-play-state: paused;
+  will-change: transform;
 }
 
 .menu__group {
   display: flex;
-  gap: 14px;
-  padding-left: 14px;
-}
-
-@keyframes menu-scroll {
-  to {
-    transform: translateX(-50%);
-  }
+  align-items: center;
+  gap: 40px;
+  padding-left: 40px;
 }
 
 .dish {
   position: relative;
-  flex: 0 0 320px;
-  height: 224px;
+  flex: 0 0 300px;
+  height: 210px;
+  box-shadow: 0 22px 44px -26px rgba(var(--rgb-bone), 0.6);
+  will-change: transform, opacity;
   border: 1px solid var(--line);
   border-radius: var(--r);
   overflow: hidden;
@@ -153,15 +141,15 @@
 
 @media (max-width: 640px) {
   .dish {
-    flex-basis: 250px;
-    height: 180px;
+    flex-basis: 220px;
+    height: 160px;
+  }
+  .menu__marquee {
+    padding: 34px 0 40px;
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .menu__track {
-    animation: none;
-  }
   .menu__marquee {
     overflow-x: auto;
     scrollbar-width: none;

@@ -1,10 +1,6 @@
-/** "Hungora" wordmark in the logo's own palette — "go" red, the rest gold. */
+import wordmark from '../assets/hungora-wordmark.png'
+
+/** "HUNGORA" logotype (transparent PNG, logo gold + red). Sized by the parent via .wordmark. */
 export default function Wordmark({ className = '' }: { className?: string }) {
-  return (
-    <span className={`wordmark ${className}`.trim()} aria-label="Hungora">
-      <span className="wordmark__g" aria-hidden="true">Hun</span>
-      <span className="wordmark__r" aria-hidden="true">go</span>
-      <span className="wordmark__g" aria-hidden="true">ra</span>
-    </span>
-  )
+  return <img src={wordmark} alt="Hungora" className={`wordmark ${className}`.trim()} />
 }

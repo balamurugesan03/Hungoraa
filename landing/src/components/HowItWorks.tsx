@@ -55,11 +55,15 @@ export default function HowItWorks() {
   }, [])
 
   return (
-    <section id="how-it-works" className="section how" ref={rootRef}>
-      <div className="section-head">
-        <span className="eyebrow">How it works</span>
-        <h2>Hungry to seated to settled — three taps.</h2>
-        <p>No paperwork at the table. No waiting on a card machine. No splitting argument.</p>
+    <section id="how-it-works" className="section band how" ref={rootRef}>
+      <div className="display-head">
+        <span className="display-tag">How it works</span>
+        <h2 className="display-title">
+          Hungry to seated to settled —
+          <span className="display-title-accent">three taps.</span>
+        </h2>
+        <span className="display-rule" aria-hidden="true" />
+        <p className="display-lead">No paperwork at the table. No waiting on a card machine. No splitting argument.</p>
       </div>
 
       <div className="how__timeline">

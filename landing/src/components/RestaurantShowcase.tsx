@@ -1,6 +1,7 @@
 import { useRef } from 'react'
 import { useRevealSelf } from '../hooks/useReveal'
 import { IconArrowRight, IconPin, IconStar, IconTag } from './Icons'
+import Marquee from './Marquee'
 import './RestaurantShowcase.css'
 
 const U = (id: string) => `https://images.unsplash.com/${id}?w=560&q=72&auto=format&fit=crop`
@@ -21,14 +22,16 @@ export default function RestaurantShowcase() {
   const scrollBy = (dir: 1 | -1) => trackRef.current?.scrollBy({ left: dir * 344, behavior: 'smooth' })
 
   return (
-    <section id="restaurants" className="section restaurants">
+    <section id="restaurants" className="section band restaurants">
       <div className="restaurants__head" ref={headRef}>
-        <div className="section-head" style={{ marginBottom: 0 }}>
-          <span className="eyebrow">Restaurant showcase</span>
-          <h2>
-            Thousands of tables, <span className="accent">one app.</span>
+        <div className="display-head" style={{ marginBottom: 0 }}>
+          <span className="display-tag">Restaurant showcase</span>
+          <h2 className="display-title">
+            Thousands of tables,
+            <span className="display-title-accent">one app.</span>
           </h2>
-          <p>Live offers refresh through the day — book while the discount lasts.</p>
+          <span className="display-rule" aria-hidden="true" />
+          <p className="display-lead">Live offers refresh through the day — book while the discount lasts.</p>
         </div>
         <div className="restaurants__arrows">
           <button onClick={() => scrollBy(-1)} aria-label="Scroll left">
@@ -38,6 +41,10 @@ export default function RestaurantShowcase() {
             <IconArrowRight size={16} />
           </button>
         </div>
+      </div>
+
+      <div className="restaurants__marquee">
+        <Marquee />
       </div>
 
       <div className="restaurants__track" ref={trackRef}>

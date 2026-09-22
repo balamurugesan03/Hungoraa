@@ -1,33 +1,3 @@
-.tstats {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 1px;
-  background: var(--line);
-  border: 1px solid var(--line);
-  border-radius: var(--r);
-  overflow: hidden;
-}
-
-.tstats__item {
-  background: var(--ink-1);
-  padding: 34px 28px;
-}
-
-.tstats__item strong {
-  display: block;
-  font-size: 2rem;
-  font-weight: 700;
-  color: var(--amber);
-  letter-spacing: -0.03em;
-}
-
-.tstats__item span {
-  display: block;
-  margin-top: 8px;
-  font-size: 0.8rem;
-  color: var(--bone-3);
-}
-
 .testimonials__grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -102,16 +72,8 @@
 }
 
 @media (max-width: 900px) {
-  .tstats {
-    grid-template-columns: 1fr 1fr;
-  }
   .testimonials__grid {
     grid-template-columns: 1fr;
   }
 }
 
-@media (max-width: 480px) {
-  .tstats {
-    grid-template-columns: 1fr;
-  }
-}

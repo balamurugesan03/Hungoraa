@@ -1,16 +1,19 @@
 import { useEffect, useState } from 'react'
 import logo from '../assets/logo.svg'
 import Wordmark from './Wordmark'
+import { pageHref } from '../lib/links'
 import './Navbar.css'
 
 const links = [
-  { label: 'Menu', href: '#menu' },
-  { label: 'How it works', href: '#how-it-works' },
-  { label: 'Features', href: '#features' },
-  { label: 'Restaurants', href: '#restaurants' },
+  { label: 'About us', href: '#about' },
+  { label: 'How it works', href: '/how-it-works' },
+  { label: 'Partner with us', href: '/partner' },
+  { label: 'Features', href: '/features' },
+  { label: 'Contact', href: '#contact' },
 ]
 
-export default function Navbar() {
+/** `onHome` is false on the standalone pages, where #anchors have to point back at the home page. */
+export default function Navbar({ onHome = true }: { onHome?: boolean }) {
   const [scrolled, setScrolled] = useState(false)
   const [progress, setProgress] = useState(0)
   const [open, setOpen] = useState(false)
@@ -30,14 +33,14 @@ export default function Navbar() {
   return (
     <header className={`navbar ${scrolled ? 'navbar--scrolled' : ''}`}>
       <div className="navbar__inner">
-        <a href="#top" className="navbar__brand">
+        <a href={pageHref('#top', onHome)} className="navbar__brand">
           <img src={logo} alt="Hungora" className="navbar__brand-icon" />
           <Wordmark />
         </a>
 
         <nav className="navbar__links">
           {links.map((l) => (
-            <a key={l.href} href={l.href}>
+            <a key={l.href} href={pageHref(l.href, onHome)}>
               <span className="navbar__link-dot" />
               {l.label}
             </a>
@@ -66,7 +69,7 @@ export default function Navbar() {
       {open && (
         <div className="navbar__mobile">
           {links.map((l) => (
-            <a key={l.href} href={l.href} onClick={() => setOpen(false)}>
+            <a key={l.href} href={pageHref(l.href, onHome)} onClick={() => setOpen(false)}>
               {l.label}
             </a>
           ))}

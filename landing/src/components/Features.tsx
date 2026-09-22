@@ -51,12 +51,14 @@ export default function Features() {
 
   return (
     <section id="features" className="section band features">
-      <div className="section-head">
-        <span className="eyebrow">Features</span>
-        <h2>
-          Everything a table needs, <span className="accent">built in.</span>
+      <div className="display-head">
+        <span className="display-tag">Features</span>
+        <h2 className="display-title">
+          Everything a table needs,
+          <span className="display-title-accent">built in.</span>
         </h2>
-        <p>One platform for the entire dine-in journey — from booking to settlement.</p>
+        <span className="display-rule" aria-hidden="true" />
+        <p className="display-lead">One platform for the entire dine-in journey — from booking to settlement.</p>
       </div>
 
       <div className="features__grid" ref={ref}>

@@ -1,72 +1,113 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import gsap from 'gsap'
 import { IconArrowRight } from './Icons'
-import banner from '../assets/banner.png'
 import './Hero.css'
 
-const stats = [
-  { v: '12,400+', l: 'Partner restaurants' },
-  { v: '2.4M', l: 'Bills settled' },
-  { v: '4.9', l: 'Avg. diner rating' },
-]
+const TITLE_LINES = ['Good Food.', 'Great Moments.', 'Together.']
+const TITLE_TOTAL = TITLE_LINES.reduce((n, l) => n + l.length, 0)
+
+/** Types the headline in letter by letter, holds, erases it, and loops. */
+function useTypewriter(total: number) {
+  const [count, setCount] = useState(0)
+
+  useEffect(() => {
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      setCount(total)
+      return
+    }
+    let n = 0
+    let dir = 1
+    let timer: number
+    const tick = () => {
+      n += dir
+      setCount(n)
+      let delay = dir === 1 ? 85 : 35
+      if (n >= total) {
+        dir = -1
+        delay = 2600
+      } else if (n <= 0) {
+        dir = 1
+        delay = 700
+      }
+      timer = window.setTimeout(tick, delay)
+    }
+    timer = window.setTimeout(tick, 900)
+    return () => window.clearTimeout(timer)
+  }, [total])
+
+  return count
+}
 
 export default function Hero() {
-  const rootRef = useRef<HTMLDivElement>(null)
+  const rootRef = useRef<HTMLElement>(null)
+  const typed = useTypewriter(TITLE_TOTAL)
 
   useEffect(() => {
     const ctx = gsap.context(() => {
       const tl = gsap.timeline({ defaults: { ease: 'power3.out', duration: 0.8 } })
-      tl.from('.hero__eyebrow', { opacity: 0, y: 14 })
-        .from('.hero__title .line > span', { yPercent: 116, stagger: 0.08, duration: 0.9 }, '-=0.4')
-        .from('.hero__subtitle', { opacity: 0, y: 16 }, '-=0.55')
+      tl.from('.hero__banner', { opacity: 0, scale: 1.05, duration: 1.4 }, 0)
+        .from('.hero__subtitle', { opacity: 0, y: 16 }, 0.5)
         .from('.hero__actions > *', { opacity: 0, y: 16, stagger: 0.08 }, '-=0.5')
-        .from('.hero__stats > *', { opacity: 0, y: 14, stagger: 0.08 }, '-=0.45')
-        .from('.hero__banner', { opacity: 0, y: 30, scale: 0.96, duration: 1 }, '-=0.9')
     }, rootRef)
 
     return () => ctx.revert()
   }, [])
 
+  useEffect(() => {
+    const root = rootRef.current
+    if (!root || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
+    let raf = 0
+    const update = () => {
+      raf = 0
+      root.style.setProperty('--hp', String(Math.min(window.scrollY, window.innerHeight)))
+    }
+    const onScroll = () => {
+      if (!raf) raf = requestAnimationFrame(update)
+    }
+    update()
+    window.addEventListener('scroll', onScroll, { passive: true })
+    return () => {
+      window.removeEventListener('scroll', onScroll)
+      if (raf) cancelAnimationFrame(raf)
+    }
+  }, [])
+
   return (
     <section id="top" className="hero" ref={rootRef}>
+      <div className="hero__bg" aria-hidden="true">
+        <img className="hero__banner" src="/bannerimage.png" alt="" loading="eager" />
+      </div>
+
       <div className="hero__inner">
         <div className="hero__copy">
-          <span className="eyebrow hero__eyebrow">Reservations &amp; bill pay, unified</span>
-
-          <h1 className="hero__title">
-            <span className="line"><span>Walk in.</span></span>
-            <span className="line"><span>Sit down.</span></span>
-            <span className="line">
-              <span>Settle up <span className="accent">instantly.</span></span>
-            </span>
+          <h1 className="hero__title" aria-label={TITLE_LINES.join(' ')}>
+            {TITLE_LINES.map((text, i) => {
+              const offset = TITLE_LINES.slice(0, i).reduce((n, l) => n + l.length, 0)
+              const shown = Math.min(Math.max(typed - offset, 0), text.length)
+              const hasCaret = typed > offset ? typed <= offset + text.length : i === 0
+              return (
+                <span className="line" key={text} aria-hidden="true">
+                  <span className={i === TITLE_LINES.length - 1 ? 'hero__title-accent' : undefined}>
+                    {text.slice(0, shown)}
+                  </span>
+                  {hasCaret && <span className="hero__caret" />}
+                  <span className="hero__ghost">{text.slice(shown)}</span>
+                </span>
+              )
+            })}
           </h1>
 
           <p className="hero__subtitle">
-            Hungora reserves your table in seconds, applies every live restaurant offer automatically,
-            and lets the whole table split and pay the bill without waiting on the check.
+            Discover restaurants, reserve your table,
+            <br />
+            and enjoy genuine value.
           </p>
 
           <div className="hero__actions">
-            <a href="#download" className="btn btn-primary">
+            <a href="#download" className="btn hero__btn-outline">
               Get the app <IconArrowRight size={16} />
             </a>
-            <a href="#how-it-works" className="btn btn-ghost">
-              How it works
-            </a>
           </div>
-
-          <div className="hero__stats">
-            {stats.map((s) => (
-              <div key={s.l}>
-                <strong className="mono">{s.v}</strong>
-                <span>{s.l}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        <div className="hero__art">
-          <img className="hero__banner" src={banner} alt="Hungora — table reserved, bill split and paid instantly" loading="eager" />
         </div>
       </div>
     </section>

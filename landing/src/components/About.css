@@ -1,33 +1,46 @@
-.about__promise {
-  padding: 56px 48px;
-  margin-bottom: 14px;
-  background: var(--amber-deep);
-  border-color: var(--amber-deep);
-  box-shadow: var(--shadow-md);
+/* ---------- intro: big editorial copy left, banner art right ---------- */
+.about__intro {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr);
+  align-items: center;
+  gap: clamp(32px, 5vw, 72px);
 }
 
-.about__promise.ticks::before,
-.about__promise.ticks::after {
-  border-color: rgba(255, 255, 255, 0.28);
+.about__intro-art {
+  position: relative;
 }
 
-.about__promise .eyebrow {
-  margin-bottom: 22px;
-  color: #8ec9f2;
+/* soft blue/gold glow behind the transparent banner */
+.about__intro-art::before {
+  content: '';
+  position: absolute;
+  inset: 8% 6%;
+  border-radius: 50%;
+  background:
+    radial-gradient(closest-side, rgba(var(--rgb-amber), 0.18), transparent 70%),
+    radial-gradient(closest-side at 75% 80%, rgba(var(--rgb-gold), 0.16), transparent 70%);
+  filter: blur(20px);
+  z-index: 0;
 }
 
-.about__promise .eyebrow::before {
-  background: rgba(142, 201, 242, 0.5);
+.about__intro-art img {
+  position: relative;
+  z-index: 1;
+  display: block;
+  width: 100%;
+  height: auto;
+  filter: drop-shadow(0 30px 40px rgba(var(--rgb-bone), 0.18));
 }
 
-.about__promise h3 {
-  font-size: clamp(1.7rem, 3.2vw, 2.6rem);
-  max-width: 20ch;
-  color: #fff;
+/* brand promise: first title line stays on one row on wide screens */
+.display-head.promise__head {
+  max-width: none;
 }
 
-.about__promise h3 .accent {
-  color: #8ec9f2;
+@media (min-width: 861px) {
+  .promise__line {
+    white-space: nowrap;
+  }
 }
 
 .about__split {
@@ -86,7 +99,6 @@
   border: 1px solid var(--line);
   border-radius: var(--r);
   overflow: hidden;
-  margin-bottom: 14px;
 }
 
 .about__value {
@@ -146,6 +158,15 @@
   font-size: 0.94rem;
 }
 
+@media (max-width: 960px) {
+  .about__intro {
+    grid-template-columns: 1fr;
+  }
+  .about__intro-art {
+    max-width: 620px;
+  }
+}
+
 @media (max-width: 860px) {
   .about__split,
   .about__vm {
@@ -153,9 +174,6 @@
   }
   .about__values {
     grid-template-columns: 1fr 1fr;
-  }
-  .about__promise {
-    padding: 40px 28px;
   }
 }
 

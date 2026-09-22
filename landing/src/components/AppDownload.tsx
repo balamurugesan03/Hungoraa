@@ -6,7 +6,7 @@ export default function AppDownload() {
   const ref = useRevealSelf<HTMLDivElement>()
 
   return (
-    <section id="download" className="section download">
+    <section id="download" className="section band download">
       <div className="download__panel panel--raised panel ticks" ref={ref}>
         <div className="download__glow" />
         <div className="download__copy">

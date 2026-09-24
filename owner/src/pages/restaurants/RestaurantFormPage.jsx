@@ -1,8 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import {
   Stack, Title, Group, Button, Card, Text, TextInput, Textarea, Select,
   MultiSelect, NumberInput, Switch, Divider, SimpleGrid, ActionIcon,
-  Box, Grid, Paper, rem,
+  Box, Grid, Paper, Image, CloseButton, rem,
 } from '@mantine/core';
 import { useForm } from '@mantine/form';
 import { Dropzone, IMAGE_MIME_TYPE } from '@mantine/dropzone';
@@ -29,6 +29,8 @@ export default function RestaurantFormPage() {
   const isEdit = !!id;
   const [logoFile, setLogoFile] = useState(null);
   const [coverFiles, setCoverFiles] = useState([]);
+  const [existingImages, setExistingImages] = useState([]); // edit mode: current cover photos kept
+  const [existingLogo, setExistingLogo] = useState(null);
   const [operatingHours, setOperatingHours] = useState(defaultHours);
 
   const form = useForm({
@@ -73,6 +75,8 @@ export default function RestaurantFormPage() {
       latitude: existing.location?.coordinates?.[1]?.toString() || '',
       longitude: existing.location?.coordinates?.[0]?.toString() || '',
     });
+    setExistingImages(existing.images || []);
+    setExistingLogo(existing.logo?.url ? existing.logo : null);
     if (existing.operatingHours?.length) {
       const hoursMap = existing.operatingHours.reduce((acc, h) => {
         acc[h.day] = { isOpen: h.isOpen, openTime: h.slots?.[0]?.open || '11:00', closeTime: h.slots?.[0]?.close || '23:00' };
@@ -111,6 +115,10 @@ export default function RestaurantFormPage() {
     fd.append('operatingHours', JSON.stringify(operatingHours));
     if (logoFile) fd.append('logo', logoFile);
     coverFiles.forEach((f) => fd.append('images', f));
+    if (isEdit) {
+      fd.append('existingImages', JSON.stringify(existingImages.map((img) => img.url)));
+      if (!existingLogo && !logoFile && existing?.logo?.url) fd.append('removeLogo', 'true');
+    }
 
     if (isEdit) updateMutation.mutate(fd);
     else createMutation.mutate(fd);
@@ -131,6 +139,13 @@ export default function RestaurantFormPage() {
   };
 
   const isPending = createMutation.isPending || updateMutation.isPending;
+  const maxNewCovers = Math.max(0, 10 - existingImages.length);
+
+  // Object URLs for previewing not-yet-uploaded files
+  const logoPreview = useMemo(() => (logoFile ? URL.createObjectURL(logoFile) : null), [logoFile]);
+  const coverPreviews = useMemo(() => coverFiles.map((f) => URL.createObjectURL(f)), [coverFiles]);
+  useEffect(() => () => { if (logoPreview) URL.revokeObjectURL(logoPreview); }, [logoPreview]);
+  useEffect(() => () => coverPreviews.forEach((u) => URL.revokeObjectURL(u)), [coverPreviews]);
 
   return (
     <Stack gap="lg">
@@ -194,39 +209,59 @@ export default function RestaurantFormPage() {
             <Grid gutter="md">
               <Grid.Col span={{ base: 12, md: 4 }}>
                 <Text size="sm" fw={600} mb={8}>Logo</Text>
-                <Dropzone accept={IMAGE_MIME_TYPE} maxFiles={1} onDrop={(files) => setLogoFile(files[0])}
-                  style={{ border: '2px dashed #dee2e6', borderRadius: 8, padding: 24, textAlign: 'center' }}>
-                  <Stack align="center" gap={8}>
-                    <IconPhoto size={28} color="#868e96" />
-                    <Text size="sm" c="dimmed">Drop logo here</Text>
-                    {logoFile && <Text size="xs" c="green">{logoFile.name}</Text>}
-                  </Stack>
-                </Dropzone>
+                {logoPreview || existingLogo ? (
+                  <Box pos="relative" w={140}>
+                    <Image src={logoPreview || existingLogo.url} w={140} h={140} radius="md" fit="cover" />
+                    <CloseButton size="sm" variant="filled" color="red" radius="xl"
+                      style={{ position: 'absolute', top: 6, right: 6 }}
+                      onClick={() => { if (logoFile) setLogoFile(null); else setExistingLogo(null); }} />
+                  </Box>
+                ) : (
+                  <Dropzone accept={IMAGE_MIME_TYPE} maxFiles={1} maxSize={5 * 1024 ** 2}
+                    onDrop={(files) => setLogoFile(files[0])}
+                    onReject={() => notifications.show({ title: 'Logo rejected', message: 'Use a JPG/PNG/WEBP under 5 MB', color: 'red' })}
+                    style={{ border: '2px dashed #dee2e6', borderRadius: 8, padding: 24, textAlign: 'center' }}>
+                    <Stack align="center" gap={8}>
+                      <IconPhoto size={28} color="#868e96" />
+                      <Text size="sm" c="dimmed">Drop logo here or click</Text>
+                    </Stack>
+                  </Dropzone>
+                )}
               </Grid.Col>
               <Grid.Col span={{ base: 12, md: 8 }}>
-                <Text size="sm" fw={600} mb={8}>Cover Images (up to 5)</Text>
-                <Dropzone accept={IMAGE_MIME_TYPE} maxFiles={5}
-                  onDrop={(files) => setCoverFiles((prev) => [...prev, ...files].slice(0, 5))}
-                  style={{ border: '2px dashed #dee2e6', borderRadius: 8, padding: 24, textAlign: 'center' }}>
-                  <Stack align="center" gap={8}>
-                    <IconUpload size={28} color="#868e96" />
-                    <Text size="sm" c="dimmed">Drop up to 5 cover photos</Text>
-                  </Stack>
-                </Dropzone>
-                {coverFiles.length > 0 && (
-                  <Group gap={6} mt={8} wrap="wrap">
-                    {coverFiles.map((f, i) => (
-                      <Paper key={i} p={6} withBorder radius="sm">
-                        <Group gap={4}>
-                          <Text size="xs">{f.name}</Text>
-                          <ActionIcon size="xs" color="red" variant="subtle"
-                            onClick={() => setCoverFiles((prev) => prev.filter((_, idx) => idx !== i))}>
-                            <IconX size={10} />
-                          </ActionIcon>
-                        </Group>
-                      </Paper>
+                <Text size="sm" fw={600} mb={8}>
+                  Cover Photos ({existingImages.length + coverFiles.length}/10) — first photo is the main one
+                </Text>
+                {(existingImages.length > 0 || coverFiles.length > 0) && (
+                  <SimpleGrid cols={{ base: 3, sm: 4 }} spacing={8} mb={8}>
+                    {existingImages.map((img) => (
+                      <Box key={img.url} pos="relative">
+                        <Image src={img.url} h={90} radius="sm" fit="cover" />
+                        <CloseButton size="xs" variant="filled" color="red" radius="xl"
+                          style={{ position: 'absolute', top: 4, right: 4 }}
+                          onClick={() => setExistingImages((prev) => prev.filter((i) => i.url !== img.url))} />
+                      </Box>
                     ))}
-                  </Group>
+                    {coverFiles.map((f, i) => (
+                      <Box key={`new-${i}`} pos="relative">
+                        <Image src={coverPreviews[i]} h={90} radius="sm" fit="cover" style={{ outline: '2px solid #40c057' }} />
+                        <CloseButton size="xs" variant="filled" color="red" radius="xl"
+                          style={{ position: 'absolute', top: 4, right: 4 }}
+                          onClick={() => setCoverFiles((prev) => prev.filter((_, idx) => idx !== i))} />
+                      </Box>
+                    ))}
+                  </SimpleGrid>
+                )}
+                {maxNewCovers - coverFiles.length > 0 && (
+                  <Dropzone accept={IMAGE_MIME_TYPE} maxSize={5 * 1024 ** 2}
+                    onDrop={(files) => setCoverFiles((prev) => [...prev, ...files].slice(0, maxNewCovers))}
+                    onReject={() => notifications.show({ title: 'Some photos rejected', message: 'Use JPG/PNG/WEBP under 5 MB', color: 'red' })}
+                    style={{ border: '2px dashed #dee2e6', borderRadius: 8, padding: 24, textAlign: 'center' }}>
+                    <Stack align="center" gap={8}>
+                      <IconUpload size={28} color="#868e96" />
+                      <Text size="sm" c="dimmed">Drop cover photos here or click to add</Text>
+                    </Stack>
+                  </Dropzone>
                 )}
               </Grid.Col>
             </Grid>

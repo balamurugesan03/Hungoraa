@@ -45,7 +45,12 @@ function ItemModal({ opened, onClose, item, categoryId, restaurantId }) {
 
   const handleSubmit = (values) => {
     const fd = new FormData();
-    Object.entries(values).forEach(([k, v]) => fd.append(k, v));
+    // null/NaN would be stringified as 'null'/'NaN'; a blank field ('') is
+    // fine — the API treats it as "no value" (lets calories be cleared).
+    Object.entries(values).forEach(([k, v]) => {
+      if (v === null || v === undefined || Number.isNaN(v)) return;
+      fd.append(k, v);
+    });
     if (imageFile) fd.append('image', imageFile);
     mutation.mutate(fd);
   };

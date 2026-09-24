@@ -113,16 +113,34 @@ const updateRestaurant = async (req, res, next) => {
     const updates = { ...parseFormData(req.body) };
     // Auto-approve pending restaurants when owner edits them
     if (restaurant.status === 'pending') updates.status = 'approved';
-    if (req.files?.images) {
-      // Delete old images from Cloudinary
-      for (const img of restaurant.images || []) {
-        if (img.publicId) await deleteImage(img.publicId).catch(() => {});
-      }
-      updates.images = req.files.images.map((f, i) => ({
-        url: f.path,
-        publicId: f.filename,
-        isPrimary: i === 0,
-      }));
+    // Cover images: `existingImages` (JSON array of urls) lists the current
+    // photos the owner kept; new uploads are appended. Without it, new
+    // uploads replace the whole set (legacy behaviour).
+    let kept = restaurant.images || [];
+    if (req.body.existingImages !== undefined) {
+      let keepUrls = [];
+      try { keepUrls = JSON.parse(req.body.existingImages) || []; } catch {}
+      kept = kept.filter((img) => keepUrls.includes(img.url));
+    } else if (req.files?.images) {
+      kept = [];
+    }
+    const removed = (restaurant.images || []).filter((img) => !kept.includes(img));
+    for (const img of removed) {
+      if (img.publicId) await deleteImage(img.publicId).catch(() => {});
+    }
+    const added = (req.files?.images || []).map((f) => ({ url: f.path, publicId: f.filename }));
+    if (removed.length || added.length) {
+      updates.images = [...kept.map((img) => ({ url: img.url, publicId: img.publicId })), ...added]
+        .slice(0, 10)
+        .map((img, i) => ({ ...img, isPrimary: i === 0 }));
+    }
+
+    if (req.files?.logo?.[0]) {
+      if (restaurant.logo?.publicId) await deleteImage(restaurant.logo.publicId).catch(() => {});
+      updates.logo = { url: req.files.logo[0].path, publicId: req.files.logo[0].filename };
+    } else if (req.body.removeLogo === 'true') {
+      if (restaurant.logo?.publicId) await deleteImage(restaurant.logo.publicId).catch(() => {});
+      updates.logo = { url: undefined, publicId: undefined };
     }
 
     const updated = await Restaurant.findByIdAndUpdate(req.params.id, updates, { new: true, runValidators: true });

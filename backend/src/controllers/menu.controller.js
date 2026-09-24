@@ -116,6 +116,14 @@ const deleteCategory = async (req, res, next) => {
   }
 };
 
+// Multipart bodies send every field as a string — '' / 'undefined' / 'null'
+// must become "no value", never NaN (which Mongoose rejects on Number paths).
+const toNumber = (v) => {
+  if (v === undefined || v === null || v === '' || v === 'undefined' || v === 'null') return undefined;
+  const n = Number(v);
+  return Number.isFinite(n) ? n : undefined;
+};
+
 // ─── Item CRUD ────────────────────────────────────────────────────────────────
 const addMenuItem = async (req, res, next) => {
   try {
@@ -136,11 +144,11 @@ const addMenuItem = async (req, res, next) => {
     category.items.push({
       name,
       description,
-      price: parseFloat(price),
+      price: toNumber(price),
       isVeg: isVeg === 'true' || isVeg === true,
       isVegan: isVegan === 'true' || isVegan === true,
-      calories: calories ? parseInt(calories) : undefined,
-      preparationTime: parseInt(preparationTime) || 15,
+      calories: toNumber(calories),
+      preparationTime: toNumber(preparationTime) || 15,
       tags: tags ? (Array.isArray(tags) ? tags : JSON.parse(tags)) : [],
       allergens: allergens ? (Array.isArray(allergens) ? allergens : JSON.parse(allergens)) : [],
       image: imageData,
@@ -169,12 +177,12 @@ const updateMenuItem = async (req, res, next) => {
     const { name, description, price, isVeg, isVegan, calories, preparationTime, isAvailable } = req.body;
     if (name !== undefined) item.name = name;
     if (description !== undefined) item.description = description;
-    if (price !== undefined) item.price = parseFloat(price);
+    if (toNumber(price) !== undefined) item.price = toNumber(price);
     if (isVeg !== undefined) item.isVeg = isVeg === 'true' || isVeg === true;
     if (isVegan !== undefined) item.isVegan = isVegan === 'true' || isVegan === true;
-    if (calories !== undefined) item.calories = parseInt(calories);
-    if (preparationTime !== undefined) item.preparationTime = parseInt(preparationTime);
-    if (isAvailable !== undefined) item.isAvailable = isAvailable;
+    if (calories !== undefined) item.calories = toNumber(calories);
+    if (toNumber(preparationTime) !== undefined) item.preparationTime = toNumber(preparationTime);
+    if (isAvailable !== undefined) item.isAvailable = isAvailable === 'true' || isAvailable === true;
     if (req.file) item.image = { url: req.file.path, publicId: req.file.filename };
 
     await menu.save();

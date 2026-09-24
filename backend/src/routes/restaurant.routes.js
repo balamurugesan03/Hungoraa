@@ -5,7 +5,13 @@ const bookingCtrl = require('../controllers/booking.controller');
 const menuCtrl = require('../controllers/menu.controller');
 const reviewCtrl = require('../controllers/review.controller');
 const { protect, authorize, optionalAuth } = require('../middleware/auth.middleware');
-const { uploadMultiple, uploadSingle } = require('../config/upload');
+const { uploadImageFields } = require('../config/upload');
+
+// Restaurant photos: up to 10 cover images + 1 logo
+const restaurantImages = uploadImageFields('restaurants', [
+  { name: 'images', maxCount: 10 },
+  { name: 'logo', maxCount: 1 },
+]);
 
 // ─── Named static routes first (before /:id wildcard) ────────────────────────
 router.get('/nearby', ctrl.getNearbyRestaurants);
@@ -33,14 +39,14 @@ router.post(
   '/',
   protect,
   authorize('owner', 'admin'),
-  uploadMultiple('restaurants', 'images', 10),
+  restaurantImages,
   ctrl.createRestaurant
 );
 router.put(
   '/:id',
   protect,
   authorize('owner', 'admin'),
-  uploadMultiple('restaurants', 'images', 10),
+  restaurantImages,
   ctrl.updateRestaurant
 );
 router.delete('/:id', protect, authorize('owner', 'admin'), ctrl.deleteRestaurant);

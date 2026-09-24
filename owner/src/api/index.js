@@ -47,7 +47,7 @@ export const menuApi = {
   addItem: (restaurantId, categoryId, data) =>
     api.post(`/menus/${restaurantId}/categories/${categoryId}/items`, data, { headers: { 'Content-Type': 'multipart/form-data' } }),
   updateItem: (restaurantId, categoryId, itemId, data) =>
-    api.put(`/menus/${restaurantId}/categories/${categoryId}/items/${itemId}`, data),
+    api.put(`/menus/${restaurantId}/categories/${categoryId}/items/${itemId}`, data, { headers: { 'Content-Type': 'multipart/form-data' } }),
   deleteItem: (restaurantId, categoryId, itemId) =>
     api.delete(`/menus/${restaurantId}/categories/${categoryId}/items/${itemId}`),
 };

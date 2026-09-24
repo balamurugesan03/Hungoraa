@@ -79,6 +79,12 @@ const uploadMultiple = (folder, fieldName = 'images', maxCount = 10) => [
   publicize,
 ];
 
+// Several named image fields in one request, e.g. restaurant `logo` + `images`
+const uploadImageFields = (folder, fields) => [
+  multer({ storage: storageFor(folder), fileFilter: fileFilterFor(IMAGE_EXT), limits: { fileSize: MAX_FILE_SIZE } }).fields(fields),
+  publicize,
+];
+
 // KYC/business documents (FSSAI, PAN, Aadhar, etc.) — accepts photos or scanned PDFs
 const uploadFields = (folder, fields) => [
   multer({ storage: storageFor(folder), fileFilter: fileFilterFor(DOC_EXT), limits: { fileSize: MAX_FILE_SIZE } }).fields(fields),
@@ -109,4 +115,4 @@ const deleteImage = async (filename) => {
   return false;
 };
 
-module.exports = { uploadSingle, uploadMultiple, uploadFields, deleteImage, UPLOAD_ROOT };
+module.exports = { uploadSingle, uploadMultiple, uploadImageFields, uploadFields, deleteImage, UPLOAD_ROOT };

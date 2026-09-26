@@ -32,6 +32,9 @@ const platformSettingsSchema = new mongoose.Schema(
     convenienceFeeCap: { type: Number, default: 25 },       // max ₹ when percent (0 = no cap)
     convenienceFeeMinBill: { type: Number, default: 0 },    // waive the fee below this bill
     gstOnFeePercent: { type: Number, default: 18 },         // GST on the convenience fee
+    // Promo: compute the fee as usual but don't charge it — the app shows
+    // the fee struck out with "FREE".
+    convenienceFeeWaived: { type: Boolean, default: false },
 
     // ── Mobile home screen — hero background (Swiggy-style) ─────────────────
     homeHeroEnabled: { type: Boolean, default: false },
@@ -54,7 +57,7 @@ platformSettingsSchema.statics.WRITABLE = [
   'enableWallet', 'enableGoogleLogin', 'enableRazorpay', 'enableSmsOtp',
   'enableEmailVerification', 'maintenanceMode',
   'convenienceFeeEnabled', 'convenienceFeeType', 'convenienceFeeValue',
-  'convenienceFeeCap', 'convenienceFeeMinBill', 'gstOnFeePercent',
+  'convenienceFeeCap', 'convenienceFeeMinBill', 'gstOnFeePercent', 'convenienceFeeWaived',
   'homeHeroEnabled', 'homeHeroImageUrl', 'homeHeroVideoUrl',
 ];
 

@@ -161,8 +161,9 @@ exports.quoteBill = async (req, res, next) => {
     }
 
     const base = Math.max(0, billingService.r2(amount - discountBreakup.total));
-    const { convenienceFee, gstAmount, gstOnFeePercent, toPay } =
-      await billingService.computeCharges(base, tip);
+    const {
+      convenienceFee, gstAmount, gstOnFeePercent, toPay, convenienceFeeOriginal, convenienceFeeWaived,
+    } = await billingService.computeCharges(base, tip);
 
     return successResponse(res, 200, 'Bill quote', {
       restaurant: { _id: restaurant._id, name: restaurant.name },
@@ -175,6 +176,8 @@ exports.quoteBill = async (req, res, next) => {
       } : null,
       offerError,
       convenienceFee,
+      convenienceFeeOriginal,
+      convenienceFeeWaived,
       gstAmount,
       gstOnFeePercent,
       tip,

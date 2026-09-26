@@ -7,6 +7,37 @@ const { deleteImage } = require('../config/upload');
 const verifyOwner = async (restaurantId, userId) =>
   !!(await Restaurant.findOne({ _id: restaurantId, owner: userId }));
 
+// Who pays for the discount is a platform business decision: only admin may
+// set it. Owners always create restaurant-funded offers.
+// Returns { fundedBy, fundingBreakup } or { error }.
+function resolveFunding(fundedBy = 'restaurant', breakup = {}) {
+  const single = {
+    restaurant: { restaurantPercent: 100, platformPercent: 0, bankPercent: 0 },
+    platform:   { restaurantPercent: 0, platformPercent: 100, bankPercent: 0 },
+    bank:       { restaurantPercent: 0, platformPercent: 0, bankPercent: 100 },
+  };
+  if (single[fundedBy]) return { fundedBy, fundingBreakup: single[fundedBy] };
+  if (fundedBy !== 'combined') return { error: 'Invalid fundedBy value' };
+
+  const fundingBreakup = {
+    restaurantPercent: Number(breakup?.restaurantPercent) || 0,
+    platformPercent:   Number(breakup?.platformPercent) || 0,
+    bankPercent:       Number(breakup?.bankPercent) || 0,
+  };
+  const parts = Object.values(fundingBreakup);
+  if (parts.some((p) => p < 0)) return { error: 'Funding percentages cannot be negative' };
+  if (Math.round(parts.reduce((s, p) => s + p, 0)) !== 100) {
+    return { error: 'fundingBreakup percentages must sum to 100' };
+  }
+  return { fundedBy, fundingBreakup };
+}
+
+// Fields an owner may never set directly on an offer.
+const OWNER_LOCKED_FIELDS = [
+  'fundedBy', 'fundingBreakup', 'approvalStatus', 'approvalHistory',
+  'approvedBy', 'approvedAt', 'rejectionReason', 'usedCount', 'usedBy', 'createdBy', 'restaurant',
+];
+
 // ─── Customer / Public: List active approved offers ───────────────────────────
 exports.getAllOffers = async (req, res, next) => {
   try {
@@ -157,15 +188,10 @@ exports.createOffer = async (req, res, next) => {
     const restaurant = await Restaurant.findById(restaurantId);
     if (!restaurant) return errorResponse(res, 404, 'Restaurant not found');
 
-    // Validate combined funding sums to 100
-    if (fundedBy === 'combined' && fundingBreakup) {
-      const sum = (fundingBreakup.restaurantPercent || 0) +
-                  (fundingBreakup.platformPercent || 0) +
-                  (fundingBreakup.bankPercent || 0);
-      if (Math.round(sum) !== 100) {
-        return errorResponse(res, 400, 'fundingBreakup percentages must sum to 100');
-      }
-    }
+    // Owners can only create restaurant-funded offers; admin picks the funder.
+    const funding = isAdmin ? resolveFunding(fundedBy, fundingBreakup) : resolveFunding('restaurant');
+    if (funding.error) return errorResponse(res, 400, funding.error);
+    for (const f of OWNER_LOCKED_FIELDS) delete rest[f];
 
     // Determine if approval is required. Admin-created offers go live directly.
     const needsApproval = isAdmin
@@ -183,8 +209,8 @@ exports.createOffer = async (req, res, next) => {
       ...rest,
       restaurant: restaurantId,
       createdBy: req.user._id,
-      fundedBy: fundedBy || 'restaurant',
-      fundingBreakup: fundingBreakup || { restaurantPercent: 100, platformPercent: 0, bankPercent: 0 },
+      fundedBy: funding.fundedBy,
+      fundingBreakup: funding.fundingBreakup,
       approvalRequired: needsApproval,
       approvalStatus,
     });
@@ -236,6 +262,21 @@ exports.updateOffer = async (req, res, next) => {
     // Editing an approved owner offer resets it to draft until re-submitted.
     // Admin edits stay live.
     const updates = { ...req.body };
+    delete updates.restaurantId;
+
+    if (isAdmin) {
+      if (updates.fundedBy !== undefined || updates.fundingBreakup !== undefined) {
+        const funding = resolveFunding(
+          updates.fundedBy ?? offer.fundedBy,
+          updates.fundingBreakup ?? offer.fundingBreakup,
+        );
+        if (funding.error) return errorResponse(res, 400, funding.error);
+        updates.fundedBy = funding.fundedBy;
+        updates.fundingBreakup = funding.fundingBreakup;
+      }
+    } else {
+      for (const f of OWNER_LOCKED_FIELDS) delete updates[f];
+    }
 
     // Banner image changed or cleared — drop the old Cloudinary asset.
     if (Object.prototype.hasOwnProperty.call(req.body, 'image')) {

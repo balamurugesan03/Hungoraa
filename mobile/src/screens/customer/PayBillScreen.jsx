@@ -208,6 +208,8 @@ function PayBillForm({ navigation, restaurant, initialAmount, initialOfferId }) 
 
   const discount = quote?.discount ?? clientDiscount;
   const convenienceFee = quote?.convenienceFee ?? 0;
+  const feeWaived = Boolean(quote?.convenienceFeeWaived);
+  const feeOriginal = quote?.convenienceFeeOriginal ?? 0;
   const gstAmount = quote?.gstAmount ?? 0;
   const gstPct = quote?.gstOnFeePercent ?? 0;
   const net = Math.max(0, amt - discount);
@@ -367,6 +369,11 @@ function PayBillForm({ navigation, restaurant, initialAmount, initialOfferId }) 
               <Text style={f.revealFeeNote}>
                 incl. ₹{(convenienceFee + gstAmount).toLocaleString('en-IN')} convenience fee &amp; GST
               </Text>
+            ) : feeWaived ? (
+              <Text style={f.revealFeeNote}>
+                Convenience fee <Text style={f.strike}>₹{feeOriginal.toLocaleString('en-IN')}</Text>{' '}
+                <Text style={f.freeText}>FREE</Text>
+              </Text>
             ) : null}
           </Animated.View>
         ) : null}
@@ -451,6 +458,14 @@ function PayBillForm({ navigation, restaurant, initialAmount, initialOfferId }) 
           ) : null}
           {convenienceFee > 0 ? (
             <Row label="Convenience fee" value={`₹${convenienceFee.toLocaleString('en-IN')}`} />
+          ) : feeWaived ? (
+            <View style={f.row}>
+              <Text style={f.rowLabel}>Convenience fee</Text>
+              <Text style={f.rowValue}>
+                <Text style={f.strike}>₹{feeOriginal.toLocaleString('en-IN')}</Text>{'  '}
+                <Text style={f.freeText}>FREE</Text>
+              </Text>
+            </View>
           ) : null}
           {gstAmount > 0 ? (
             <Row label={`GST${gstPct ? ` (${gstPct}%)` : ''}`} value={`₹${gstAmount.toLocaleString('en-IN')}`} />
@@ -760,6 +775,8 @@ const f = StyleSheet.create({
   row: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 5 },
   rowLabel: { fontSize: SIZES.sm, fontFamily: FONTS.regular, color: COLORS.gray },
   rowValue: { fontSize: SIZES.sm, fontFamily: FONTS.medium, color: COLORS.dark },
+  strike: { textDecorationLine: 'line-through', color: COLORS.gray, fontFamily: FONTS.regular },
+  freeText: { color: COLORS.success || '#1a7f37', fontFamily: FONTS.bold, letterSpacing: 0.5 },
   tipRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 5 },
   tipToggle: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   tipToggleText: { fontSize: SIZES.sm, fontFamily: FONTS.medium, color: COLORS.dark },

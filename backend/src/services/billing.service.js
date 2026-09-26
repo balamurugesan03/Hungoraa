@@ -23,7 +23,10 @@ const r2 = (n) => Math.round((n + Number.EPSILON) * 100) / 100;
  * Convenience fee + GST for a Pay Bill transaction.
  * @param base  billAmount − totalDiscount (the amount owed to the restaurant)
  * @param tip   voluntary tip (rides on top, untaxed)
- * Returns { convenienceFee, gstAmount, gstOnFeePercent, toPay }.
+ * Returns { convenienceFee, gstAmount, gstOnFeePercent, toPay,
+ *           convenienceFeeOriginal, convenienceFeeWaived }.
+ * When the admin waives the fee, convenienceFee/gstAmount are 0 and
+ * convenienceFeeOriginal carries the struck-out amount for display.
  */
 async function computeCharges(base, tip = 0) {
   const s = await getSettings();
@@ -39,13 +42,15 @@ async function computeCharges(base, tip = 0) {
       convenienceFee = s.convenienceFeeValue || 0;
     }
   }
-  convenienceFee = r2(convenienceFee);
+  const convenienceFeeOriginal = r2(convenienceFee);
+  const convenienceFeeWaived = Boolean(s.convenienceFeeWaived) && convenienceFeeOriginal > 0;
+  convenienceFee = convenienceFeeWaived ? 0 : convenienceFeeOriginal;
 
   const gstOnFeePercent = s.gstOnFeePercent || 0;
   const gstAmount = r2((convenienceFee * gstOnFeePercent) / 100);
   const toPay = r2(b + convenienceFee + gstAmount + t);
 
-  return { convenienceFee, gstAmount, gstOnFeePercent, toPay };
+  return { convenienceFee, gstAmount, gstOnFeePercent, toPay, convenienceFeeOriginal, convenienceFeeWaived };
 }
 
 module.exports = { getSettings, invalidate, computeCharges, r2 };

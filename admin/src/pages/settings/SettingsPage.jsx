@@ -49,6 +49,7 @@ export default function SettingsPage() {
       convenienceFeeCap: 25,
       convenienceFeeMinBill: 0,
       gstOnFeePercent: 18,
+      convenienceFeeWaived: false,
     },
   });
 
@@ -105,6 +106,7 @@ export default function SettingsPage() {
       convenienceFeeCap: settingsData.convenienceFeeCap ?? 25,
       convenienceFeeMinBill: settingsData.convenienceFeeMinBill ?? 0,
       gstOnFeePercent: settingsData.gstOnFeePercent ?? 18,
+      convenienceFeeWaived: settingsData.convenienceFeeWaived ?? false,
     });
     heroForm.setValues({
       homeHeroEnabled: settingsData.homeHeroEnabled ?? false,
@@ -279,6 +281,21 @@ export default function SettingsPage() {
                   {...feeForm.getInputProps('convenienceFeeMinBill')}
                 />
 
+                <Group justify="space-between" wrap="nowrap">
+                  <Stack gap={2}>
+                    <Text size="sm" fw={600}>Waive the fee — show as FREE</Text>
+                    <Text size="xs" c="dimmed">
+                      App shows the fee struck out (e.g. <s>₹{feeForm.values.convenienceFeeValue || 0}</s> FREE) and charges ₹0
+                    </Text>
+                  </Stack>
+                  <Switch
+                    checked={feeForm.values.convenienceFeeWaived}
+                    onChange={(e) => feeForm.setFieldValue('convenienceFeeWaived', e.target.checked)}
+                    disabled={!feeForm.values.convenienceFeeEnabled}
+                    color="green"
+                  />
+                </Group>
+
                 <NumberInput
                   label="GST on the convenience fee (%)"
                   description="Tax added on the fee itself (India: 18)"
@@ -292,7 +309,7 @@ export default function SettingsPage() {
                     <b>
                       ₹{(() => {
                         const base = 850;
-                        const f = feeForm.values.convenienceFeeEnabled && base >= (feeForm.values.convenienceFeeMinBill || 0)
+                        const f = feeForm.values.convenienceFeeEnabled && !feeForm.values.convenienceFeeWaived && base >= (feeForm.values.convenienceFeeMinBill || 0)
                           ? (feeForm.values.convenienceFeeType === 'percent'
                             ? Math.min(base * (feeForm.values.convenienceFeeValue || 0) / 100, feeForm.values.convenienceFeeCap || Infinity)
                             : (feeForm.values.convenienceFeeValue || 0))

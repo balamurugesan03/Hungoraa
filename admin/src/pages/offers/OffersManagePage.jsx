@@ -23,12 +23,51 @@ const TYPE_COLORS = {
   percentage: 'blue', flat: 'green', free_item: 'violet',
   bogo: 'orange', early_bird: 'teal', happy_hours: 'red',
 };
+const FUNDER_LABELS = {
+  restaurant: 'Restaurant', platform: 'Platform (Hungora)', bank: 'Bank', combined: 'Shared',
+};
+const FUNDER_COLORS = { restaurant: 'gray', platform: 'grape', bank: 'cyan', combined: 'indigo' };
 const DAYS = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
 const DAY_OPTIONS = DAYS.map((d) => ({ value: d, label: d[0].toUpperCase() + d.slice(1) }));
 
 function randomCode() {
   const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
   return Array.from({ length: 7 }, () => chars[Math.floor(Math.random() * chars.length)]).join('');
+}
+
+// Worked example for the chosen funder — mirrors the backend formula:
+// commissionBase = bill − restaurantFunded, restaurant gets base − commission.
+function FundingPreview({ values, commissionRate }) {
+  const bill = 2000;
+  const raw = values.type === 'percentage'
+    ? (bill * (Number(values.discountValue) || 0)) / 100
+    : values.type === 'flat' ? Math.min(Number(values.discountValue) || 0, bill) : 0;
+  const discount = values.maxDiscount && values.type === 'percentage'
+    ? Math.min(raw, Number(values.maxDiscount)) : raw;
+  const pct = values.fundedBy === 'combined'
+    ? { r: values.restaurantPercent || 0, p: values.platformPercent || 0, b: values.bankPercent || 0 }
+    : { r: values.fundedBy === 'restaurant' ? 100 : 0, p: values.fundedBy === 'platform' ? 100 : 0, b: values.fundedBy === 'bank' ? 100 : 0 };
+  const restFunded = (discount * pct.r) / 100;
+  const platFunded = (discount * pct.p) / 100;
+  const commission = ((bill - restFunded) * commissionRate) / 100;
+  const restaurantGets = bill - restFunded - commission;
+  const fmt = (n) => `₹${Math.round(n * 100) / 100}`;
+
+  return (
+    <Box p="sm" style={{ background: 'var(--mantine-color-gray-0)', borderRadius: 8 }}>
+      <Text size="xs" fw={600} mb={4}>Example on a {fmt(bill)} bill ({commissionRate}% commission)</Text>
+      <Text size="xs" c="dimmed">
+        Customer pays {fmt(bill - discount)} (+ convenience fee) · Discount {fmt(discount)}
+      </Text>
+      <Text size="xs" c="dimmed">
+        Restaurant bears {fmt(restFunded)} · Platform bears {fmt(platFunded)}
+        {pct.b ? ` · Bank bears ${fmt((discount * pct.b) / 100)}` : ''}
+      </Text>
+      <Text size="xs" mt={4}>
+        Commission {fmt(commission)} · <b>Restaurant settlement {fmt(restaurantGets)}</b> · Platform net {fmt(commission - platFunded)}
+      </Text>
+    </Box>
+  );
 }
 
 function OfferModal({ opened, onClose, offer, restaurants }) {
@@ -50,6 +89,10 @@ function OfferModal({ opened, onClose, offer, restaurants }) {
       validTo: offer?.validTo ? new Date(offer.validTo) : dayjs().add(30, 'day').toDate(),
       validDays: offer?.validDays || [],
       applicableTo: offer?.applicableTo || ['booking'],
+      fundedBy: offer?.fundedBy || 'restaurant',
+      restaurantPercent: offer?.fundingBreakup?.restaurantPercent ?? 50,
+      platformPercent: offer?.fundingBreakup?.platformPercent ?? 50,
+      bankPercent: offer?.fundingBreakup?.bankPercent ?? 0,
       isActive: offer?.isActive ?? true,
       isFeatured: offer?.isFeatured ?? false,
       image: offer?.image?.url
@@ -61,6 +104,11 @@ function OfferModal({ opened, onClose, offer, restaurants }) {
       title: (v) => (v.trim().length >= 2 ? null : 'Title required'),
       code: (v) => (v.trim().length >= 2 ? null : 'Code required'),
       discountValue: (v) => (v > 0 ? null : 'Must be greater than 0'),
+      restaurantPercent: (_v, vals) => {
+        if (vals.fundedBy !== 'combined') return null;
+        const sum = (vals.restaurantPercent || 0) + (vals.platformPercent || 0) + (vals.bankPercent || 0);
+        return Math.round(sum) === 100 ? null : `Shares must add up to 100% (now ${sum}%)`;
+      },
     },
   });
 
@@ -111,6 +159,12 @@ function OfferModal({ opened, onClose, offer, restaurants }) {
         validTo: values.validTo,
         validDays: values.validDays,
         applicableTo: values.applicableTo,
+        fundedBy: values.fundedBy,
+        fundingBreakup: values.fundedBy === 'combined' ? {
+          restaurantPercent: Number(values.restaurantPercent) || 0,
+          platformPercent: Number(values.platformPercent) || 0,
+          bankPercent: Number(values.bankPercent) || 0,
+        } : undefined,
         isActive: values.isActive,
         isFeatured: values.isFeatured,
         image: values.image || null,
@@ -194,6 +248,38 @@ function OfferModal({ opened, onClose, offer, restaurants }) {
                 value={form.values.applicableTo}
                 onChange={(v) => form.setFieldValue('applicableTo', v.length ? v : ['booking'])}
               />
+            </Grid.Col>
+
+            <Grid.Col span={12}>
+              <Text size="sm" fw={500} mb={2}>Discount funded by</Text>
+              <Text size="xs" c="dimmed" mb={6}>
+                Who bears the discount. Commission is charged on the bill minus the restaurant-funded part only.
+              </Text>
+              <SegmentedControl
+                fullWidth
+                data={Object.entries(FUNDER_LABELS).map(([value, label]) => ({ value, label }))}
+                value={form.values.fundedBy}
+                onChange={(v) => form.setFieldValue('fundedBy', v)}
+              />
+              {form.values.fundedBy === 'combined' && (
+                <Grid gutter="sm" mt="xs">
+                  <Grid.Col span={4}>
+                    <NumberInput label="Restaurant %" min={0} max={100} {...form.getInputProps('restaurantPercent')} />
+                  </Grid.Col>
+                  <Grid.Col span={4}>
+                    <NumberInput label="Platform %" min={0} max={100} {...form.getInputProps('platformPercent')} error={null} />
+                  </Grid.Col>
+                  <Grid.Col span={4}>
+                    <NumberInput label="Bank %" min={0} max={100} {...form.getInputProps('bankPercent')} error={null} />
+                  </Grid.Col>
+                </Grid>
+              )}
+              <Box mt="xs">
+                <FundingPreview
+                  values={form.values}
+                  commissionRate={restaurants?.find((r) => r._id === form.values.restaurantId)?.commission || 10}
+                />
+              </Box>
             </Grid.Col>
 
             <Grid.Col span={6}>
@@ -391,6 +477,11 @@ export default function OffersManagePage() {
                       <Text fw={700} size="lg">{offer.title}</Text>
                       <Badge color={TYPE_COLORS[offer.type] || 'gray'} variant="light" size="sm">
                         {TYPE_LABELS[offer.type] || offer.type}
+                      </Badge>
+                      <Badge color={FUNDER_COLORS[offer.fundedBy] || 'gray'} variant="outline" size="sm">
+                        {offer.fundedBy === 'combined'
+                          ? `Shared R${offer.fundingBreakup?.restaurantPercent ?? 0}/P${offer.fundingBreakup?.platformPercent ?? 0}/B${offer.fundingBreakup?.bankPercent ?? 0}`
+                          : `${FUNDER_LABELS[offer.fundedBy] || 'Restaurant'} funded`}
                       </Badge>
                       {offer.isFeatured && (
                         <Badge color="yellow" variant="light" size="sm" leftSection={<IconStar size={10} />}>Featured</Badge>

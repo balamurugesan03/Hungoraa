@@ -21,7 +21,7 @@ export default function HomeHeroVideo({ uri, poster }) {
   if (VideoLayer && uri) return <VideoLayer uri={uri} />;
   if (poster) {
     return (
-      <ExpoImage source={{ uri: poster }} style={StyleSheet.absoluteFill} contentFit="cover" transition={250} />
+      <ExpoImage source={{ uri: poster }} style={StyleSheet.absoluteFill} contentFit="cover" contentPosition="top" allowDownscaling={false} priority="high" transition={250} />
     );
   }
   return <View />;

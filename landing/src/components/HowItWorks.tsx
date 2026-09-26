@@ -2,32 +2,63 @@ import { useEffect, useRef } from 'react'
 import gsap from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import { useStaggerReveal } from '../hooks/useReveal'
-import { IconBolt, IconCalendar, IconReceipt } from './Icons'
+import { IconCalendar, IconCompass, IconSparkle } from './Icons'
 import './HowItWorks.css'
 
 gsap.registerPlugin(ScrollTrigger)
 
 const steps = [
   {
-    icon: IconCalendar,
+    icon: IconCompass,
     step: '01',
-    title: 'Find & hold your table',
-    body: 'Search nearby restaurants, pick a slot, and we hold the table for 5 minutes while you confirm — no walk-in queue, no calling ahead.',
-    meta: '5:00 hold timer',
+    title: 'Discover',
+    meta: 'Curated & filtered',
+    points: [
+      {
+        label: 'Explore curated dining',
+        text: 'Effortlessly browse through a handpicked selection of top-tier restaurants, hidden gems, and local favorites tailored to your exact cravings and mood.',
+      },
+      {
+        label: 'Smart filtering',
+        text: 'Find dining spots based on ambiance, cuisine type, specific dietary preferences, and exclusive offers.',
+      },
+    ],
   },
   {
-    icon: IconBolt,
+    icon: IconCalendar,
     step: '02',
-    title: 'Offers apply themselves',
-    body: 'Restaurant, platform, and bank-funded discounts are calculated automatically — the best available price is locked before you ask.',
-    meta: 'Auto-stacked',
+    title: 'Reserve / Dine-in',
+    meta: 'A few taps',
+    points: [
+      {
+        label: 'Instant table booking',
+        text: 'Secure your preferred table in just a few taps without the hassle of waiting in long lines or making phone calls.',
+      },
+      {
+        label: 'Seamless scheduling',
+        text: 'Choose your exact dining time, select your seating preference, and customize your reservation to match any special occasion.',
+      },
+    ],
   },
   {
-    icon: IconReceipt,
+    icon: IconSparkle,
     step: '03',
-    title: 'Split & settle the bill',
-    body: 'Scan the table QR, review the itemised bill, split it any way, and pay. The restaurant is settled automatically in the background.',
-    meta: 'Instant settlement',
+    title: 'Enjoy',
+    meta: 'Best price, locked',
+    points: [
+      {
+        label: 'Elevated experience',
+        text: 'Step into your chosen restaurant with your table ready and waiting for an unforgettable meal.',
+      },
+      {
+        label: 'Built-in benefits',
+        text: 'Restaurant, platform and bank-funded discounts are calculated automatically — locking in your best, lowest price instantly.',
+      },
+      {
+        label: 'Genuine value',
+        text: 'Savor delicious food and create great moments while unlocking exclusive savings and flat-fee benefits.',
+      },
+    ],
   },
 ]
 
@@ -59,11 +90,11 @@ export default function HowItWorks() {
       <div className="display-head">
         <span className="display-tag">How it works</span>
         <h2 className="display-title">
-          Hungry to seated to settled —
-          <span className="display-title-accent">three taps.</span>
+          Discover, reserve, enjoy —
+          <span className="display-title-accent">three simple steps.</span>
         </h2>
         <span className="display-rule" aria-hidden="true" />
-        <p className="display-lead">No paperwork at the table. No waiting on a card machine. No splitting argument.</p>
+        <p className="display-lead">No long queues. No phone calls. Your best price, locked in automatically.</p>
       </div>
 
       <div className="how__timeline">
@@ -72,7 +103,7 @@ export default function HowItWorks() {
         </div>
 
         <div className="how__steps" ref={stepsRef}>
-          {steps.map(({ icon: Icon, step, title, body, meta }) => (
+          {steps.map(({ icon: Icon, step, title, meta, points }) => (
             <div className="how__step" key={step}>
               <div className="how__node" aria-hidden="true">
                 <span className="how__node-num mono">{step}</span>
@@ -85,7 +116,14 @@ export default function HowItWorks() {
                   <span className="how__card-meta mono">{meta}</span>
                 </div>
                 <h3>{title}</h3>
-                <p>{body}</p>
+                <ul className="how__points">
+                  {points.map(({ label, text }) => (
+                    <li key={label}>
+                      <strong>{label}</strong>
+                      <p>{text}</p>
+                    </li>
+                  ))}
+                </ul>
               </div>
             </div>
           ))}

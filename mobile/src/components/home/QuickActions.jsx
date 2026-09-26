@@ -58,7 +58,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: SPACING.sm,
     marginHorizontal: SPACING.lg,
-    marginTop: SPACING.sm,
+    marginTop: SPACING.lg, // clear of the hero's curve
     marginBottom: SPACING.xs,
   },
   cell: {
@@ -78,7 +78,8 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   navy: { backgroundColor: NAVY, borderColor: 'rgba(255,255,255,0.18)' },
-  white: { backgroundColor: '#FFFFFF', borderColor: 'rgba(255,255,255,0.5)' },
+  // hairline navy edge — the card sits on the white page, so it needs an edge to read
+  white: { backgroundColor: '#FFFFFF', borderColor: 'rgba(12,47,78,0.12)' },
   pressed: { transform: [{ scale: 0.965 }], opacity: 0.94 },
   label: {
     fontFamily: FONT.semiBold,

@@ -1,7 +1,8 @@
-import logo from '../assets/logo.svg'
 import { IconArrowRight } from './Icons'
 import { pageHref } from '../lib/links'
 import './Footer.css'
+
+const logo = '/logolanding.jpeg'
 
 const columns = [
   {

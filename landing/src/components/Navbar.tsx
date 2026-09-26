@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react'
-import logo from '../assets/logo.svg'
 import Wordmark from './Wordmark'
 import { pageHref } from '../lib/links'
 import './Navbar.css'
+
+const logo = '/loggggooo.png'
 
 const links = [
   { label: 'About us', href: '#about' },

@@ -47,7 +47,7 @@ export default function ServiceModes() {
   return (
     <section id="ways" className="section band modes">
       <div className="display-head" ref={headRef}>
-        <span className="display-tag">Two ways to eat</span>
+        <span className="display-tag">How Do You Want to Dine?</span>
         <h2 className="display-title">
           Sit down, or
           <span className="display-title-accent">take it with you.</span>

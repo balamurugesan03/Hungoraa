@@ -3,7 +3,6 @@ import {
   View, Text, StyleSheet, ScrollView, Pressable, FlatList, RefreshControl,
 } from 'react-native';
 import { Image as ExpoImage } from 'expo-image';
-import { LinearGradient } from 'expo-linear-gradient';
 import { useQuery } from '@tanstack/react-query';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
@@ -21,7 +20,7 @@ import HomeHeroVideo from '../../components/home/HomeHeroVideo';
 import OffersBanner from '../../components/home/OffersBanner';
 import { useAppStore } from '../../store/appStore';
 import {
-  toRestaurantCard, toPromo, offersByRestaurant, greetingForNow,
+  toRestaurantCard, toPromo, offersByRestaurant,
 } from '../../components/home/viewModels';
 import {
   useActiveOffers, useFeaturedRestaurants, useTrendingRestaurants, useUnreadCount,
@@ -162,7 +161,6 @@ export default function HomeScreen({ navigation }) {
     offersQ.refetch(); featuredQ.refetch(); trendingQ.refetch(); unreadQ.refetch();
   }, [offersQ, featuredQ, trendingQ, unreadQ]);
 
-  const firstName = (user?.name || '').trim().split(' ')[0] || 'there';
   const avatarUrl = user?.avatar?.url || user?.profilePhoto || user?.photo || null;
   const cityList = citiesQ.data?.length ? citiesQ.data : CITY_FALLBACK;
 
@@ -176,19 +174,21 @@ export default function HomeScreen({ navigation }) {
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#FFFFFF" colors={['#FFFFFF']} />
         }
       >
-        {/* Navy zone — brand through "What's on your mind?", ends in a curved shape */}
+        {/* Navy zone — brand, location, search and cuisine chips, ends in a curved shape */}
         <View style={[styles.navyZone, { paddingTop: insets.top + SPACING.xs }]}>
           {/* Admin-set hero background (Swiggy-style) — image or looping video */}
           {heroVideo ? (
             <HomeHeroVideo uri={heroVideo} poster={heroImage} />
           ) : heroImage ? (
-            <ExpoImage source={{ uri: heroImage }} style={StyleSheet.absoluteFill} contentFit="cover" transition={250} />
-          ) : null}
-          {(heroVideo || heroImage) ? (
-            <LinearGradient
-              colors={['rgba(12,47,78,0.30)', 'rgba(12,47,78,0.62)', 'rgba(12,47,78,0.92)']}
-              locations={[0, 0.55, 1]}
+            <ExpoImage
+              source={{ uri: heroImage }}
               style={StyleSheet.absoluteFill}
+              contentFit="cover"
+              contentPosition="top"
+              allowDownscaling={false} // keep full-res pixels — Android downscaling softens the hero
+              priority="high"
+              cachePolicy="memory-disk"
+              transition={250}
             />
           ) : null}
 
@@ -211,12 +211,6 @@ export default function HomeScreen({ navigation }) {
                 <Avatar name={user?.name || 'U'} uri={avatarUrl} size={38} />
               </Pressable>
             </View>
-          </View>
-
-          {/* Greeting */}
-          <View style={styles.greet}>
-            <Text style={[text.display, styles.onNavy]}>{greetingForNow()}, {firstName}.</Text>
-            <Text style={[text.body, styles.greetSub]}>What are you dining on today?</Text>
           </View>
 
           {/* Search (opens Search screen) */}
@@ -245,10 +239,10 @@ export default function HomeScreen({ navigation }) {
               )}
             />
           ) : null}
-
-          {/* Primary actions */}
-          <QuickActions onPress={handleQuickAction} />
         </View>
+
+        {/* Primary actions — fully below the hero's curve, on the plain page */}
+        <QuickActions onPress={handleQuickAction} />
 
         {/* What's on your mind — back on white */}
         <Text style={[text.h2, styles.sectionHead]}>What&apos;s on your mind?</Text>
@@ -381,12 +375,11 @@ function cuisineList(featured = [], trending = []) {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: COLOR.surface },
-  onNavy: { color: COLOR.onNavy },
   navyZone: {
     backgroundColor: COLOR.navy,
-    paddingBottom: SPACING.lg,
-    borderBottomLeftRadius: 32,
-    borderBottomRightRadius: 32,
+    paddingBottom: 230, // extra hero image below the chips before the curve
+    borderBottomLeftRadius: 56,
+    borderBottomRightRadius: 56,
     overflow: 'hidden',
   },
   topBar: {
@@ -407,11 +400,9 @@ const styles = StyleSheet.create({
     width: 8, height: 8, borderRadius: 4, backgroundColor: '#F9A91B',
     borderWidth: 1.5, borderColor: COLOR.navy,
   },
-  greet: { paddingHorizontal: SPACING.lg, marginTop: SPACING.sm, marginBottom: SPACING.md },
-  greetSub: { marginTop: 4, color: COLOR.onNavySoft },
   search: {
     flexDirection: 'row', alignItems: 'center', gap: SPACING.sm,
-    marginHorizontal: SPACING.lg,
+    marginHorizontal: SPACING.lg, marginTop: SPACING.sm,
     backgroundColor: COLOR.surface, borderRadius: RADII.md,
     borderWidth: 1, borderColor: COLOR.hairline,
     paddingHorizontal: SPACING.md, height: 52,

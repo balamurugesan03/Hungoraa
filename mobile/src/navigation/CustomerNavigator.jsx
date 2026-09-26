@@ -33,6 +33,8 @@ import OffersScreen from '../screens/customer/OffersScreen';
 import MapViewScreen from '../screens/customer/MapViewScreen';
 import PayBillScreen from '../screens/customer/PayBillScreen';
 import PayBillSuccessScreen from '../screens/customer/PayBillSuccessScreen';
+import PayBillReviewScreen from '../screens/customer/PayBillReviewScreen';
+import PayBillCheckoutScreen from '../screens/customer/PayBillCheckoutScreen';
 import BillPaymentHistoryScreen from '../screens/customer/BillPaymentHistoryScreen';
 
 const Tab = createBottomTabNavigator();
@@ -90,6 +92,8 @@ function HomeStack() {
       <Stack.Screen name="MapView" component={MapViewScreen} />
       <Stack.Screen name="Notifications" component={NotificationsScreen} />
       <Stack.Screen name="PayBill" component={PayBillScreen} />
+      <Stack.Screen name="PayBillReview" component={PayBillReviewScreen} />
+      <Stack.Screen name="PayBillCheckout" component={PayBillCheckoutScreen} />
       <Stack.Screen name="PayBillSuccess" component={PayBillSuccessScreen} />
       <Stack.Screen name="BillPaymentHistory" component={BillPaymentHistoryScreen} />
     </Stack.Navigator>

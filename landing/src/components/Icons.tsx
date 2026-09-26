@@ -233,6 +233,15 @@ export function IconPin({ size, className }: IconProps) {
   )
 }
 
+export function IconMail({ size, className }: IconProps) {
+  return (
+    <svg {...base(size)} className={className}>
+      <rect x="3" y="5" width="18" height="14" rx="2.5" />
+      <path d="m4 7 8 6 8-6" />
+    </svg>
+  )
+}
+
 export function IconPlus({ size, className }: IconProps) {
   return (
     <svg {...base(size)} className={className}>

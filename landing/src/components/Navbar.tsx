@@ -10,7 +10,7 @@ const links = [
   { label: 'How it works', href: '/how-it-works' },
   { label: 'Partner with us', href: '/partner' },
   { label: 'Features', href: '/features' },
-  { label: 'Contact', href: '#contact' },
+  { label: 'Contact', href: '/contact' },
 ]
 
 /** `onHome` is false on the standalone pages, where #anchors have to point back at the home page. */

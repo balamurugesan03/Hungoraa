@@ -3,7 +3,7 @@ import { IconArrowRight, IconCalendar, IconFork, IconReceipt, IconStar, IconTag,
 import './PartnerWithUs.css'
 
 /** Where "Become a partner" sends people — swap for the real sign-up form or mailto: link. */
-const PARTNER_HREF = '#contact'
+const PARTNER_HREF = '/contact'
 
 const cafe = 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=1000&q=74&auto=format&fit=crop'
 

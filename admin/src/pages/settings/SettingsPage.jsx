@@ -2,12 +2,12 @@ import { useEffect, useState } from 'react';
 import {
   Stack, Title, Card, Text, NumberInput, Switch, Button, Grid,
   TextInput, Divider, Group, Skeleton, SegmentedControl, Alert,
-  FileInput, Image,
+  FileInput, Image, Progress,
 } from '@mantine/core';
 import { useForm } from '@mantine/form';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { notifications } from '@mantine/notifications';
-import { IconDeviceFloppy, IconUpload } from '@tabler/icons-react';
+import { IconDeviceFloppy, IconUpload, IconMovie, IconTrash } from '@tabler/icons-react';
 import { adminApi } from '../../api';
 
 
@@ -61,6 +61,30 @@ export default function SettingsPage() {
     },
   });
   const [heroUploading, setHeroUploading] = useState(false);
+  const [videoProgress, setVideoProgress] = useState(null); // null = idle, 0–100 = uploading
+
+  const uploadHeroVideo = async (file) => {
+    if (!file) return;
+    if (file.size > 50 * 1024 * 1024) {
+      notifications.show({ title: 'Video too large', message: 'Keep it under 50 MB — a 10–20 s loop is ideal', color: 'red' });
+      return;
+    }
+    setVideoProgress(0);
+    try {
+      const { data } = await adminApi.uploadVideo(file, setVideoProgress);
+      heroForm.setFieldValue('homeHeroVideoUrl', data.data.url);
+      heroForm.setFieldValue('homeHeroEnabled', true);
+      notifications.show({ title: 'Video uploaded — click Save Background', color: 'green' });
+    } catch (err) {
+      notifications.show({
+        title: 'Upload failed',
+        message: err.response?.data?.message || 'Use an MP4 / WebM / MOV under 50 MB',
+        color: 'red',
+      });
+    } finally {
+      setVideoProgress(null);
+    }
+  };
 
   const uploadHeroImage = async (file) => {
     if (!file) return;
@@ -391,15 +415,63 @@ export default function SettingsPage() {
                   {...heroForm.getInputProps('homeHeroImageUrl')}
                 />
 
+                <Divider label="Banner video (optional)" labelPosition="left" />
+
+                <FileInput
+                  label="Background video"
+                  description="Plays on loop instead of the image · MP4 (H.264) best · 10–20 s, under 50 MB, no sound needed"
+                  placeholder="Upload a video"
+                  accept="video/mp4,video/webm,video/quicktime"
+                  leftSection={<IconMovie size={16} />}
+                  disabled={videoProgress !== null}
+                  onChange={uploadHeroVideo}
+                  value={null}
+                />
+                {videoProgress !== null ? (
+                  <Stack gap={4}>
+                    <Progress value={videoProgress} animated striped color="gold" />
+                    <Text size="xs" c="dimmed">Uploading… {videoProgress}%</Text>
+                  </Stack>
+                ) : null}
+
+                {heroForm.values.homeHeroVideoUrl ? (
+                  <Stack gap={6}>
+                    <video
+                      key={heroForm.values.homeHeroVideoUrl}
+                      src={heroForm.values.homeHeroVideoUrl}
+                      poster={heroForm.values.homeHeroImageUrl || undefined}
+                      autoPlay
+                      muted
+                      loop
+                      playsInline
+                      style={{ width: '100%', height: 150, objectFit: 'cover', borderRadius: 8, background: '#0c2f4e' }}
+                    />
+                    <Group justify="space-between" wrap="nowrap">
+                      <Text size="xs" c="dimmed" style={{ wordBreak: 'break-all' }}>
+                        {heroForm.values.homeHeroVideoUrl}
+                      </Text>
+                      <Button
+                        size="xs"
+                        variant="light"
+                        color="red"
+                        leftSection={<IconTrash size={13} />}
+                        onClick={() => heroForm.setFieldValue('homeHeroVideoUrl', '')}
+                      >
+                        Remove
+                      </Button>
+                    </Group>
+                    <Text size="xs" c="dimmed">The image above is used as the poster while the video loads.</Text>
+                  </Stack>
+                ) : null}
+
                 <TextInput
-                  label="Looping video URL (optional)"
-                  description="An .mp4 plays instead of the image when set"
+                  label="…or paste a video URL"
                   placeholder="https://…/hero.mp4"
                   {...heroForm.getInputProps('homeHeroVideoUrl')}
                 />
 
                 <Button type="submit" color="gold" leftSection={<IconDeviceFloppy size={16} />}
-                  loading={updateMutation.isPending || heroUploading}>
+                  loading={updateMutation.isPending || heroUploading || videoProgress !== null}>
                   Save Background
                 </Button>
               </Stack>

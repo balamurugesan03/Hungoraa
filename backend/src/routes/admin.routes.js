@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { protect, authorize } = require('../middleware/auth.middleware');
-const { uploadFields, uploadSingle } = require('../config/upload');
+const { uploadFields, uploadSingle, uploadVideo } = require('../config/upload');
 const {
   getDashboard, getStats,
   uploadAsset,
@@ -90,5 +90,6 @@ router.put('/settings', updateSettings);
 
 // Generic image upload for platform assets (e.g. the home hero background)
 router.post('/upload', uploadSingle('platform', 'image'), uploadAsset);
+router.post('/upload-video', uploadVideo('platform', 'video'), uploadAsset);
 
 module.exports = router;

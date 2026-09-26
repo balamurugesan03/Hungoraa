@@ -732,10 +732,10 @@ exports.updateSettings = async (req, res) => {
   }
 };
 
-// Generic image upload — returns the public URL for the caller to store in settings
+// Generic image / video upload — returns the public URL for the caller to store in settings
 exports.uploadAsset = async (req, res) => {
   try {
-    if (!req.file) return errorResponse(res, 400, 'No image file received');
+    if (!req.file) return errorResponse(res, 400, 'No file received');
     successResponse(res, 200, 'Uploaded', {
       url: absolutiseUrl(req.file.path, req),
       publicId: req.file.filename,

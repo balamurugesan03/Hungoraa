@@ -25,6 +25,8 @@ const PUBLIC_URL = (
 const IMAGE_EXT = ['.jpg', '.jpeg', '.png', '.webp'];
 const DOC_EXT = [...IMAGE_EXT, '.pdf'];
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB, same cap the Cloudinary config used
+const VIDEO_EXT = ['.mp4', '.webm', '.mov'];
+const MAX_VIDEO_SIZE = 50 * 1024 * 1024; // 50MB — short looping clips only
 
 function ensureDir(dir) {
   fs.mkdirSync(dir, { recursive: true });
@@ -79,6 +81,12 @@ const uploadMultiple = (folder, fieldName = 'images', maxCount = 10) => [
   publicize,
 ];
 
+// A single short video (e.g. the mobile home hero loop)
+const uploadVideo = (folder, fieldName = 'video') => [
+  multer({ storage: storageFor(folder), fileFilter: fileFilterFor(VIDEO_EXT), limits: { fileSize: MAX_VIDEO_SIZE } }).single(fieldName),
+  publicize,
+];
+
 // Several named image fields in one request, e.g. restaurant `logo` + `images`
 const uploadImageFields = (folder, fields) => [
   multer({ storage: storageFor(folder), fileFilter: fileFilterFor(IMAGE_EXT), limits: { fileSize: MAX_FILE_SIZE } }).fields(fields),
@@ -115,4 +123,4 @@ const deleteImage = async (filename) => {
   return false;
 };
 
-module.exports = { uploadSingle, uploadMultiple, uploadImageFields, uploadFields, deleteImage, UPLOAD_ROOT };
+module.exports = { uploadSingle, uploadMultiple, uploadVideo, uploadImageFields, uploadFields, deleteImage, UPLOAD_ROOT };

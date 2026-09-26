@@ -26,7 +26,7 @@ const errorHandler = (err, req, res, next) => {
   // Multer / file-upload errors
   if (err.name === 'MulterError') {
     message = err.code === 'LIMIT_FILE_SIZE'
-      ? 'File too large — maximum size is 5 MB'
+      ? `File too large — maximum size is ${err.field === 'video' ? 50 : 5} MB`
       : `Upload error: ${err.message}`;
     statusCode = 400;
   }

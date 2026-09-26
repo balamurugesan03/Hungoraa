@@ -16,6 +16,15 @@ export const adminApi = {
     fd.append('image', file);
     return api.post('/admin/upload', fd, { headers: { 'Content-Type': 'multipart/form-data' } });
   },
+  // Short looping video (mp4 / webm / mov, ≤ 50 MB). onProgress gets 0–100.
+  uploadVideo: (file, onProgress) => {
+    const fd = new FormData();
+    fd.append('video', file);
+    return api.post('/admin/upload-video', fd, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+      onUploadProgress: (e) => e.total && onProgress?.(Math.round((e.loaded * 100) / e.total)),
+    });
+  },
   // New analytics dashboards
   getCommissionDashboard: (params) => api.get('/admin/commissions', { params }),
   getSettlementDashboard: (params) => api.get('/admin/settlements', { params }),

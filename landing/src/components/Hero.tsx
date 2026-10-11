@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import gsap from 'gsap'
 import { IconArrowRight } from './Icons'
+import { DEFAULT_BANNER, useHeroBanner } from '../hooks/useHeroBanner'
 import './Hero.css'
 
 const TITLE_LINES = ['Good Food.', 'Great Moments.', 'Together.']
@@ -41,12 +42,22 @@ function useTypewriter(total: number) {
 export default function Hero() {
   const rootRef = useRef<HTMLElement>(null)
   const typed = useTypewriter(TITLE_TOTAL)
+  const banner = useHeroBanner()
+  const [bannerSrc, setBannerSrc] = useState<string | null>(null)
+  const [bannerLoaded, setBannerLoaded] = useState(false)
+
+  // Swap in a new URL (admin changed it since the cached one) with a fresh fade-in.
+  useEffect(() => {
+    if (banner && banner !== bannerSrc) {
+      setBannerSrc(banner)
+      setBannerLoaded(false)
+    }
+  }, [banner]) // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     const ctx = gsap.context(() => {
       const tl = gsap.timeline({ defaults: { ease: 'power3.out', duration: 0.8 } })
-      tl.from('.hero__banner', { opacity: 0, scale: 1.05, duration: 1.4 }, 0)
-        .from('.hero__subtitle', { opacity: 0, y: 16 }, 0.5)
+      tl.from('.hero__subtitle', { opacity: 0, y: 16 }, 0.5)
         .from('.hero__actions > *', { opacity: 0, y: 16, stagger: 0.08 }, '-=0.5')
     }, rootRef)
 
@@ -75,7 +86,18 @@ export default function Hero() {
   return (
     <section id="top" className="hero" ref={rootRef}>
       <div className="hero__bg" aria-hidden="true">
-        <img className="hero__banner" src="/bannerimage.png" alt="" loading="eager" />
+        {bannerSrc && (
+          <img
+            key={bannerSrc}
+            className={`hero__banner${bannerLoaded ? ' is-loaded' : ''}`}
+            src={bannerSrc}
+            alt=""
+            loading="eager"
+            fetchPriority="high"
+            onLoad={() => setBannerLoaded(true)}
+            onError={() => bannerSrc !== DEFAULT_BANNER && setBannerSrc(DEFAULT_BANNER)}
+          />
+        )}
       </div>
 
       <div className="hero__inner">

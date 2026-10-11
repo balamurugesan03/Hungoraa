@@ -124,6 +124,29 @@ export default function SettingsPage() {
     }
   };
 
+  const landingForm = useForm({
+    initialValues: { landingHeroImageUrl: '' },
+  });
+  const [landingUploading, setLandingUploading] = useState(false);
+
+  const uploadLandingImage = async (file) => {
+    if (!file) return;
+    setLandingUploading(true);
+    try {
+      const { data } = await adminApi.uploadAsset(file);
+      landingForm.setFieldValue('landingHeroImageUrl', data.data.url);
+      notifications.show({ title: 'Image uploaded — click Save Landing Image', color: 'green' });
+    } catch (err) {
+      notifications.show({
+        title: 'Upload failed',
+        message: err.response?.data?.message || 'Use a JPG / PNG / WebP under 5 MB',
+        color: 'red',
+      });
+    } finally {
+      setLandingUploading(false);
+    }
+  };
+
   useEffect(() => {
     if (!settingsData) return;
     platformForm.setValues({
@@ -164,6 +187,9 @@ export default function SettingsPage() {
       homeHeroEnabled: settingsData.homeHeroEnabled ?? false,
       homeHeroImageUrl: settingsData.homeHeroImageUrl ?? '',
       homeHeroVideoUrl: settingsData.homeHeroVideoUrl ?? '',
+    });
+    landingForm.setValues({
+      landingHeroImageUrl: settingsData.landingHeroImageUrl ?? '',
     });
   }, [settingsData]);
 
@@ -638,6 +664,72 @@ export default function SettingsPage() {
                 <Button type="submit" color="gold" leftSection={<IconDeviceFloppy size={16} />}
                   loading={updateMutation.isPending || heroUploading || videoProgress !== null}>
                   Save Background
+                </Button>
+              </Stack>
+            </form>
+          </Card>
+        </Grid.Col>
+
+        {/* Landing page (hungora.com) — hero banner image */}
+        <Grid.Col span={{ base: 12, md: 6 }}>
+          <Card withBorder radius="md" p="lg">
+            <Text fw={700} mb={4} size="lg">Landing Page Image</Text>
+            <Text size="xs" c="dimmed" mb="lg">
+              The full-width banner behind the headline on the hungora.com home page.
+              Leave empty to use the default banner.
+            </Text>
+            <form onSubmit={landingForm.onSubmit((v) => updateMutation.mutate(v))}>
+              <Stack gap="md">
+                <FileInput
+                  label="Landing page image"
+                  description="Wide / landscape (≈ 1920×1080), subject on the right · JPG, PNG or WebP, under 5 MB"
+                  placeholder="Upload an image"
+                  accept="image/png,image/jpeg,image/webp"
+                  leftSection={<IconUpload size={16} />}
+                  disabled={landingUploading}
+                  onChange={uploadLandingImage}
+                  value={null}
+                />
+
+                {landingForm.values.landingHeroImageUrl ? (
+                  <>
+                    <Image
+                      src={landingForm.values.landingHeroImageUrl}
+                      radius="md"
+                      h={160}
+                      fit="cover"
+                      alt="Landing page image preview"
+                    />
+                    <Group justify="space-between" wrap="nowrap" align="flex-start">
+                      <Text size="xs" c="dimmed" style={{ wordBreak: 'break-all' }}>
+                        URL: <a href={landingForm.values.landingHeroImageUrl} target="_blank" rel="noreferrer">
+                          {landingForm.values.landingHeroImageUrl}
+                        </a>
+                      </Text>
+                      <Button
+                        size="xs"
+                        variant="light"
+                        color="red"
+                        leftSection={<IconTrash size={13} />}
+                        onClick={() => landingForm.setFieldValue('landingHeroImageUrl', '')}
+                      >
+                        Reset to default
+                      </Button>
+                    </Group>
+                  </>
+                ) : (
+                  <Text size="xs" c="dimmed">Using the default banner.</Text>
+                )}
+
+                <TextInput
+                  label="…or paste an image URL"
+                  placeholder="https://…"
+                  {...landingForm.getInputProps('landingHeroImageUrl')}
+                />
+
+                <Button type="submit" color="gold" leftSection={<IconDeviceFloppy size={16} />}
+                  loading={updateMutation.isPending || landingUploading}>
+                  Save Landing Image
                 </Button>
               </Stack>
             </form>

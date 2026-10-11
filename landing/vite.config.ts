@@ -22,6 +22,11 @@ export default defineConfig({
   plugins: [react(), cleanUrls()],
   server: {
     port: 5180,
+    // the hero banner URL comes from the backend's public settings (nginx does this in prod)
+    proxy: {
+      '/api': { target: 'http://localhost:5000', changeOrigin: true },
+      '/uploads': { target: 'http://localhost:5000', changeOrigin: true },
+    },
   },
   build: {
     rollupOptions: {

@@ -53,6 +53,10 @@ const platformSettingsSchema = new mongoose.Schema(
     homeHeroEnabled: { type: Boolean, default: false },
     homeHeroImageUrl: { type: String, default: '' },
     homeHeroVideoUrl: { type: String, default: '' },        // optional looping video (mp4)
+
+    // ── Landing page (hungora.com) — hero banner image ──────────────────────
+    // Empty = the landing site falls back to its bundled /bannerimage.png.
+    landingHeroImageUrl: { type: String, default: '' },
   },
   { timestamps: true, minimize: false },
 );
@@ -74,6 +78,7 @@ platformSettingsSchema.statics.WRITABLE = [
   'appDiscountEnabled', 'appDiscountType', 'appDiscountValue', 'appDiscountCap', 'appDiscountMinBill',
   'appDiscountScope', 'appDiscountRestaurants',
   'homeHeroEnabled', 'homeHeroImageUrl', 'homeHeroVideoUrl',
+  'landingHeroImageUrl',
 ];
 
 // Fields safe to expose to unauthenticated mobile clients.
@@ -81,6 +86,7 @@ platformSettingsSchema.statics.PUBLIC = [
   'homeHeroEnabled', 'homeHeroImageUrl', 'homeHeroVideoUrl',
   'convenienceFeeEnabled', 'maintenanceMode',
   'appDiscountEnabled', 'appDiscountType', 'appDiscountValue', 'appDiscountCap', 'appDiscountMinBill',
+  'landingHeroImageUrl',
 ];
 
 module.exports = mongoose.model('PlatformSettings', platformSettingsSchema);

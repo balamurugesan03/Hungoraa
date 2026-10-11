@@ -753,6 +753,9 @@ exports.getPublicSettings = async (req, res) => {
     for (const k of PlatformSettings.PUBLIC) out[k] = doc[k];
     out.homeHeroImageUrl = absolutiseUrl(out.homeHeroImageUrl, req);
     out.homeHeroVideoUrl = absolutiseUrl(out.homeHeroVideoUrl, req);
+    // landingHeroImageUrl is left as stored: the landing site is served from the
+    // same origin and loads its own /uploads/… by path (absolutiseUrl would give
+    // http:// behind nginx → mixed content on https).
     successResponse(res, 200, 'Public settings', { settings: out });
   } catch (err) {
     errorResponse(res, 500, err.message);

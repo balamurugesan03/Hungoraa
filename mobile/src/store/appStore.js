@@ -7,6 +7,11 @@ export const useAppStore = create((set) => ({
   recentSearches: [],
   cartItems: [],
 
+  // Launch logo video has finished. Screens hold their popups (location etc.) until
+  // then — RN Modals render in their own window, above the intro overlay.
+  introDone: false,
+  setIntroDone: (introDone) => set({ introDone }),
+
   // Dining intent chosen from the post-login popup ('book' | 'dinein' | null).
   // `modeChooserShown` is NOT persisted, so the popup shows once per app launch.
   diningMode: null,

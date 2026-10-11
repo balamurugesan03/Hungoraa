@@ -14,7 +14,6 @@ import QuickActions from '../../components/home/QuickActions';
 import DiscoveryGrid from '../../components/home/DiscoveryGrid';
 import BottomNavigation from '../../components/home/BottomNavigation';
 import RateOrderCard from '../../components/home/RateOrderCard';
-import DiningModeModal from '../../components/home/DiningModeModal';
 import LocationGate from '../../components/home/LocationGate';
 import HomeHeroVideo from '../../components/home/HomeHeroVideo';
 import OffersBanner from '../../components/home/OffersBanner';
@@ -48,15 +47,12 @@ export default function HomeScreen({ navigation }) {
   const [showRate, setShowRate] = useState(true);
   const [locOpen, setLocOpen] = useState(false);
 
-  // Post-login popups. Neither flag is persisted, so both re-evaluate each launch.
-  const modeChooserShown = useAppStore((s) => s.modeChooserShown);
+  // Post-login location prompt. Not persisted, so it re-evaluates each launch.
+  const introDone = useAppStore((s) => s.introDone);
   const setDiningMode = useAppStore((s) => s.setDiningMode);
-  const markModeChooserShown = useAppStore((s) => s.markModeChooserShown);
   const locationPromptDone = useAppStore((s) => s.locationPromptDone);
   const markLocationPrompt = useAppStore((s) => s.markLocationPrompt);
-  const [modeOpen, setModeOpen] = useState(false);
   const [locGateOpen, setLocGateOpen] = useState(false);
-  const [locChecked, setLocChecked] = useState(false);
 
   const platformQ = useQuery({
     queryKey: ['platform-settings'],
@@ -94,10 +90,12 @@ export default function HomeScreen({ navigation }) {
 
   // Swiggy-style: right after login, figure out where the guest is. If location
   // is already granted, detect silently; otherwise show the permission prompt.
+  // Waits for the launch video, so the prompt never pops up over it.
   useEffect(() => {
+    if (!introDone) return undefined;
     let cancelled = false;
     (async () => {
-      if (city || locationPromptDone) { setLocChecked(true); return; }
+      if (city || locationPromptDone) return;
       markLocationPrompt();
       try {
         const perm = await Location.getForegroundPermissionsAsync();
@@ -117,31 +115,15 @@ export default function HomeScreen({ navigation }) {
             } catch { /* geocode best-effort */ }
             if (!cancelled) setLocation({ city: dCity, coords, locality: dLoc });
           } catch { /* GPS fix failed — leave it, user can pick a city */ }
-          if (!cancelled) setLocChecked(true);
         } else if (!cancelled) {
           setLocGateOpen(true);
-          setLocChecked(true);
         }
       } catch {
-        if (!cancelled) { setLocGateOpen(true); setLocChecked(true); }
+        if (!cancelled) setLocGateOpen(true);
       }
     })();
     return () => { cancelled = true; };
-  }, []);
-
-  // Dining-intent popup — only after the location step is out of the way.
-  useEffect(() => {
-    if (modeChooserShown || !locChecked || locGateOpen) return;
-    const t = setTimeout(() => setModeOpen(true), 300);
-    return () => clearTimeout(t);
-  }, [modeChooserShown, locChecked, locGateOpen]);
-
-  const handlePickMode = (mode) => {
-    setDiningMode(mode);
-    setModeOpen(false);
-    if (mode === 'book') go('RestaurantList', { title: 'Book a table', city });
-    else if (mode === 'dinein') go('PayBill');
-  };
+  }, [introDone]);
 
   const handleLocationResolved = ({ city: c, coords, locality: loc }) => {
     setLocation({ city: c, coords, locality: loc });
@@ -174,7 +156,7 @@ export default function HomeScreen({ navigation }) {
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#FFFFFF" colors={['#FFFFFF']} />
         }
       >
-        {/* Navy zone — brand, location, search and cuisine chips, ends in a curved shape */}
+        {/* Navy zone — brand, location and search, ends in a curved shape */}
         <View style={[styles.navyZone, { paddingTop: insets.top + SPACING.xs }]}>
           {/* Admin-set hero background (Swiggy-style) — image or looping video */}
           {heroVideo ? (
@@ -221,28 +203,28 @@ export default function HomeScreen({ navigation }) {
               <Ionicons name="mic-outline" size={16} color={COLOR.terracotta} />
             </View>
           </Pressable>
-
-          {/* Cuisine chips */}
-          {cuisines.length ? (
-            <FlatList
-              data={cuisines}
-              keyExtractor={(c) => c.id}
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={styles.chips}
-              renderItem={({ item }) => (
-                <Chip
-                  label={item.label}
-                  selected={category.id === item.id}
-                  onPress={() => setCategory(category.id === item.id ? { id: 'all', label: 'All' } : item)}
-                />
-              )}
-            />
-          ) : null}
         </View>
 
         {/* Primary actions — fully below the hero's curve, on the plain page */}
         <QuickActions onPress={handleQuickAction} />
+
+        {/* Cuisine chips — scroll with the page, under the primary actions */}
+        {cuisines.length ? (
+          <FlatList
+            data={cuisines}
+            keyExtractor={(c) => c.id}
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.chips}
+            renderItem={({ item }) => (
+              <Chip
+                label={item.label}
+                selected={category.id === item.id}
+                onPress={() => setCategory(category.id === item.id ? { id: 'all', label: 'All' } : item)}
+              />
+            )}
+          />
+        ) : null}
 
         {/* What's on your mind — back on white */}
         <Text style={[text.h2, styles.sectionHead]}>What&apos;s on your mind?</Text>
@@ -330,11 +312,6 @@ export default function HomeScreen({ navigation }) {
         onClose={() => setLocGateOpen(false)}
       />
 
-      <DiningModeModal
-        visible={modeOpen}
-        onSelect={handlePickMode}
-        onClose={() => { setModeOpen(false); markModeChooserShown(); }}
-      />
 
       <Sheet visible={locOpen} onClose={() => setLocOpen(false)} title="Choose your city">
         <ScrollView style={{ maxHeight: 380 }} showsVerticalScrollIndicator={false}>

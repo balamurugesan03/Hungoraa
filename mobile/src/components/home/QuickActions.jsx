@@ -8,13 +8,12 @@ const NAVY = '#0C2F4E';
 
 const ACTIONS = [
   { id: 'book', label: 'Book a Table', hint: 'Reserve ahead', icon: 'calendar-outline', variant: 'navy' },
-  { id: 'dinein', label: 'Dine In', hint: 'Walk in & pay bill', icon: 'restaurant-outline', variant: 'white' },
+  { id: 'dinein', label: 'Dine In', hint: 'Walk in & pay bill', icon: 'restaurant-outline', variant: 'navy' },
 ];
 
 /**
- * The two primary diner actions as solid colour blocks:
- *  - Book a Table → logo-blue fill, white text
- *  - Dine In      → white fill, logo-blue text (the inverse)
+ * The two primary diner actions as solid logo-blue blocks with white text.
+ * (The `white` variant is kept for an inverse card if one is ever needed.)
  */
 export default function QuickActions({ onPress }) {
   return (

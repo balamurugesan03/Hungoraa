@@ -21,6 +21,8 @@ import {
   Inter_700Bold,
 } from '@expo-google-fonts/inter';
 import RootNavigator from './src/navigation';
+import LaunchVideo from './src/components/LaunchVideo';
+import { useAppStore } from './src/store/appStore';
 import { COLOR } from './src/theme';
 
 // Web/server client ID — the audience the backend verifies Google ID tokens
@@ -61,6 +63,8 @@ const queryClient = new QueryClient({
 
 export default function App() {
   const [ready, setReady] = useState(false);
+  const introDone = useAppStore((s) => s.introDone);
+  const setIntroDone = useAppStore((s) => s.setIntroDone);
 
   const [fontsLoaded, fontError] = useFonts({
     Fraunces_400Regular,
@@ -92,16 +96,16 @@ export default function App() {
 
   const bootDone = ready && (fontsLoaded || fontError);
 
-  const onLayoutRootView = useCallback(async () => {
-    if (bootDone) {
-      await SplashScreen.hideAsync().catch(() => {});
-    }
-  }, [bootDone]);
+  // The native splash stays up until the intro video's first frame is on screen,
+  // so the hand-off from splash → video has no blank flash.
+  const hideNativeSplash = useCallback(() => {
+    SplashScreen.hideAsync().catch(() => {});
+  }, []);
 
   if (!bootDone) return null;
 
   return (
-    <GestureHandlerRootView style={{ flex: 1 }} onLayout={onLayoutRootView}>
+    <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>
         <QueryClientProvider client={queryClient}>
           <StatusBar barStyle="dark-content" backgroundColor={COLOR.bg} translucent={false} />
@@ -109,6 +113,9 @@ export default function App() {
             <RootNavigator />
           </View>
           <Toast />
+          {!introDone ? (
+            <LaunchVideo onFirstFrame={hideNativeSplash} onDone={() => setIntroDone(true)} />
+          ) : null}
         </QueryClientProvider>
       </SafeAreaProvider>
     </GestureHandlerRootView>

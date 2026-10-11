@@ -12,6 +12,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import Toast from 'react-native-toast-message';
 import restaurantApi from '../../api/restaurant.api';
+import { useAppStore } from '../../store/appStore';
 import { isOpenNow } from '../../components/home/viewModels';
 import {
   isPayBillOffer, isBookingOffer, offerValueLabel, offerFunderLabel,
@@ -85,8 +86,13 @@ const formatReviewDate = (d) => {
 };
 
 export default function RestaurantDetailScreen({ navigation, route }) {
-  const { id, restaurantId } = route.params || {};
+  const { id, restaurantId, mode: modeParam } = route.params || {};
   const rid = restaurantId || id;
+  const diningMode = useAppStore((s) => s.diningMode);
+  const setDiningMode = useAppStore((s) => s.setDiningMode);
+  // 'book' → reservation section, 'dinein' → walk-in pay bill section.
+  const [mode, setMode] = useState(modeParam || (diningMode === 'dinein' ? 'dinein' : 'book'));
+  const pickMode = (m) => { setMode(m); setDiningMode(m); };
   const insets = useSafeAreaInsets();
   const scrollY = useSharedValue(0);
   const heroRef = useRef(null);
@@ -359,7 +365,24 @@ export default function RestaurantDetailScreen({ navigation, route }) {
           </View>
         </View>
 
+        {/* Book a Table / Dine In switch — shows only the chosen flow */}
+        <View style={styles.modeTabs}>
+          {[
+            { id: 'book', label: 'Book a Table', icon: 'calendar-outline' },
+            { id: 'dinein', label: 'Dine In', icon: 'restaurant-outline' },
+          ].map((t) => {
+            const on = mode === t.id;
+            return (
+              <Pressable key={t.id} style={[styles.modeTab, on && styles.modeTabOn]} onPress={() => pickMode(t.id)}>
+                <Ionicons name={t.icon} size={16} color={on ? '#FFFFFF' : COLOR.navy} />
+                <Text style={[styles.modeTabText, on && styles.modeTabTextOn]}>{t.label}</Text>
+              </Pressable>
+            );
+          })}
+        </View>
+
         {/* Book a Table */}
+        {mode === 'book' ? (
         <View style={styles.block}>
           <Text style={[text.h2, styles.blockTitle]}>Book a Table</Text>
           <Text style={[text.caption, styles.blockSub]}>Free · instant confirmation · earn Hungora rewards</Text>
@@ -433,6 +456,24 @@ export default function RestaurantDetailScreen({ navigation, route }) {
             style={{ marginTop: SPACING.md }}
           />
         </View>
+        ) : null}
+
+        {/* Walk-in Pay Bill — available at every restaurant */}
+        {mode === 'dinein' && restaurant._id ? (
+          <View style={styles.block}>
+            <WalkInPayBill
+              offers={payBillOffers}
+              onProceed={(amount, offerId) => navigation.navigate('PayBill', {
+                restaurant: {
+                  _id: rid, name: restaurant.name, address: restaurant.address,
+                  logo: restaurant.logo, averageRating: restaurant.averageRating,
+                },
+                billAmount: amount,
+                offerId,
+              })}
+            />
+          </View>
+        ) : null}
 
         {/* Deals */}
         {allOffers.length ? (
@@ -456,23 +497,6 @@ export default function RestaurantDetailScreen({ navigation, route }) {
                 </View>
               ))}
             </ScrollView>
-          </View>
-        ) : null}
-
-        {/* Walk-in Pay Bill — available at every restaurant */}
-        {restaurant._id ? (
-          <View style={styles.block}>
-            <WalkInPayBill
-              offers={payBillOffers}
-              onProceed={(amount, offerId) => navigation.navigate('PayBill', {
-                restaurant: {
-                  _id: rid, name: restaurant.name, address: restaurant.address,
-                  logo: restaurant.logo, averageRating: restaurant.averageRating,
-                },
-                billAmount: amount,
-                offerId,
-              })}
-            />
           </View>
         ) : null}
 
@@ -688,7 +712,8 @@ export default function RestaurantDetailScreen({ navigation, route }) {
         </View>
       </Animated.ScrollView>
 
-      {/* Sticky CTA */}
+      {/* Sticky CTA — booking only; Dine In has its own Pay button inline */}
+      {mode === 'book' ? (
       <View style={[styles.cta, { paddingBottom: insets.bottom + SPACING.sm }]}>
         <View style={styles.flex}>
           {bookTime ? (
@@ -705,6 +730,7 @@ export default function RestaurantDetailScreen({ navigation, route }) {
         </View>
         <Button label={bookTime ? 'Reserve' : 'Book a table'} full={false} onPress={goBook} disabled={!bookTime} />
       </View>
+      ) : null}
     </View>
   );
 }
@@ -871,6 +897,19 @@ const styles = StyleSheet.create({
     alignItems: 'center', justifyContent: 'center', ...ELEVATION.sm,
   },
   actionLabel: { fontFamily: FONT.medium, fontSize: 11, color: COLOR.inkSoft },
+
+  modeTabs: {
+    flexDirection: 'row', gap: SPACING.xs, marginTop: SPACING.sm,
+    marginHorizontal: SPACING.lg, padding: 4,
+    backgroundColor: COLOR.surface, borderRadius: RADII.pill, ...ELEVATION.sm,
+  },
+  modeTab: {
+    flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
+    gap: 6, paddingVertical: 11, borderRadius: RADII.pill,
+  },
+  modeTabOn: { backgroundColor: COLOR.navy },
+  modeTabText: { fontFamily: FONT.semiBold, fontSize: 14, color: COLOR.navy },
+  modeTabTextOn: { color: '#FFFFFF' },
 
   block: {
     backgroundColor: COLOR.surface, marginTop: SPACING.sm,

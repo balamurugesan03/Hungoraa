@@ -62,7 +62,7 @@ function MethodRow({ on, onPress, icon, iconBg, iconColor = '#fff', letter, titl
 }
 
 export default function PayBillCheckoutScreen({ navigation, route }) {
-  const { restaurant, amount, tip, offerId, offerCode, toPay, discount } = route.params;
+  const { restaurant, amount, tip, offerId, offerCode, toPay, discount, appDiscount = 0 } = route.params;
   const [method, setMethod] = useState('upi:gpay');
   const [upiId, setUpiId] = useState('');
   const qc = useQueryClient();
@@ -137,7 +137,9 @@ export default function PayBillCheckoutScreen({ navigation, route }) {
             {discount > 0 ? (
               <View style={p.savePill}>
                 <Ionicons name="pricetag" size={12} color={GREEN} />
-                <Text style={p.saveText}>Saved {inr(discount)}</Text>
+                <Text style={p.saveText}>
+                  Saved {inr(discount)}{appDiscount > 0 ? ` · incl. ${inr(appDiscount)} app discount` : ''}
+                </Text>
               </View>
             ) : null}
           </View>

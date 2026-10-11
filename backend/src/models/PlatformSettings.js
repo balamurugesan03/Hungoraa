@@ -36,6 +36,19 @@ const platformSettingsSchema = new mongoose.Schema(
     // the fee struck out with "FREE".
     convenienceFeeWaived: { type: Boolean, default: false },
 
+    // ── Pay Bill: Hungora app discount (platform-funded) ────────────────────
+    // Automatic discount for paying through the app, at every restaurant.
+    // Applied on (bill − offer discount) and stacks with offers. Booked as
+    // platformFunded, so the restaurant's payout and commission are untouched.
+    appDiscountEnabled: { type: Boolean, default: false },
+    appDiscountType: { type: String, enum: ['flat', 'percent'], default: 'percent' },
+    appDiscountValue: { type: Number, default: 0 },         // ₹ flat, or % if percent
+    appDiscountCap: { type: Number, default: 0 },           // max ₹ when percent (0 = no cap)
+    appDiscountMinBill: { type: Number, default: 0 },       // only on bills ≥ this
+    // 'all' = every restaurant · 'selected' = only appDiscountRestaurants
+    appDiscountScope: { type: String, enum: ['all', 'selected'], default: 'all' },
+    appDiscountRestaurants: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Restaurant' }],
+
     // ── Mobile home screen — hero background (Swiggy-style) ─────────────────
     homeHeroEnabled: { type: Boolean, default: false },
     homeHeroImageUrl: { type: String, default: '' },
@@ -58,6 +71,8 @@ platformSettingsSchema.statics.WRITABLE = [
   'enableEmailVerification', 'maintenanceMode',
   'convenienceFeeEnabled', 'convenienceFeeType', 'convenienceFeeValue',
   'convenienceFeeCap', 'convenienceFeeMinBill', 'gstOnFeePercent', 'convenienceFeeWaived',
+  'appDiscountEnabled', 'appDiscountType', 'appDiscountValue', 'appDiscountCap', 'appDiscountMinBill',
+  'appDiscountScope', 'appDiscountRestaurants',
   'homeHeroEnabled', 'homeHeroImageUrl', 'homeHeroVideoUrl',
 ];
 
@@ -65,6 +80,7 @@ platformSettingsSchema.statics.WRITABLE = [
 platformSettingsSchema.statics.PUBLIC = [
   'homeHeroEnabled', 'homeHeroImageUrl', 'homeHeroVideoUrl',
   'convenienceFeeEnabled', 'maintenanceMode',
+  'appDiscountEnabled', 'appDiscountType', 'appDiscountValue', 'appDiscountCap', 'appDiscountMinBill',
 ];
 
 module.exports = mongoose.model('PlatformSettings', platformSettingsSchema);

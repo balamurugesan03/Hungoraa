@@ -53,4 +53,60 @@ async function computeCharges(base, tip = 0) {
   return { convenienceFee, gstAmount, gstOnFeePercent, toPay, convenienceFeeOriginal, convenienceFeeWaived };
 }
 
-module.exports = { getSettings, invalidate, computeCharges, r2 };
+/**
+ * Hungora app discount: the admin's automatic, platform-funded discount for
+ * paying through the app. Applied on what is left after any offer discount.
+ * @param base          billAmount − offer discount
+ * @param restaurantId  checked against the 'selected' restaurant list
+ * Returns the discount in ₹ (0 when disabled, not eligible, or below the minimum bill).
+ */
+function appDiscountAppliesTo(s, restaurantId) {
+  if (!s.appDiscountEnabled) return false;
+  if (s.appDiscountScope !== 'selected') return true;
+  const id = String(restaurantId || '');
+  return (s.appDiscountRestaurants || []).some((r) => String(r) === id);
+}
+
+async function computeAppDiscount(base, restaurantId) {
+  const s = await getSettings();
+  const b = Math.max(0, Number(base) || 0);
+  if (!appDiscountAppliesTo(s, restaurantId) || b <= 0 || b < (s.appDiscountMinBill || 0)) return 0;
+
+  let d;
+  if (s.appDiscountType === 'flat') {
+    d = s.appDiscountValue || 0;
+  } else {
+    d = (b * (s.appDiscountValue || 0)) / 100;
+    if (s.appDiscountCap > 0) d = Math.min(d, s.appDiscountCap);
+  }
+  return r2(Math.min(Math.max(0, d), b));
+}
+
+// Human label for the bill summary, e.g. "10% off · up to ₹50" / "Flat ₹40 off".
+function appDiscountLabel(s) {
+  if (s.appDiscountType === 'flat') return `Flat ₹${s.appDiscountValue || 0} off`;
+  const cap = s.appDiscountCap > 0 ? ` · up to ₹${s.appDiscountCap}` : '';
+  return `${s.appDiscountValue || 0}% off${cap}`;
+}
+
+/**
+ * Folds the app discount into an offer's discountBreakup as platform-funded.
+ * Returns { discountBreakup, appDiscount, appDiscountLabel }.
+ */
+async function withAppDiscount(amount, discountBreakup, restaurantId) {
+  const appDiscount = await computeAppDiscount(amount - discountBreakup.total, restaurantId);
+  if (!appDiscount) return { discountBreakup, appDiscount: 0, appDiscountLabel: '' };
+  return {
+    appDiscount,
+    appDiscountLabel: appDiscountLabel(await getSettings()),
+    discountBreakup: {
+      ...discountBreakup,
+      platformFunded: r2(discountBreakup.platformFunded + appDiscount),
+      total:          r2(discountBreakup.total + appDiscount),
+    },
+  };
+}
+
+module.exports = {
+  getSettings, invalidate, computeCharges, appDiscountAppliesTo, computeAppDiscount, withAppDiscount, r2,
+};

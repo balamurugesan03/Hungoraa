@@ -34,6 +34,10 @@ const billPaymentSchema = new mongoose.Schema(
     offer:           { type: mongoose.Schema.Types.ObjectId, ref: 'Offer' },
     offerCode:       String,
     discountBreakup: { type: discountBreakupSchema, default: () => ({}) },
+    // Hungora app discount (admin setting). Already included in
+    // discountBreakup.platformFunded/total; kept separately for display.
+    appDiscount:     { type: Number, default: 0, min: 0 },
+    appDiscountLabel: String,                              // e.g. "10% off · up to ₹50"
 
     // Voluntary tip — added by the customer at checkout. Paid on top of the
     // bill, passed through 100% to the restaurant: NOT part of the commission

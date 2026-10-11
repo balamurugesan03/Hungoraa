@@ -160,6 +160,11 @@ exports.quoteBill = async (req, res, next) => {
       }
     }
 
+    const offerDiscount = discountBreakup.total;
+    let appDiscount;
+    let appDiscountLabel;
+    ({ discountBreakup, appDiscount, appDiscountLabel } = await billingService.withAppDiscount(amount, discountBreakup, rid));
+
     const base = Math.max(0, billingService.r2(amount - discountBreakup.total));
     const {
       convenienceFee, gstAmount, gstOnFeePercent, toPay, convenienceFeeOriginal, convenienceFeeWaived,
@@ -168,7 +173,10 @@ exports.quoteBill = async (req, res, next) => {
     return successResponse(res, 200, 'Bill quote', {
       restaurant: { _id: restaurant._id, name: restaurant.name },
       billAmount: amount,
-      discount: discountBreakup.total,
+      discount: discountBreakup.total,   // offer + app discount
+      offerDiscount,
+      appDiscount,
+      appDiscountLabel,
       discountBreakup,
       offer: offer ? {
         _id: offer._id, title: offer.title, type: offer.type,
@@ -228,7 +236,7 @@ exports.applyOffer = async (req, res, next) => {
 
 // ─── Internal: finalise a paid bill (offer usage + invoice + cashback + email) ─
 async function _settlePaidBill({
-  req, restaurant, amount, tip, discountBreakup, appliedOffer,
+  req, restaurant, amount, tip, discountBreakup, offerBreakup, appDiscount, appDiscountLabel, appliedOffer,
   convenienceFee, gstAmount, finalAmount, method, reference,
 }) {
   const billPayment = await BillPayment.create({
@@ -238,6 +246,8 @@ async function _settlePaidBill({
     offer:         appliedOffer?._id,
     offerCode:     appliedOffer?.code,
     discountBreakup,
+    appDiscount,
+    appDiscountLabel,
     tipAmount:     tip,
     convenienceFee,
     gstAmount,
@@ -254,7 +264,8 @@ async function _settlePaidBill({
     discountService.recordOfferUsage({
       offer: appliedOffer, userId: req.user._id, restaurantId: restaurant._id,
       grossAmount: amount,
-      discountResult: { totalDiscount: discountBreakup.total, ...discountBreakup },
+      // offer ledger records the offer's own discount, not the app discount
+      discountResult: { totalDiscount: offerBreakup.total, ...offerBreakup },
       sourceType: 'bill_payment', sourceId: billPayment._id,
     }).catch(() => {});
   }
@@ -319,13 +330,19 @@ exports.createBillPayment = async (req, res, next) => {
       }
     }
 
+    // Hungora app discount (admin setting), platform-funded, on top of the offer.
+    const offerBreakup = discountBreakup;
+    let appDiscount;
+    let appDiscountLabel;
+    ({ discountBreakup, appDiscount, appDiscountLabel } = await billingService.withAppDiscount(amount, discountBreakup, rid));
+
     // EasyDiner-style total: (bill − discount) + convenience fee + GST-on-fee + tip.
     const base = Math.max(0, billingService.r2(amount - discountBreakup.total));
     const { convenienceFee, gstAmount, toPay } = await billingService.computeCharges(base, tip);
     const finalAmount = toPay;
 
     const settle = (method, reference) => _settlePaidBill({
-      req, restaurant, amount, tip, discountBreakup, appliedOffer,
+      req, restaurant, amount, tip, discountBreakup, offerBreakup, appDiscount, appDiscountLabel, appliedOffer,
       convenienceFee, gstAmount, finalAmount, method, reference,
     });
 
@@ -364,6 +381,8 @@ exports.createBillPayment = async (req, res, next) => {
         offer:         appliedOffer?._id,
         offerCode:     appliedOffer?.code,
         discountBreakup,
+        appDiscount,
+        appDiscountLabel,
         tipAmount:     tip,
         convenienceFee,
         gstAmount,
@@ -425,10 +444,11 @@ exports.completeBillPayment = async (req, res, next) => {
         discountService.recordOfferUsage({
           offer, userId: billPayment.customer, restaurantId: billPayment.restaurant,
           grossAmount: billPayment.billAmount,
+          // offer's own discount only — strip the app discount back out
           discountResult: {
-            totalDiscount:    billPayment.discountBreakup?.total ?? 0,
+            totalDiscount:    (billPayment.discountBreakup?.total ?? 0) - (billPayment.appDiscount || 0),
             restaurantFunded: billPayment.discountBreakup?.restaurantFunded ?? 0,
-            platformFunded:   billPayment.discountBreakup?.platformFunded ?? 0,
+            platformFunded:   (billPayment.discountBreakup?.platformFunded ?? 0) - (billPayment.appDiscount || 0),
             bankFunded:       billPayment.discountBreakup?.bankFunded ?? 0,
           },
           sourceType: 'bill_payment', sourceId: billPayment._id,

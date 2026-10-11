@@ -154,7 +154,8 @@ function HungoraCoin({ size = 92, delay = 0 }) {
 export default function PayBillSuccessScreen({ route, navigation }) {
   const insets = useSafeAreaInsets();
   const { billPayment, restaurantName, coinsEarned = 0 } = route.params || {};
-  const discount = billPayment?.discountBreakup?.total || 0;
+  const discount = billPayment?.discountBreakup?.total || 0;   // offer + app discount
+  const appDiscount = billPayment?.appDiscount || 0;
   const hasCoins = coinsEarned > 0;
 
   const check = useRef(new Animated.Value(0)).current;
@@ -175,7 +176,16 @@ export default function PayBillSuccessScreen({ route, navigation }) {
 
   const rows = [
     { label: 'Bill amount', value: inr(billPayment?.billAmount) },
-    ...(discount > 0 ? [{ label: 'Offer discount', value: `− ${inr(discount)}`, tone: GREEN }] : []),
+    ...(discount - appDiscount > 0 ? [{
+      label: 'Offer discount', sub: billPayment?.offerCode || undefined,
+      value: `− ${inr(discount - appDiscount)}`, tone: GREEN,
+    }] : []),
+    ...(appDiscount > 0 ? [{
+      label: 'Hungora app discount',
+      sub: `${billPayment?.appDiscountLabel ? `${billPayment.appDiscountLabel} · ` : ''}for paying on the app`,
+      value: `− ${inr(appDiscount)}`, tone: GREEN,
+    }] : []),
+    ...(discount > 0 ? [{ label: 'Amount after discount', value: inr(Math.max(0, (billPayment?.billAmount || 0) - discount)) }] : []),
     ...(billPayment?.convenienceFee > 0 ? [{ label: 'Convenience fee', value: inr(billPayment.convenienceFee) }] : []),
     ...(billPayment?.gstAmount > 0 ? [{ label: 'GST', value: inr(billPayment.gstAmount) }] : []),
     ...(billPayment?.tipAmount > 0 ? [{ label: 'Tip', value: inr(billPayment.tipAmount) }] : []),
@@ -216,7 +226,10 @@ export default function PayBillSuccessScreen({ route, navigation }) {
           {discount > 0 ? (
             <View style={st.saved}>
               <Text style={{ fontSize: 20 }}>🥳</Text>
-              <Text style={st.savedText}>You saved {inr(discount)} on this bill!</Text>
+              <Text style={st.savedText}>
+                You saved {inr(discount)} on this bill!
+                {appDiscount > 0 ? ` (incl. ${inr(appDiscount)} Hungora app discount)` : ''}
+              </Text>
             </View>
           ) : null}
 
@@ -240,7 +253,10 @@ export default function PayBillSuccessScreen({ route, navigation }) {
             <View style={st.dashed} />
             {rows.map((r) => (
               <View key={r.label} style={st.row}>
-                <Text style={st.rowLabel}>{r.label}</Text>
+                <View style={{ flex: 1, paddingRight: 8 }}>
+                  <Text style={st.rowLabel}>{r.label}</Text>
+                  {r.sub ? <Text style={st.rowSub} numberOfLines={2}>{r.sub}</Text> : null}
+                </View>
                 <Text style={[st.rowValue, r.tone && { color: r.tone }]}>{r.value}</Text>
               </View>
             ))}
@@ -334,6 +350,7 @@ const st = StyleSheet.create({
   dashed: { borderBottomWidth: 1, borderStyle: 'dashed', borderColor: COLOR.border, marginVertical: SPACING.sm },
   row: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 5 },
   rowLabel: { fontFamily: FONT.regular, fontSize: 14, color: COLOR.inkSoft },
+  rowSub: { fontFamily: FONT.regular, fontSize: 11.5, color: COLOR.inkFaint, marginTop: 1 },
   rowValue: { fontFamily: FONT.semiBold, fontSize: 14, color: COLOR.ink },
   totalLabel: { fontFamily: FONT.bold, fontSize: 16, color: NAVY },
   totalValue: { fontFamily: FONT.display, fontSize: 22, color: NAVY },

@@ -2,13 +2,13 @@ import { useEffect, useState } from 'react';
 import {
   Stack, Title, Card, Text, NumberInput, Switch, Button, Grid,
   TextInput, Divider, Group, Skeleton, SegmentedControl, Alert,
-  FileInput, Image, Progress,
+  FileInput, Image, Progress, MultiSelect,
 } from '@mantine/core';
 import { useForm } from '@mantine/form';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { notifications } from '@mantine/notifications';
 import { IconDeviceFloppy, IconUpload, IconMovie, IconTrash } from '@tabler/icons-react';
-import { adminApi } from '../../api';
+import { adminApi, restaurantApi } from '../../api';
 
 
 export default function SettingsPage() {
@@ -52,6 +52,25 @@ export default function SettingsPage() {
       convenienceFeeWaived: false,
     },
   });
+
+  const appDiscountForm = useForm({
+    initialValues: {
+      appDiscountEnabled: false,
+      appDiscountType: 'percent',
+      appDiscountValue: 0,
+      appDiscountCap: 0,
+      appDiscountMinBill: 0,
+      appDiscountScope: 'all',
+      appDiscountRestaurants: [],
+    },
+  });
+
+  const { data: restaurantData } = useQuery({
+    queryKey: ['admin-all-restaurants'],
+    queryFn: () => restaurantApi.getAll({ limit: 500 }).then((r) => r.data.data),
+  });
+  const restaurantOptions = (restaurantData?.restaurants || [])
+    .map((r) => ({ value: r._id, label: r.address?.city ? `${r.name} · ${r.address.city}` : r.name }));
 
   const heroForm = useForm({
     initialValues: {
@@ -131,6 +150,15 @@ export default function SettingsPage() {
       convenienceFeeMinBill: settingsData.convenienceFeeMinBill ?? 0,
       gstOnFeePercent: settingsData.gstOnFeePercent ?? 18,
       convenienceFeeWaived: settingsData.convenienceFeeWaived ?? false,
+    });
+    appDiscountForm.setValues({
+      appDiscountEnabled: settingsData.appDiscountEnabled ?? false,
+      appDiscountType: settingsData.appDiscountType ?? 'percent',
+      appDiscountValue: settingsData.appDiscountValue ?? 0,
+      appDiscountCap: settingsData.appDiscountCap ?? 0,
+      appDiscountMinBill: settingsData.appDiscountMinBill ?? 0,
+      appDiscountScope: settingsData.appDiscountScope ?? 'all',
+      appDiscountRestaurants: (settingsData.appDiscountRestaurants || []).map(String),
     });
     heroForm.setValues({
       homeHeroEnabled: settingsData.homeHeroEnabled ?? false,
@@ -355,6 +383,127 @@ export default function SettingsPage() {
           </Card>
         </Grid.Col>
 
+        {/* Pay Bill — Hungora app discount (platform-funded) */}
+        <Grid.Col span={{ base: 12, md: 6 }}>
+          <Card withBorder radius="md" p="lg">
+            <Text fw={700} mb={4} size="lg">Pay Bill — App Discount</Text>
+            <Text size="xs" c="dimmed" mb="lg">
+              Automatic discount for diners who pay through the app, at all restaurants or only the ones you pick.
+              Funded by the platform: the restaurant still gets its full payout, and
+              commission is unchanged. Stacks on top of restaurant offers.
+            </Text>
+            <form onSubmit={appDiscountForm.onSubmit((v) => {
+              if (v.appDiscountEnabled && v.appDiscountScope === 'selected' && !v.appDiscountRestaurants.length) {
+                notifications.show({ title: 'Pick at least one restaurant', color: 'red' });
+                return;
+              }
+              updateMutation.mutate(v);
+            })}>
+              <Stack gap="md">
+                <Group justify="space-between">
+                  <Stack gap={2}>
+                    <Text size="sm" fw={600}>Give an app discount</Text>
+                    <Text size="xs" c="dimmed">Applied automatically on Pay Bill</Text>
+                  </Stack>
+                  <Switch
+                    checked={appDiscountForm.values.appDiscountEnabled}
+                    onChange={(e) => appDiscountForm.setFieldValue('appDiscountEnabled', e.target.checked)}
+                    color="green"
+                  />
+                </Group>
+
+                <div>
+                  <Text size="sm" fw={500} mb={6}>Restaurants</Text>
+                  <SegmentedControl
+                    fullWidth
+                    data={[{ label: 'All restaurants', value: 'all' }, { label: 'Selected only', value: 'selected' }]}
+                    value={appDiscountForm.values.appDiscountScope}
+                    onChange={(v) => appDiscountForm.setFieldValue('appDiscountScope', v)}
+                    disabled={!appDiscountForm.values.appDiscountEnabled}
+                  />
+                </div>
+
+                {appDiscountForm.values.appDiscountScope === 'selected' && (
+                  <MultiSelect
+                    label="Choose restaurants"
+                    description={`${appDiscountForm.values.appDiscountRestaurants.length} selected`}
+                    placeholder="Search restaurants"
+                    data={restaurantOptions}
+                    searchable
+                    clearable
+                    hidePickedOptions
+                    maxDropdownHeight={260}
+                    nothingFoundMessage="No restaurant found"
+                    disabled={!appDiscountForm.values.appDiscountEnabled}
+                    {...appDiscountForm.getInputProps('appDiscountRestaurants')}
+                  />
+                )}
+
+                <div>
+                  <Text size="sm" fw={500} mb={6}>Discount type</Text>
+                  <SegmentedControl
+                    fullWidth
+                    data={[{ label: 'Percent %', value: 'percent' }, { label: 'Flat ₹', value: 'flat' }]}
+                    value={appDiscountForm.values.appDiscountType}
+                    onChange={(v) => appDiscountForm.setFieldValue('appDiscountType', v)}
+                    disabled={!appDiscountForm.values.appDiscountEnabled}
+                  />
+                </div>
+
+                <NumberInput
+                  label={appDiscountForm.values.appDiscountType === 'percent' ? 'Discount (% of bill)' : 'Discount amount (₹)'}
+                  min={0}
+                  max={appDiscountForm.values.appDiscountType === 'percent' ? 50 : 5000}
+                  decimalScale={2}
+                  disabled={!appDiscountForm.values.appDiscountEnabled}
+                  {...appDiscountForm.getInputProps('appDiscountValue')}
+                />
+
+                {appDiscountForm.values.appDiscountType === 'percent' && (
+                  <NumberInput
+                    label="Max discount (₹)"
+                    description="Cap per bill · 0 = no cap"
+                    min={0} max={10000}
+                    disabled={!appDiscountForm.values.appDiscountEnabled}
+                    {...appDiscountForm.getInputProps('appDiscountCap')}
+                  />
+                )}
+
+                <NumberInput
+                  label="Minimum bill (₹)"
+                  description="Only bills at or above this get the discount · 0 = every bill"
+                  min={0} max={50000}
+                  disabled={!appDiscountForm.values.appDiscountEnabled}
+                  {...appDiscountForm.getInputProps('appDiscountMinBill')}
+                />
+
+                <Alert color="green" variant="light" p="sm">
+                  <Text size="xs">
+                    {(() => {
+                      const v = appDiscountForm.values;
+                      if (!v.appDiscountEnabled) return 'App discount is off.';
+                      const bill = 1000;
+                      let d = 0;
+                      if (bill >= (v.appDiscountMinBill || 0)) {
+                        d = v.appDiscountType === 'flat'
+                          ? (v.appDiscountValue || 0)
+                          : Math.min(bill * (v.appDiscountValue || 0) / 100, v.appDiscountCap || Infinity);
+                      }
+                      d = Math.min(d, bill);
+                      return <>On a ₹1,000 bill the diner saves <b>₹{d.toFixed(2)}</b>; the platform pays it, the restaurant still gets its full share.</>;
+                    })()}
+                  </Text>
+                </Alert>
+
+                <Button type="submit" color="gold" leftSection={<IconDeviceFloppy size={16} />}
+                  loading={updateMutation.isPending}>
+                  Save App Discount
+                </Button>
+              </Stack>
+            </form>
+          </Card>
+        </Grid.Col>
+
         {/* Mobile Home — hero background (Swiggy-style) */}
         <Grid.Col span={{ base: 12, md: 6 }}>
           <Card withBorder radius="md" p="lg">
@@ -371,7 +520,7 @@ export default function SettingsPage() {
               <Stack gap="md">
                 <Group justify="space-between">
                   <Stack gap={2}>
-                    <Text size="sm" fw={600}>Use a background image</Text>
+                    <Text size="sm" fw={600}>Use a background image / video</Text>
                     <Text size="xs" c="dimmed">Off = plain logo-blue background</Text>
                   </Stack>
                   <Switch
@@ -389,6 +538,7 @@ export default function SettingsPage() {
                   leftSection={<IconUpload size={16} />}
                   disabled={heroUploading}
                   onChange={uploadHeroImage}
+                  value={null}
                 />
 
                 {heroForm.values.homeHeroImageUrl ? (
@@ -400,12 +550,23 @@ export default function SettingsPage() {
                       fit="cover"
                       alt="Home background preview"
                     />
-                    <Text size="xs" c="dimmed" style={{ wordBreak: 'break-all' }}>
-                      URL: <a href={heroForm.values.homeHeroImageUrl} target="_blank" rel="noreferrer">
-                        {heroForm.values.homeHeroImageUrl}
-                      </a>
-                      {' '}— this must open in the browser for the app to show it.
-                    </Text>
+                    <Group justify="space-between" wrap="nowrap" align="flex-start">
+                      <Text size="xs" c="dimmed" style={{ wordBreak: 'break-all' }}>
+                        URL: <a href={heroForm.values.homeHeroImageUrl} target="_blank" rel="noreferrer">
+                          {heroForm.values.homeHeroImageUrl}
+                        </a>
+                        {' '}— this must open in the browser for the app to show it.
+                      </Text>
+                      <Button
+                        size="xs"
+                        variant="light"
+                        color="red"
+                        leftSection={<IconTrash size={13} />}
+                        onClick={() => heroForm.setFieldValue('homeHeroImageUrl', '')}
+                      >
+                        Remove
+                      </Button>
+                    </Group>
                   </>
                 ) : null}
 
@@ -460,7 +621,11 @@ export default function SettingsPage() {
                         Remove
                       </Button>
                     </Group>
-                    <Text size="xs" c="dimmed">The image above is used as the poster while the video loads.</Text>
+                    <Text size="xs" c="dimmed">
+                      {heroForm.values.homeHeroImageUrl
+                        ? 'The image above is used as the poster while the video loads.'
+                        : 'No image set — the app shows only this video.'}
+                    </Text>
                   </Stack>
                 ) : null}
 

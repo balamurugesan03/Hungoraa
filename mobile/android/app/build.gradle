@@ -35,6 +35,10 @@ react {
     // debuggableVariants = ["liteDebug", "prodDebug"]
 
     /* Bundling */
+    // 8GB machine: Metro's default worker pool (one per core) OOMs while
+    // bundling for release. Two workers keeps it within memory.
+    extraPackagerArgs = ["--max-workers", "2"]
+
     //   A list containing the node command and its flags. Default is just 'node'.
     // nodeExecutableAndArgs = ["node"]
 
@@ -92,8 +96,8 @@ android {
         applicationId 'com.hungora.app'
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 28
-        versionName "1.1.11"
+        versionCode 32
+        versionName "1.1.15"
 
         buildConfigField "String", "REACT_NATIVE_RELEASE_LEVEL", "\"${findProperty('reactNativeReleaseLevel') ?: 'stable'}\""
     }

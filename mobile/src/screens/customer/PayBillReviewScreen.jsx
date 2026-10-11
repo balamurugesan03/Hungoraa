@@ -29,11 +29,14 @@ function ZigZag({ flip }) {
   );
 }
 
-function BillRow({ label, value, tone, strikeValue, free, bold }) {
+function BillRow({ label, sub, value, tone, strikeValue, free, bold }) {
   const color = tone === 'green' ? GREEN : tone === 'muted' ? COLOR.inkSoft : COLOR.ink;
   return (
     <View style={r.row}>
-      <Text style={[r.label, bold && r.bold, { color: bold ? NAVY : COLOR.inkSoft }]}>{label}</Text>
+      <View style={{ flex: 1, paddingRight: SPACING.sm }}>
+        <Text style={[r.label, bold && r.bold, { color: bold ? NAVY : COLOR.inkSoft }]}>{label}</Text>
+        {sub ? <Text style={r.sub} numberOfLines={2}>{sub}</Text> : null}
+      </View>
       {free ? (
         <Text style={r.value}>
           <Text style={r.strike}>{strikeValue}</Text>{'  '}<Text style={r.free}>FREE</Text>
@@ -64,7 +67,9 @@ export default function PayBillReviewScreen({ navigation, route }) {
     restaurantId: restaurant._id, amount, offerId, offerCode: coupon?.code, tip,
   });
 
-  const discount = quote?.discount ?? 0;
+  const discount = quote?.discount ?? 0;           // offer + app discount
+  const appDiscount = quote?.appDiscount ?? 0;
+  const offerDiscount = quote?.offerDiscount ?? discount - appDiscount;
   const fee = quote?.convenienceFee ?? 0;
   const gst = quote?.gstAmount ?? 0;
   const toPay = quote?.toPay ?? amount + tip;
@@ -86,7 +91,7 @@ export default function PayBillReviewScreen({ navigation, route }) {
 
   const proceed = () => navigation.navigate('PayBillCheckout', {
     restaurant, amount, tip, offerId, offerCode: coupon?.code,
-    toPay, discount, offerTitle: activeOffer?.title,
+    toPay, discount, appDiscount, offerTitle: activeOffer?.title,
   });
 
   return (
@@ -101,7 +106,12 @@ export default function PayBillReviewScreen({ navigation, route }) {
               <Text style={{ fontSize: 22 }}>🎉</Text>
               <View style={{ flex: 1 }}>
                 <Text style={s.saveTitle}>Yay! You’re saving <CountUp value={discount} style={s.saveTitle} /></Text>
-                <Text style={s.saveSub} numberOfLines={1}>{activeOffer?.title || 'Offer applied'}</Text>
+                <Text style={s.saveSub} numberOfLines={2}>
+                  {[
+                    offerDiscount > 0 ? `${activeOffer?.title || 'Offer'} ${inr(offerDiscount)}` : null,
+                    appDiscount > 0 ? `App discount ${inr(appDiscount)}` : null,
+                  ].filter(Boolean).join('  +  ')}
+                </Text>
               </View>
             </View>
           ) : null}
@@ -215,12 +225,24 @@ export default function PayBillReviewScreen({ navigation, route }) {
               <View style={s.dashed} />
 
               <BillRow label="Bill amount" value={inr(amount)} />
-              {discount > 0 ? (
+              {offerDiscount > 0 ? (
                 <BillRow
                   label={activeOffer?.fundedBy === 'bank' ? 'Bank discount' : 'Offer discount'}
-                  value={`− ${inr(discount)}`}
+                  sub={activeOffer?.title || coupon?.code}
+                  value={`− ${inr(offerDiscount)}`}
                   tone="green"
                 />
+              ) : null}
+              {appDiscount > 0 ? (
+                <BillRow
+                  label="Hungora app discount"
+                  sub={`${quote?.appDiscountLabel ? `${quote.appDiscountLabel} · ` : ''}for paying on the app`}
+                  value={`− ${inr(appDiscount)}`}
+                  tone="green"
+                />
+              ) : null}
+              {discount > 0 ? (
+                <BillRow label="Amount after discount" value={inr(Math.max(0, amount - discount))} />
               ) : null}
               {quote?.convenienceFeeWaived ? (
                 <BillRow label="Convenience fee" free strikeValue={inr(quote.convenienceFeeOriginal)} />
@@ -271,6 +293,7 @@ const r = StyleSheet.create({
   bold: { fontFamily: FONT.bold },
   strike: { textDecorationLine: 'line-through', color: COLOR.inkFaint, fontFamily: FONT.regular },
   free: { color: GREEN, fontFamily: FONT.bold, letterSpacing: 0.6 },
+  sub: { fontFamily: FONT.regular, fontSize: 11.5, color: COLOR.inkFaint, marginTop: 1 },
 });
 
 const s = StyleSheet.create({

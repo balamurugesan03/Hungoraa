@@ -4,7 +4,12 @@ import { IconArrowRight } from './Icons'
 import { DEFAULT_BANNER, useHeroBanner } from '../hooks/useHeroBanner'
 import './Hero.css'
 
-const TITLE_LINES = ['Good Food.', 'Great Moments.', 'Together.']
+// Looping background video (no audio). Small screens get the lighter 720p encode.
+const HERO_POSTER = '/hero-poster.jpg'
+const heroVideoSrc = () =>
+  window.matchMedia('(max-width: 900px)').matches ? '/hero-loop-720.mp4' : '/hero-loop.mp4'
+
+const TITLE_LINES =['Good Food.', 'Great Moments.', 'Together.']
 const TITLE_TOTAL = TITLE_LINES.reduce((n, l) => n + l.length, 0)
 
 /** Types the headline in letter by letter, holds, erases it, and loops. */
@@ -45,6 +50,26 @@ export default function Hero() {
   const banner = useHeroBanner()
   const [bannerSrc, setBannerSrc] = useState<string | null>(null)
   const [bannerLoaded, setBannerLoaded] = useState(false)
+  const videoRef = useRef<HTMLVideoElement>(null)
+  const [videoSrc] = useState(heroVideoSrc)
+  const [videoReady, setVideoReady] = useState(false)
+  // Reduced-motion visitors, or a video that fails to load, fall back to the banner image.
+  const [useVideo, setUseVideo] = useState(
+    () => !window.matchMedia('(prefers-reduced-motion: reduce)').matches,
+  )
+
+  // Only spend CPU/battery on the video while the hero is actually on screen.
+  useEffect(() => {
+    const video = videoRef.current
+    const root = rootRef.current
+    if (!useVideo || !video || !root) return
+    const io = new IntersectionObserver(([entry]) => {
+      if (entry.isIntersecting) video.play().catch(() => {})
+      else video.pause()
+    })
+    io.observe(root)
+    return () => io.disconnect()
+  }, [useVideo])
 
   // Swap in a new URL (admin changed it since the cached one) with a fresh fade-in.
   useEffect(() => {
@@ -86,7 +111,22 @@ export default function Hero() {
   return (
     <section id="top" className="hero" ref={rootRef}>
       <div className="hero__bg" aria-hidden="true">
-        {bannerSrc && (
+        {useVideo ? (
+          <video
+            ref={videoRef}
+            className={`hero__banner${videoReady ? ' is-loaded' : ''}`}
+            src={videoSrc}
+            poster={HERO_POSTER}
+            autoPlay
+            muted
+            loop
+            playsInline
+            preload="auto"
+            disablePictureInPicture
+            onLoadedData={() => setVideoReady(true)}
+            onError={() => setUseVideo(false)}
+          />
+        ) : bannerSrc && (
           <img
             key={bannerSrc}
             className={`hero__banner${bannerLoaded ? ' is-loaded' : ''}`}

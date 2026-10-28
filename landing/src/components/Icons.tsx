@@ -268,3 +268,40 @@ export function IconQr({ size, className }: IconProps) {
     </svg>
   )
 }
+
+// Brand marks — solid fills (official glyph shapes), sized like the line icons.
+const brand = (size = 24) => ({ width: size, height: size, viewBox: '0 0 24 24', fill: 'currentColor' })
+
+export function IconInstagram({ size, className }: IconProps) {
+  return (
+    <svg {...base(size)} className={className}>
+      <rect x="3" y="3" width="18" height="18" rx="5" />
+      <circle cx="12" cy="12" r="4" />
+      <path d="M17.5 6.5h.01" />
+    </svg>
+  )
+}
+
+export function IconFacebook({ size, className }: IconProps) {
+  return (
+    <svg {...brand(size)} className={className}>
+      <path d="M13.5 21v-7.5h2.5l.4-3h-2.9V8.6c0-.87.25-1.46 1.5-1.46H16.6V4.46A21 21 0 0 0 14.3 4.3c-2.3 0-3.8 1.4-3.8 3.95v2.25H8v3h2.5V21h3Z" />
+    </svg>
+  )
+}
+
+export function IconYoutube({ size, className }: IconProps) {
+  return (
+    <svg {...brand(size)} className={className}>
+      <path d="M21.6 7.2a2.5 2.5 0 0 0-1.77-1.77C18.27 5 12 5 12 5s-6.27 0-7.83.43A2.5 2.5 0 0 0 2.4 7.2 26 26 0 0 0 2 12a26 26 0 0 0 .4 4.8 2.5 2.5 0 0 0 1.77 1.77C5.73 19 12 19 12 19s6.27 0 7.83-.43a2.5 2.5 0 0 0 1.77-1.77A26 26 0 0 0 22 12a26 26 0 0 0-.4-4.8ZM10 15V9l5.2 3L10 15Z" />
+    </svg>
+  )
+}
+
+export function IconX({ size, className }: IconProps) {
+  return (
+    <svg {...brand(size)} className={className}>
+      <path d="M17.75 3h3.07l-6.7 7.66L22 21h-6.17l-4.83-6.32L5.47 21H2.4l7.17-8.2L2 3h6.33l4.37 5.78L17.75 3Zm-1.08 16.18h1.7L7.4 4.73H5.58l11.09 14.45Z" />
+    </svg>
+  )
+}

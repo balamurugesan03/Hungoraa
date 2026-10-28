@@ -1,4 +1,4 @@
-import { IconArrowRight } from './Icons'
+import { IconArrowRight, IconFacebook, IconInstagram, IconX, IconYoutube } from './Icons'
 import { pageHref } from '../lib/links'
 import './Footer.css'
 
@@ -25,12 +25,22 @@ const columns = [
   {
     title: 'Legal',
     links: [
-      { label: 'Terms of service', href: '#' },
-      { label: 'Privacy policy', href: '#' },
-      { label: 'Cookie policy', href: '#' },
+      { label: 'Terms of service', href: '/legal/terms-and-conditions.pdf', external: true },
+      { label: 'Privacy policy', href: '/legal/privacy-policy.pdf', external: true },
+      { label: 'Cookie policy', href: '/legal/cookie-policy.pdf', external: true },
     ],
   },
 ]
+
+const socials = [
+  { label: 'Instagram', href: 'https://www.instagram.com/hungoraofficial/', Icon: IconInstagram },
+  { label: 'Facebook', href: 'https://www.facebook.com/HungoraOfficial', Icon: IconFacebook },
+  { label: 'YouTube', href: 'https://www.youtube.com/@HungoraOfficial', Icon: IconYoutube },
+  { label: 'X (Twitter)', href: 'https://x.com/OfficialHungora', Icon: IconX },
+]
+
+// Legal docs are static PDFs in public/legal — open in a new tab (browser's PDF viewer).
+const pdfLink = { target: '_blank', rel: 'noopener noreferrer' }
 
 export default function Footer({ onHome = true }: { onHome?: boolean }) {
   return (
@@ -51,6 +61,15 @@ export default function Footer({ onHome = true }: { onHome?: boolean }) {
               <img src={logo} alt="Hungora" />
             </a>
             <p className="footer__tagline">The smartest way to dine</p>
+            <ul className="footer__socials">
+              {socials.map(({ label, href, Icon }) => (
+                <li key={label}>
+                  <a href={href} target="_blank" rel="noopener noreferrer" aria-label={`Hungora on ${label}`} title={label}>
+                    <Icon size={18} />
+                  </a>
+                </li>
+              ))}
+            </ul>
           </div>
 
           <div className="footer__columns">
@@ -60,7 +79,13 @@ export default function Footer({ onHome = true }: { onHome?: boolean }) {
                 <ul>
                   {c.links.map((l) => (
                     <li key={l.label}>
-                      <a href={pageHref(l.href, onHome)}>{l.label}</a>
+                      {'external' in l ? (
+                        <a href={l.href} {...pdfLink}>
+                          {l.label}
+                        </a>
+                      ) : (
+                        <a href={pageHref(l.href, onHome)}>{l.label}</a>
+                      )}
                     </li>
                   ))}
                 </ul>
@@ -73,8 +98,10 @@ export default function Footer({ onHome = true }: { onHome?: boolean }) {
       <div className="footer__bottom">
         <div className="footer__inner">
           <p className="footer__legal">
-            By accessing or continuing to use this platform, you agree to abide by our Terms of Service, Cookie
-            Policy, Privacy Policy, and Content Guidelines. All third-party trademarks, logos, and brand assets
+            By accessing or continuing to use this platform, you agree to abide by our{' '}
+            <a href="/legal/terms-and-conditions.pdf" {...pdfLink}>Terms of Service</a>,{' '}
+            <a href="/legal/cookie-policy.pdf" {...pdfLink}>Cookie Policy</a>,{' '}
+            <a href="/legal/privacy-policy.pdf" {...pdfLink}>Privacy Policy</a>, and Content Guidelines. All third-party trademarks, logos, and brand assets
             displayed are the property of their respective owners.
           </p>
           <span className="mono">

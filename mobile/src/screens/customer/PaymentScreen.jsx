@@ -6,6 +6,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { paymentApi } from '../../api/payment.api';
+import { openRazorpayCheckout } from '../../utils/razorpay';
 import { COLORS } from '../../constants/colors';
 import { SPACING, BORDER_RADIUS } from '../../constants';
 
@@ -31,18 +32,22 @@ export default function PaymentScreen({ navigation, route }) {
         }
         return paymentApi.payWithWallet(bookingId, amount);
       }
-      // Razorpay
-      const orderRes = await paymentApi.createOrder(bookingId, amount);
-      const { orderId, key } = orderRes.data.data;
-      // In a real app: open RazorpayCheckout here
-      Alert.alert('Razorpay', `Order ID: ${orderId}\n(Razorpay SDK integration active)`);
-      return orderRes;
+      // Razorpay: create order → Checkout → verify signature + confirm booking
+      const { data: orderRes } = await paymentApi.createOrder({ bookingId, amount });
+      const result = await openRazorpayCheckout(orderRes.data, {
+        description: `Booking deposit · ${restaurantName || 'Hungora'}`,
+      });
+      return paymentApi.verifyPayment({ ...result, bookingId });
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['my-bookings'] });
-      navigation.replace('BookingSuccess', { bookingId });
+      qc.invalidateQueries({ queryKey: ['wallet'] });
+      navigation.replace('BookingSuccess', { bookingId, ...(route.params?.successParams || {}) });
     },
-    onError: (err) => Alert.alert('Payment Failed', err.message || 'Could not process payment'),
+    onError: (err) => {
+      if (err?.cancelled) return; // user closed the sheet — stay here so they can retry
+      Alert.alert('Payment Failed', err.response?.data?.message || err.message || 'Could not process payment');
+    },
   });
 
   const handlePay = () => {

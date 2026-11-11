@@ -413,73 +413,100 @@ exports.createBillPayment = async (req, res, next) => {
   }
 };
 
+// ─── Shared: mark a Razorpay-paid bill as paid + run all side effects ───────
+// Used by the in-app verify call AND the Razorpay webhook (whichever arrives
+// first wins; the atomic pending→paid claim makes the second a no-op).
+async function finalizeBillPayment({ razorpayOrderId, razorpayPaymentId, razorpaySignature, paymentReference }) {
+  const billPayment = await BillPayment.findOneAndUpdate(
+    { razorpayOrderId, paymentStatus: { $ne: 'paid' } },
+    {
+      razorpayPaymentId,
+      ...(razorpaySignature ? { razorpaySignature } : {}),
+      paymentStatus:    'paid',
+      billStatus:       'paid',
+      paymentReference: paymentReference || razorpayPaymentId,
+      paidAt:           new Date(),
+    },
+    { new: true },
+  );
+  if (!billPayment) {
+    const existing = await BillPayment.findOne({ razorpayOrderId }).populate('restaurant', 'name address');
+    return { billPayment: existing, alreadyPaid: Boolean(existing), coinsEarned: 0 };
+  }
+
+  // Record offer usage
+  if (billPayment.offer) {
+    const offer = await Offer.findById(billPayment.offer);
+    if (offer) {
+      discountService.recordOfferUsage({
+        offer, userId: billPayment.customer, restaurantId: billPayment.restaurant,
+        grossAmount: billPayment.billAmount,
+        // offer's own discount only — strip the app discount back out
+        discountResult: {
+          totalDiscount:    (billPayment.discountBreakup?.total ?? 0) - (billPayment.appDiscount || 0),
+          restaurantFunded: billPayment.discountBreakup?.restaurantFunded ?? 0,
+          platformFunded:   (billPayment.discountBreakup?.platformFunded ?? 0) - (billPayment.appDiscount || 0),
+          bankFunded:       billPayment.discountBreakup?.bankFunded ?? 0,
+        },
+        sourceType: 'bill_payment', sourceId: billPayment._id,
+      }).catch(() => {});
+    }
+  }
+
+  const restaurant = await Restaurant.findById(billPayment.restaurant).populate('owner', 'name email phone');
+  const inv = await _generateBillInvoice(billPayment, restaurant);
+  billPayment.invoice = inv._id;
+  await billPayment.save();
+
+  const cashback = await loyaltyService.awardBillPaymentCashback({
+    userId: billPayment.customer,
+    amount: billingService.r2(
+      billPayment.finalAmount - (billPayment.tipAmount || 0)
+      - (billPayment.convenienceFee || 0) - (billPayment.gstAmount || 0),
+    ),
+    restaurantName: restaurant?.name,
+    billPaymentId: billPayment._id,
+  });
+
+  await billPayment.populate('customer', 'name email phone');
+  emailService.sendBillPaymentEmails({
+    billPayment, restaurant, customer: billPayment.customer, owner: restaurant?.owner,
+  }).catch(() => {});
+
+  await billPayment.populate('restaurant', 'name address');
+  return {
+    billPayment,
+    alreadyPaid: false,
+    coinsEarned: cashback?.coins || 0,
+    walletBalance: cashback?.walletBalance,
+  };
+}
+exports.finalizeBillPayment = finalizeBillPayment;
+
 // ─── Customer: Verify Razorpay + complete bill payment ───────────────────────
 exports.completeBillPayment = async (req, res, next) => {
   try {
     const { razorpayOrderId, razorpayPaymentId, razorpaySignature, paymentReference } = req.body;
+    if (!razorpayOrderId || !razorpayPaymentId || !razorpaySignature) {
+      return errorResponse(res, 400, 'razorpayOrderId, razorpayPaymentId and razorpaySignature are required');
+    }
 
     const expected = crypto
       .createHmac('sha256', process.env.RAZORPAY_KEY_SECRET)
       .update(`${razorpayOrderId}|${razorpayPaymentId}`)
       .digest('hex');
-
     if (expected !== razorpaySignature) return errorResponse(res, 400, 'Invalid payment signature');
 
-    const billPayment = await BillPayment.findOne({ razorpayOrderId });
-    if (!billPayment) return errorResponse(res, 404, 'Bill payment not found');
-    if (billPayment.paymentStatus === 'paid') return errorResponse(res, 400, 'Already completed');
+    const owned = await BillPayment.exists({ razorpayOrderId, customer: req.user._id });
+    if (!owned) return errorResponse(res, 404, 'Bill payment not found');
 
-    billPayment.razorpayPaymentId = razorpayPaymentId;
-    billPayment.razorpaySignature = razorpaySignature;
-    billPayment.paymentStatus     = 'paid';
-    billPayment.billStatus        = 'paid';
-    billPayment.paymentReference  = paymentReference || razorpayPaymentId;
-    billPayment.paidAt            = new Date();
-    await billPayment.save();
-
-    // Record offer usage
-    if (billPayment.offer) {
-      const offer = await Offer.findById(billPayment.offer);
-      if (offer) {
-        discountService.recordOfferUsage({
-          offer, userId: billPayment.customer, restaurantId: billPayment.restaurant,
-          grossAmount: billPayment.billAmount,
-          // offer's own discount only — strip the app discount back out
-          discountResult: {
-            totalDiscount:    (billPayment.discountBreakup?.total ?? 0) - (billPayment.appDiscount || 0),
-            restaurantFunded: billPayment.discountBreakup?.restaurantFunded ?? 0,
-            platformFunded:   (billPayment.discountBreakup?.platformFunded ?? 0) - (billPayment.appDiscount || 0),
-            bankFunded:       billPayment.discountBreakup?.bankFunded ?? 0,
-          },
-          sourceType: 'bill_payment', sourceId: billPayment._id,
-        }).catch(() => {});
-      }
-    }
-
-    const restaurant = await Restaurant.findById(billPayment.restaurant).populate('owner', 'name email phone');
-    const inv = await _generateBillInvoice(billPayment, restaurant);
-    billPayment.invoice = inv._id;
-    await billPayment.save();
-
-    const cashback = await loyaltyService.awardBillPaymentCashback({
-      userId: billPayment.customer,
-      amount: billingService.r2(
-        billPayment.finalAmount - (billPayment.tipAmount || 0)
-        - (billPayment.convenienceFee || 0) - (billPayment.gstAmount || 0),
-      ),
-      restaurantName: restaurant?.name,
-      billPaymentId: billPayment._id,
-    });
-
-    emailService.sendBillPaymentEmails({
-      billPayment, restaurant, customer: req.user, owner: restaurant?.owner,
-    }).catch(() => {});
-
-    await billPayment.populate('restaurant', 'name address');
+    // If the webhook already settled it, still return success so the app can
+    // show the receipt instead of an error.
+    const result = await finalizeBillPayment({ razorpayOrderId, razorpayPaymentId, razorpaySignature, paymentReference });
     return successResponse(res, 200, 'Payment completed', {
-      billPayment,
-      coinsEarned: cashback?.coins || 0,
-      walletBalance: cashback?.walletBalance,
+      billPayment:   result.billPayment,
+      coinsEarned:   result.coinsEarned,
+      walletBalance: result.walletBalance,
     });
   } catch (err) {
     next(err);

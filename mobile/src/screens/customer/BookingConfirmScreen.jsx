@@ -9,6 +9,7 @@ import { useMutation } from '@tanstack/react-query';
 import Toast from 'react-native-toast-message';
 import bookingApi from '../../api/booking.api';
 import paymentApi from '../../api/payment.api';
+import { openRazorpayCheckout } from '../../utils/razorpay';
 import { COLORS, FONTS, SIZES, SPACING, BORDER_RADIUS, SHADOW } from '../../constants';
 
 const GOLD = '#C8952B';
@@ -41,6 +42,7 @@ export default function BookingConfirmScreen({ navigation, route }) {
   const [paymentMethod, setPaymentMethod] = useState(hasDeposit ? 'razorpay' : 'cash');
   const [specialRequest, setSpecialRequest] = useState(initialRequest || '');
   const [occasion, setOccasion] = useState(null);
+  const [paying, setPaying] = useState(false); // Razorpay checkout in progress
 
   // Preselect the best booking deal's code, if one was passed through.
   useEffect(() => {
@@ -94,10 +96,11 @@ export default function BookingConfirmScreen({ navigation, route }) {
       });
       return data.data;
     },
-    onSuccess: (data) => {
-      navigation.replace('BookingSuccess', {
-        bookingId: data.booking._id,
-        bookingCode: data.booking.bookingId,
+    onSuccess: async (data) => {
+      const booking = data.booking;
+      const successParams = {
+        bookingId: booking._id,
+        bookingCode: booking.bookingId,
         restaurantName,
         restaurant,
         date,
@@ -106,7 +109,33 @@ export default function BookingConfirmScreen({ navigation, route }) {
         deal: couponApplied?.offer || offers[0] || null,
         savedAmount: discount,
         cancellationPolicy: restaurant?.cancellationPolicy,
-      });
+      };
+
+      // Advance deposit via Razorpay — collect it now, straight after the booking.
+      const payable = Number(booking.totalAmount) || 0;
+      if (paymentMethod === 'razorpay' && payable > 0) {
+        setPaying(true);
+        try {
+          const { data: orderRes } = await paymentApi.createOrder({ bookingId: booking._id, amount: payable });
+          const result = await openRazorpayCheckout(orderRes.data, {
+            description: `Booking deposit · ${restaurantName || 'Hungora'}`,
+          });
+          await paymentApi.verifyPayment({ ...result, bookingId: booking._id });
+        } catch (err) {
+          // Booking exists but is unpaid — send them to the Payment screen to retry.
+          Toast.show(err?.cancelled
+            ? { type: 'info', text1: 'Payment cancelled', text2: 'Your booking is saved — pay the advance to confirm it.' }
+            : { type: 'error', text1: 'Payment failed', text2: err.response?.data?.message || err.message || 'Please try again' });
+          navigation.replace('Payment', {
+            bookingId: booking._id, amount: payable, restaurantName, successParams,
+          });
+          return;
+        } finally {
+          setPaying(false);
+        }
+      }
+
+      navigation.replace('BookingSuccess', successParams);
     },
     onError: (err) => Toast.show({
       type: 'error',
@@ -322,9 +351,9 @@ export default function BookingConfirmScreen({ navigation, route }) {
           style={styles.confirmBtn}
           onPress={() => bookingMutation.mutate()}
           activeOpacity={0.9}
-          disabled={bookingMutation.isPending}
+          disabled={bookingMutation.isPending || paying}
         >
-          {bookingMutation.isPending
+          {bookingMutation.isPending || paying
             ? <ActivityIndicator color={NAVY} />
             : <Text style={styles.confirmBtnText}>{hasDeposit && finalAmount > 0 ? 'Pay & Confirm' : 'Confirm Booking'}</Text>}
         </TouchableOpacity>

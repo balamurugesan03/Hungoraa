@@ -18,12 +18,44 @@ const getRazorpay = () => {
   });
 };
 
+const safeEqual = (a, b) => {
+  const ba = Buffer.from(String(a || ''));
+  const bb = Buffer.from(String(b || ''));
+  return ba.length === bb.length && crypto.timingSafeEqual(ba, bb);
+};
+
 const verifySignature = (orderId, paymentId, signature) => {
+  if (!orderId || !paymentId || !signature) return false;
   const expected = crypto
     .createHmac('sha256', process.env.RAZORPAY_KEY_SECRET)
     .update(`${orderId}|${paymentId}`)
     .digest('hex');
-  return expected === signature;
+  return safeEqual(expected, signature);
+};
+
+// Mark the booking paid + notify the owner. Shared by /verify and the webhook;
+// a no-op if the booking is already paid.
+const confirmBookingDeposit = async (bookingId, payment, changedBy) => {
+  if (!bookingId) return null;
+  const booking = await Booking.findById(bookingId).populate('restaurant', 'owner name');
+  if (!booking || booking.isPaid) return booking;
+  const nextStatus = booking.status === 'held' ? 'pending' : booking.status;
+  booking.isPaid      = true;
+  booking.payment     = payment._id;
+  booking.status      = nextStatus;
+  booking.holdStatus  = 'confirmed';
+  booking.statusHistory.push({ status: nextStatus, changedBy, reason: 'Deposit paid' });
+  await booking.save();
+
+  await Notification.create({
+    recipient: booking.restaurant.owner,
+    title:     'Deposit Received',
+    body:      `Deposit of ₹${payment.amount} received for booking #${booking.bookingId}`,
+    type:      'deposit_received',
+    data:      { bookingId: booking._id, paymentId: payment._id, amount: payment.amount },
+    channel:   'in-app',
+  });
+  return booking;
 };
 
 // ─── Customer: Create Razorpay order for booking deposit ──────────────────────
@@ -83,47 +115,25 @@ exports.verifyPayment = async (req, res) => {
     const { razorpayOrderId, razorpayPaymentId, razorpaySignature, bookingId } = req.body;
 
     if (!verifySignature(razorpayOrderId, razorpayPaymentId, razorpaySignature)) {
-      // Mark payment as failed in DB
       await Payment.findOneAndUpdate(
-        { razorpayOrderId },
+        { razorpayOrderId, customer: req.user._id, status: 'pending' },
         { status: 'failed', failureReason: 'Signature mismatch' }
       );
       return errorResponse(res, 400, 'Invalid payment signature');
     }
 
-    const payment = await Payment.findOneAndUpdate(
-      { razorpayOrderId },
-      {
-        razorpayPaymentId,
-        razorpaySignature,
-        status: 'completed',
-        paidAt: new Date(),
-      },
+    const existing = await Payment.findOne({ razorpayOrderId, customer: req.user._id });
+    if (!existing) return errorResponse(res, 404, 'Payment record not found');
+
+    // Atomic →completed claim; if the webhook got there first, reuse its record.
+    const payment = (await Payment.findOneAndUpdate(
+      { _id: existing._id, status: { $ne: 'completed' } },
+      { razorpayPaymentId, razorpaySignature, status: 'completed', paidAt: new Date() },
       { new: true }
-    );
-    if (!payment) return errorResponse(res, 404, 'Payment record not found');
+    )) || existing;
 
     // Confirm booking — if it was in 'held' state, advance to 'pending'
-    const booking = await Booking.findById(bookingId).populate('restaurant', 'owner name');
-    if (booking) {
-      const nextStatus = booking.status === 'held' ? 'pending' : booking.status;
-      booking.isPaid      = true;
-      booking.payment     = payment._id;
-      booking.status      = nextStatus;
-      booking.holdStatus  = 'confirmed';
-      booking.statusHistory.push({ status: nextStatus, changedBy: req.user._id, reason: 'Deposit paid' });
-      await booking.save();
-
-      // Notify restaurant owner about deposit
-      await Notification.create({
-        recipient: booking.restaurant.owner,
-        title:     'Deposit Received',
-        body:      `Deposit of ₹${payment.amount} received for booking #${booking.bookingId}`,
-        type:      'deposit_received',
-        data:      { bookingId: booking._id, paymentId: payment._id, amount: payment.amount },
-        channel:   'in-app',
-      });
-    }
+    await confirmBookingDeposit(payment.booking || bookingId, payment, req.user._id);
 
     return successResponse(res, 200, 'Payment verified', { payment });
   } catch (err) {
@@ -239,23 +249,29 @@ exports.topUpWallet = async (req, res) => {
 
     if (!verifySignature(razorpayOrderId, razorpayPaymentId, razorpaySignature)) {
       await Payment.findOneAndUpdate(
-        { razorpayOrderId },
+        { razorpayOrderId, customer: req.user._id, status: 'pending' },
         { status: 'failed', failureReason: 'Signature mismatch' }
       );
       return errorResponse(res, 400, 'Invalid payment signature');
     }
 
-    const payment = await Payment.findOneAndUpdate(
-      { razorpayOrderId, type: 'wallet_topup' },
+    const existing = await Payment.findOne({ razorpayOrderId, type: 'wallet_topup', customer: req.user._id });
+    if (!existing) return errorResponse(res, 404, 'Payment record not found');
+
+    // Only the first →completed transition credits the wallet, so this call
+    // and the webhook can never both credit the same top-up.
+    const claimed = await Payment.findOneAndUpdate(
+      { _id: existing._id, status: { $ne: 'completed' } },
       { razorpayPaymentId, razorpaySignature, status: 'completed', paidAt: new Date() },
       { new: true }
     );
-    if (!payment) return errorResponse(res, 404, 'Payment record not found');
+    const payment = claimed || existing;
 
-    const wallet = await Wallet.findOne({ user: req.user._id });
-    if (!wallet) return errorResponse(res, 404, 'Wallet not found');
-
-    await wallet.credit(payment.amount, 'Wallet top-up via Razorpay', payment._id.toString(), 'topup');
+    let wallet = await Wallet.findOne({ user: req.user._id });
+    if (!wallet) wallet = await Wallet.create({ user: req.user._id });
+    if (claimed) {
+      await wallet.credit(payment.amount, 'Wallet top-up via Razorpay', payment._id.toString(), 'topup');
+    }
 
     return successResponse(res, 200, 'Wallet topped up', {
       payment,
@@ -450,43 +466,66 @@ exports.refundToWallet = async (req, res) => {
 };
 
 // ─── Razorpay Webhook ─────────────────────────────────────────────────────────
+// POST /api/webhooks/razorpay — raw body (mounted in app.js before express.json).
+// Safety net for when the app closes before it can call /verify. Settles
+// booking deposits, wallet top-ups and pay-bill orders. Every branch is
+// idempotent: Razorpay retries, and the in-app verify call may race it.
 exports.razorpayWebhook = async (req, res) => {
   try {
-    const signature = req.headers['x-razorpay-signature'];
-    const expected  = crypto
-      .createHmac('sha256', process.env.RAZORPAY_WEBHOOK_SECRET)
-      .update(req.body)         // raw Buffer
-      .digest('hex');
+    const secret = process.env.RAZORPAY_WEBHOOK_SECRET;
+    if (!secret) {
+      logger.error('Webhook: RAZORPAY_WEBHOOK_SECRET not set');
+      return res.status(500).json({ error: 'Webhook not configured' });
+    }
+    if (!Buffer.isBuffer(req.body)) {
+      logger.error('Webhook: body was already parsed — route must be mounted before express.json()');
+      return res.status(400).json({ error: 'Raw body required' });
+    }
 
-    if (signature !== expected) {
+    const signature = req.headers['x-razorpay-signature'];
+    const expected  = crypto.createHmac('sha256', secret).update(req.body).digest('hex');
+
+    if (!safeEqual(signature, expected)) {
       logger.warn('Webhook: invalid signature');
       return res.status(400).json({ error: 'Invalid signature' });
     }
 
-    const event   = JSON.parse(req.body.toString());
+    const event   = JSON.parse(req.body.toString('utf8'));
     const entity  = event.payload?.payment?.entity || event.payload?.refund?.entity;
-    const orderId = entity?.order_id;
+    const orderId = entity?.order_id || event.payload?.order?.entity?.id;
+    logger.info(`Razorpay webhook: ${event.event} order=${orderId || '-'}`);
 
     switch (event.event) {
-      case 'payment.captured': {
-        const payment = await Payment.findOneAndUpdate(
-          { razorpayOrderId: orderId },
-          { status: 'completed', razorpayPaymentId: entity.id, paidAt: new Date() },
+      case 'payment.captured':
+      case 'order.paid': {
+        const paymentId = event.payload?.payment?.entity?.id;
+        if (!orderId) break;
+
+        // Booking deposit / wallet top-up — claim only if not yet completed
+        const claimed = await Payment.findOneAndUpdate(
+          { razorpayOrderId: orderId, status: { $ne: 'completed' } },
+          { status: 'completed', razorpayPaymentId: paymentId, paidAt: new Date() },
           { new: true }
         );
-        // Credit wallet if this was a top-up
-        if (payment?.type === 'wallet_topup') {
-          const wallet = await Wallet.findOne({ user: payment.customer });
-          if (wallet) {
-            await wallet.credit(payment.amount, 'Wallet top-up via Razorpay', payment._id.toString(), 'topup');
-          }
+        if (claimed?.type === 'wallet_topup') {
+          let wallet = await Wallet.findOne({ user: claimed.customer });
+          if (!wallet) wallet = await Wallet.create({ user: claimed.customer });
+          await wallet.credit(claimed.amount, 'Wallet top-up via Razorpay', claimed._id.toString(), 'topup');
+        } else if (claimed?.booking) {
+          await confirmBookingDeposit(claimed.booking, claimed, claimed.customer);
+        }
+
+        // Pay-bill orders live in BillPayment, not Payment
+        if (!claimed && paymentId) {
+          const { finalizeBillPayment } = require('./billPayment.controller');
+          await finalizeBillPayment({ razorpayOrderId: orderId, razorpayPaymentId: paymentId });
         }
         break;
       }
 
       case 'payment.failed': {
         const payment = await Payment.findOneAndUpdate(
-          { razorpayOrderId: orderId },
+          { razorpayOrderId: orderId, status: 'pending' },
           {
             status:        'failed',
             failureReason: entity?.error_description || 'Payment failed',

@@ -13,11 +13,9 @@ const {
   getWalletTransactions,
   refundPayment,
   refundToWallet,
-  razorpayWebhook,
 } = require('../controllers/payment.controller');
 
-// ── Razorpay webhook — raw body, no auth ──────────────────────────────────────
-router.post('/webhook', express.raw({ type: 'application/json' }), razorpayWebhook);
+// Razorpay webhook is mounted in app.js (needs the raw body, before express.json).
 
 router.use(protect);
 

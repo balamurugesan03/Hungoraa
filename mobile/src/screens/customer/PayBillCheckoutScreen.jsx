@@ -12,6 +12,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import Toast from 'react-native-toast-message';
 import billPaymentApi from '../../api/billPayment.api';
 import paymentApi from '../../api/payment.api';
+import { openRazorpayCheckout } from '../../utils/razorpay';
 import { COLOR, FONT, RADII, SPACING, ELEVATION } from '../../theme';
 import {
   PayBillHeader, FooterCTA, Section, NAVY, GOLD, GOLD_DEEP, CREAM, PAGE_BG, GREEN, inr,
@@ -88,7 +89,15 @@ export default function PayBillCheckoutScreen({ navigation, route }) {
         }),
         new Promise((r) => setTimeout(r, 1400)),
       ]);
-      return res.data.data;
+      const data = res.data.data;
+      if (!data.razorpay) return data; // wallet / simulated — already settled
+
+      // Online payment: Razorpay Checkout, then verify the signature on our server.
+      const result = await openRazorpayCheckout(data.razorpay, {
+        description: `Bill payment · ${restaurant.name}`,
+      });
+      const done = await billPaymentApi.completeBillPayment(result);
+      return done.data.data;
     },
     onSuccess: (data) => {
       if (data.billPayment?.paymentStatus === 'paid') {
@@ -103,19 +112,13 @@ export default function PayBillCheckoutScreen({ navigation, route }) {
             },
           ],
         });
-      } else if (data.razorpay) {
-        Toast.show({
-          type: 'info',
-          text1: 'Online checkout coming soon',
-          text2: 'Please pay with Hungora Wallet for now.',
-        });
       } else {
         Toast.show({ type: 'error', text1: 'Payment could not be completed' });
       }
     },
-    onError: (err) => Toast.show({
-      type: 'error', text1: 'Payment failed', text2: err.response?.data?.message || 'Please try again',
-    }),
+    onError: (err) => Toast.show(err?.cancelled
+      ? { type: 'info', text1: 'Payment cancelled', text2: 'No money was deducted.' }
+      : { type: 'error', text1: 'Payment failed', text2: err.response?.data?.message || err.message || 'Please try again' }),
   });
 
   const methodLabel = method.startsWith('upi') ? 'UPI' : method === 'debit' ? 'Debit card'

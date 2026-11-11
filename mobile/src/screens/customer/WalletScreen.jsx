@@ -6,6 +6,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { paymentApi } from '../../api/payment.api';
+import { openRazorpayCheckout } from '../../utils/razorpay';
 import { COLORS } from '../../constants/colors';
 import { SPACING, BORDER_RADIUS } from '../../constants';
 
@@ -17,9 +18,29 @@ export default function WalletScreen({ navigation }) {
   const [addModalVisible, setAddModalVisible] = useState(false);
   const [amount, setAmount] = useState('');
 
+  const qc = useQueryClient();
   const { data, isLoading } = useQuery({
     queryKey: ['wallet'],
     queryFn: () => paymentApi.getWallet(),
+  });
+
+  // Top-up: create order → Razorpay Checkout → verify + credit on the server.
+  const topUp = useMutation({
+    mutationFn: async (amt) => {
+      const { data: res } = await paymentApi.createWalletTopupOrder(amt);
+      const result = await openRazorpayCheckout(res.data, { description: 'Hungora Wallet top-up' });
+      const { data: done } = await paymentApi.topUpWallet(result);
+      return done.data;
+    },
+    onSuccess: (res) => {
+      qc.invalidateQueries({ queryKey: ['wallet'] });
+      setAmount('');
+      Alert.alert('Money added', `₹${res?.payment?.amount ?? ''} added to your wallet.`);
+    },
+    onError: (err) => {
+      if (err?.cancelled) return;
+      Alert.alert('Top-up failed', err.response?.data?.message || err.message || 'Please try again');
+    },
   });
 
   const wallet = data?.data?.data?.wallet || {};
@@ -123,14 +144,16 @@ export default function WalletScreen({ navigation }) {
                 <Text style={styles.cancelBtnText}>Cancel</Text>
               </TouchableOpacity>
               <TouchableOpacity
-                style={[styles.confirmBtn, { opacity: !amount || Number(amount) < 1 ? 0.5 : 1 }]}
-                disabled={!amount || Number(amount) < 1}
+                style={[styles.confirmBtn, { opacity: !amount || Number(amount) < 1 || topUp.isPending ? 0.5 : 1 }]}
+                disabled={!amount || Number(amount) < 1 || topUp.isPending}
                 onPress={() => {
                   setAddModalVisible(false);
-                  Alert.alert('Razorpay', `Proceeding to pay ₹${amount} via Razorpay (integration pending in dev mode).`);
+                  topUp.mutate(Number(amount));
                 }}
               >
-                <Text style={styles.confirmBtnText}>Proceed to Pay</Text>
+                {topUp.isPending
+                  ? <ActivityIndicator color="#fff" />
+                  : <Text style={styles.confirmBtnText}>Proceed to Pay</Text>}
               </TouchableOpacity>
             </View>
           </View>

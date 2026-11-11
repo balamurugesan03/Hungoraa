@@ -49,6 +49,16 @@ app.use(
   })
 );
 
+// ─── Razorpay webhook ────────────────────────────────────────────────────────
+// Must be mounted BEFORE express.json(): the HMAC signature is computed over the
+// exact raw bytes Razorpay sent, so this route needs the unparsed Buffer.
+// Dashboard URL: https://hungora.com/api/webhooks/razorpay
+// (/api/payments/webhook kept as a legacy alias.)
+const { razorpayWebhook } = require('./controllers/payment.controller');
+const rawJson = express.raw({ type: 'application/json', limit: '1mb' });
+app.post('/api/webhooks/razorpay', rawJson, razorpayWebhook);
+app.post('/api/payments/webhook', rawJson, razorpayWebhook);
+
 // ─── Compression & Parsing ───────────────────────────────────────────────────
 app.use(compression());
 app.use(express.json({ limit: '10mb' }));

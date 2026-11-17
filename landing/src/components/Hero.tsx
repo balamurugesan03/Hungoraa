@@ -9,7 +9,7 @@ const HERO_POSTER = '/hero-poster.jpg'
 const heroVideoSrc = () =>
   window.matchMedia('(max-width: 900px)').matches ? '/hero-loop-720.mp4' : '/hero-loop.mp4'
 
-const TITLE_LINES =['Good Food.', 'Great Moments.', 'Together.']
+const TITLE_LINES = ['Great Food.', 'Good Moments.', 'Together.']
 const TITLE_TOTAL = TITLE_LINES.reduce((n, l) => n + l.length, 0)
 
 /** Types the headline in letter by letter, holds, erases it, and loops. */

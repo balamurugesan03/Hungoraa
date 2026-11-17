@@ -2,7 +2,7 @@ import { IconArrowRight, IconFacebook, IconInstagram, IconX, IconYoutube } from 
 import { pageHref } from '../lib/links'
 import './Footer.css'
 
-const logo = '/logolanding.jpeg'
+const logo = '/loggggooo.png'
 
 const columns = [
   {
@@ -18,7 +18,8 @@ const columns = [
     title: 'Partners',
     links: [
       { label: 'Partner with us', href: '/partner' },
-      { label: 'Owner dashboard', href: '#' },
+      { label: 'Hungora for Business', href: '/business' },
+      { label: 'Owner dashboard', href: '/owner/' },
       { label: 'Help & support', href: '#' },
     ],
   },

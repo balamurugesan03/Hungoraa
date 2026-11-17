@@ -4,10 +4,10 @@ import { fileURLToPath } from 'node:url'
 
 const page = (file: string) => fileURLToPath(new URL(file, import.meta.url))
 
-/** Serve the clean page URLs (/how-it-works, /features, /partner, /contact) from their .html files in dev and preview (nginx does the same via try_files). */
+/** Serve the clean page URLs (/how-it-works, /features, /partner, /contact, /business) from their .html files in dev and preview (nginx does the same via try_files). */
 const cleanUrls = (): Plugin => {
   const rewrite = (req: { url?: string }, _res: unknown, next: () => void) => {
-    const m = req.url?.match(/^\/(how-it-works|features|partner|contact)(?=[?#]|$)/)
+    const m = req.url?.match(/^\/(how-it-works|features|partner|contact|business)(?=[?#]|$)/)
     if (m) req.url = req.url!.replace(m[0], `${m[0]}.html`)
     next()
   }
@@ -36,6 +36,7 @@ export default defineConfig({
         features: page('./features.html'),
         partner: page('./partner.html'),
         contact: page('./contact.html'),
+        business: page('./business.html'),
       },
     },
   },
